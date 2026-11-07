@@ -22,9 +22,12 @@ the others in vacancy count as well as C content; see `structures/build_supercel
 - `env/`: the analysis-only conda environment (`environment.yml`). Simulations run in the container.
 
 ## Running
-All jobs run on sm_80 GPUs with account `strachan` through `common/run_lmp.sh NGPU -in ... -log ...`. Use partition
-`a30`. A100 nodes (`a100-40gb` via the `perc` account, and `a100-80gb`) are not usable yet: the current model file
-crashes in its loader there. A recompile per node type is being tested (`tests/RESULTS.md`, environment probe).
+All jobs run through `common/run_lmp.sh NGPU -in ... -log ...`, with the compiled model chosen per node type by
+`common/defaults.sh` (`MODEL`; see `models/provenance.md`). Usable GPUs:
+- `a30` with account `strachan` (submit-script default; 6 A30s shared by the group);
+- `a100-40gb` with account `perc` (10 A100s, about 1.8× faster per GPU): `sbatch -A perc -p a100-40gb ...`.
+
+`a100-80gb` needs its own model build first.
 
 Analysis environment (the package cache must be on scratch; the home quota is full):
 ```

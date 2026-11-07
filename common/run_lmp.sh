@@ -3,8 +3,8 @@
 # Usage (inside a Slurm allocation):  common/run_lmp.sh NGPU -in in.file -log log.file [-var name value ...]
 #
 # Container: lammps_debug.sif = LAMMPS 30 Mar 2026, Kokkos 5.0.2 (CUDA, double), libtorch 2.8.0+cu126.
-# The model in models/ is compiled for sm_80 GPUs but was built on an A30 b-node, and it crashes in the model loader on
-# every A100 node tried so far (Illegal instruction). Use partition a30 until tests/a100_model reports.
+# The compiled model must match the node's CPU: common/defaults.sh sets MODEL per node type (a30 b/d, a100-40gb g/n),
+# and inputs take it as -var model $MODEL (models/provenance.md).
 # Which nodes and containers have been tested, with results: tests/RESULTS.md (environment probe, 1d, 1f).
 # SIF can be overridden from the environment (tests/container uses this for lammps_stable.sif).
 set -euo pipefail

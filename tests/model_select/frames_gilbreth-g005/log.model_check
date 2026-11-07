@@ -1,0 +1,1317 @@
+LAMMPS (30 Mar 2026)
+KOKKOS mode with Kokkos version 5.0.2 is enabled
+  using double precision
+  using view layout = legacy
+  will use up to 1 GPU(s) per node
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+# Test 1b: single-point energy and forces of the compiled model on each frame written by model_check.py prepare.
+# Run with -var frames "<i j k ...>" (the list in frames.txt). Appends "frame PE pxx pyy pzz pyz pxz pxy" (eV, bar;
+# velocities are zero, so the pressure is the virial alone) to lammps_energies.txt
+# and writes forces_<frame>.dump (id fx fy fz), all in the current directory, which must hold frame_<i>.data.
+# Optional: -var root <project root> (default ../.., i.e. run from tests/model_check), -var model <file>.
+
+variable        root  index ../..
+variable        model index ${root}/models/run5_ep301.nequip.pt2
+variable        model index /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+variable        dt    index 0.001
+variable        f     index ${frames}
+variable        f     index 0 767 800 1003 1005 1131 1270 1303 1507 1508 1541 1663 2013
+shell           rm -f lammps_energies.txt
+
+label           loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_0.data
+Reading data file ...
+  triclinic box = (0 0 0) to (17.130452 14.835408 17.513606) with tilt (-8.5652261 0 0)
+WARNING: Triclinic box skew is large. LAMMPS will run inefficiently. (src/domain.cpp:221)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  144 atoms
+  read_data CPU = 0.081 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+32 atoms in group Ge
+group           Sb type 2
+32 atoms in group Sb
+group           Te type 3
+80 atoms in group Te
+group           C  type 4
+0 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_0.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+
+CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE
+
+Your simulation uses code contributions which should be cited:
+
+- KOKKOS package: https://doi.org/10.1145/3731599.3767498
+
+@inproceedings{Johansson25,
+ author = {A. Johansson and E. Weinberg and C. Trott and M. McCarthy and S. Moore},
+ title = {{LAMMPS-KOKKOS}: {P}erformance Portable Molecular Dynamics Across Exascale Architectures},
+ year = 2025,
+ booktitle = {Proceedings of the SC '25 Workshops of the International Conference for High Performance Computing,
+  Networking, Storage and Analysis},
+ pages = {1217–1232},
+}
+
+CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE
+
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 4 3 3
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   3.8233417      1135.2985      10333.602      2723.9041     -131.7159       1436.267      -1466.7249    
+Loop time of 0.000134021 on 1 procs for 0 steps with 144 atoms
+
+73.9% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.000134   |            |       |100.00
+
+Nlocal:            144 ave         144 max         144 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:            954 ave         954 max         954 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:         6678 ave        6678 max        6678 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 6678
+Ave neighs/atom = 46.375
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_767.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (24.12 24.12 36.18)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  768 atoms
+  read_data CPU = 0.024 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+153 atoms in group Ge
+group           Sb type 2
+154 atoms in group Sb
+group           Te type 3
+384 atoms in group Te
+group           C  type 4
+77 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_767.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 4 4 6
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   75.082237      3410.3631      3345.691       3487.9979     -701.9747       97.508163      603.07166    
+Loop time of 0.000151765 on 1 procs for 0 steps with 768 atoms
+
+73.1% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0001518  |            |       |100.00
+
+Nlocal:            768 ave         768 max         768 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           2085 ave        2085 max        2085 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        40722 ave       40722 max       40722 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 40722
+Ave neighs/atom = 53.023438
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_800.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (16.646943 16.646943 16.646943)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  160 atoms
+  read_data CPU = 0.010 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+32 atoms in group Ge
+group           Sb type 2
+32 atoms in group Sb
+group           Te type 3
+80 atoms in group Te
+group           C  type 4
+16 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_800.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 3 3 3
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   13.839837      274.19381      4180.0765      1247.1354      3372.6432     -1835.7861     -1018.1674    
+Loop time of 0.000158547 on 1 procs for 0 steps with 160 atoms
+
+73.8% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0001585  |            |       |100.00
+
+Nlocal:            160 ave         160 max         160 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:            954 ave         954 max         954 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:         8030 ave        8030 max        8030 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 8030
+Ave neighs/atom = 50.1875
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_1003.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (33.2 16.6 16.6)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  320 atoms
+  read_data CPU = 0.014 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+64 atoms in group Ge
+group           Sb type 2
+64 atoms in group Sb
+group           Te type 3
+160 atoms in group Te
+group           C  type 4
+32 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_1003.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 5 3 3
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   178.61496      81982.878      82113.829      85644.888     -1084.3659      5084.4411      390.85613    
+Loop time of 0.000119755 on 1 procs for 0 steps with 320 atoms
+
+73.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0001198  |            |       |100.00
+
+Nlocal:            320 ave         320 max         320 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           1380 ave        1380 max        1380 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        15926 ave       15926 max       15926 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 15926
+Ave neighs/atom = 49.76875
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_1005.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (16.686939 16.686939 16.686939)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  168 atoms
+  read_data CPU = 0.010 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+32 atoms in group Ge
+group           Sb type 2
+32 atoms in group Sb
+group           Te type 3
+80 atoms in group Te
+group           C  type 4
+24 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_1005.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 3 3 3
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   20.838351      1001.682      -2441.629      -22.326782     -383.5897       1941.2351      179.2624     
+Loop time of 0.000137959 on 1 procs for 0 steps with 168 atoms
+
+74.7% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.000138   |            |       |100.00
+
+Nlocal:            168 ave         168 max         168 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:            978 ave         978 max         978 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:         8862 ave        8862 max        8862 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 8862
+Ave neighs/atom = 52.75
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_1131.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (16.88252 16.88252 16.88252)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  176 atoms
+  read_data CPU = 0.009 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+32 atoms in group Ge
+group           Sb type 2
+32 atoms in group Sb
+group           Te type 3
+80 atoms in group Te
+group           C  type 4
+32 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_1131.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 3 3 3
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   33.617861      428.12416     -1470.6448     -8023.5616     -1963.1961      1077.8923      1060.1587    
+Loop time of 0.000184346 on 1 procs for 0 steps with 176 atoms
+
+75.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0001843  |            |       |100.00
+
+Nlocal:            176 ave         176 max         176 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:            994 ave         994 max         994 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:         9280 ave        9280 max        9280 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 9280
+Ave neighs/atom = 52.727273
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_1270.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (24.12 24.12 36.18)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  698 atoms
+  read_data CPU = 0.023 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+153 atoms in group Ge
+group           Sb type 2
+154 atoms in group Sb
+group           Te type 3
+384 atoms in group Te
+group           C  type 4
+7 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_1270.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 4 4 6
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0  -82.362694      1232.5722      2542.3209      2465.6087      483.77747      358.99572     -219.50618    
+Loop time of 9.6511e-05 on 1 procs for 0 steps with 698 atoms
+
+74.6% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 9.651e-05  |            |       |100.00
+
+Nlocal:            698 ave         698 max         698 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           1929 ave        1929 max        1929 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        33460 ave       33460 max       33460 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 33460
+Ave neighs/atom = 47.936963
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_1303.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (16.359207 16.359207 16.359207)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  146 atoms
+  read_data CPU = 0.009 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+32 atoms in group Ge
+group           Sb type 2
+32 atoms in group Sb
+group           Te type 3
+80 atoms in group Te
+group           C  type 4
+2 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_1303.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 3 3 3
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0  -10.281124      3493.2334     -462.52061     -9867.2323     -76.249777     -1766.8144     -117.98938    
+Loop time of 0.000148037 on 1 procs for 0 steps with 146 atoms
+
+75.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.000148   |            |       |100.00
+
+Nlocal:            146 ave         146 max         146 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:            880 ave         880 max         880 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:         6946 ave        6946 max        6946 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 6946
+Ave neighs/atom = 47.575342
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_1507.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (33.2 16.6 16.6)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  292 atoms
+  read_data CPU = 0.013 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+64 atoms in group Ge
+group           Sb type 2
+64 atoms in group Sb
+group           Te type 3
+160 atoms in group Te
+group           C  type 4
+4 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_1507.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 5 3 3
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   33.115163      1985.5737     -1581.5102     -618.66674     -1609.0894      849.10754      415.15022    
+Loop time of 0.000128551 on 1 procs for 0 steps with 292 atoms
+
+102.7% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0001286  |            |       |100.00
+
+Nlocal:            292 ave         292 max         292 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           1262 ave        1262 max        1262 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        13270 ave       13270 max       13270 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 13270
+Ave neighs/atom = 45.445205
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_1508.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (24.12 24.12 36.18)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  730 atoms
+  read_data CPU = 0.023 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+153 atoms in group Ge
+group           Sb type 2
+154 atoms in group Sb
+group           Te type 3
+384 atoms in group Te
+group           C  type 4
+39 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_1508.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 4 4 6
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   27.188024      1835.9462      1537.8616     -386.01756      229.32164      152.96943      1040.1536    
+Loop time of 0.000121508 on 1 procs for 0 steps with 730 atoms
+
+74.9% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0001215  |            |       |100.00
+
+Nlocal:            730 ave         730 max         730 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           1962 ave        1962 max        1962 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        36524 ave       36524 max       36524 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 36524
+Ave neighs/atom = 50.032877
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_1541.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (16.495139 16.495139 16.495139)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  152 atoms
+  read_data CPU = 0.009 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+32 atoms in group Ge
+group           Sb type 2
+32 atoms in group Sb
+group           Te type 3
+80 atoms in group Te
+group           C  type 4
+8 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_1541.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 3 3 3
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   2.6469098     -5659.2367     -6182.1152      2324.5715      738.88933      3461.1351     -720.87574    
+Loop time of 0.000151193 on 1 procs for 0 steps with 152 atoms
+
+99.2% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0001512  |            |       |100.00
+
+Nlocal:            152 ave         152 max         152 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:            894 ave         894 max         894 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:         7442 ave        7442 max        7442 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 7442
+Ave neighs/atom = 48.960526
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_1663.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (32.82 16.41 16.41)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  304 atoms
+  read_data CPU = 0.013 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+64 atoms in group Ge
+group           Sb type 2
+160 atoms in group Sb
+group           Te type 3
+64 atoms in group Te
+group           C  type 4
+16 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_1663.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 5 3 3
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   92.358006     -6789.6794     -3009.7633     -5671.8216     -1852.3945     -1499.3423     -722.46175    
+Loop time of 0.000115747 on 1 procs for 0 steps with 304 atoms
+
+76.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0001157  |            |       |100.00
+
+Nlocal:            304 ave         304 max         304 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           1311 ave        1311 max        1311 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        15082 ave       15082 max       15082 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 15082
+Ave neighs/atom = 49.611842
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+clear
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+read_data       frame_2013.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (24.12 24.12 36.18)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  691 atoms
+  read_data CPU = 0.023 seconds
+include         ${root}/common/in.potential
+include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.G.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+153 atoms in group Ge
+group           Sb type 2
+154 atoms in group Sb
+group           Te type 3
+384 atoms in group Te
+group           C  type 4
+0 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump            fr all custom 1 forces_2013.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+WARNING: No fixes with time integration, atoms won't move
+For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 4 4 6
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   77.198907      18954.388      18721.19       18147.568      187.36868     -2589.0452     -564.70963    
+Loop time of 0.000134352 on 1 procs for 0 steps with 691 atoms
+
+96.8% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0001344  |            |       |100.00
+
+Nlocal:            691 ave         691 max         691 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           1890 ave        1890 max        1890 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        32608 ave       32608 max       32608 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 32608
+Ave neighs/atom = 47.18958
+Neighbor list builds = 0
+Dangerous builds = 0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop
+Total wall time: 0:00:02

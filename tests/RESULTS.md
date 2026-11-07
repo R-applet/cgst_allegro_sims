@@ -28,11 +28,17 @@ LAMMPS runs go through `common/run_lmp.sh` with `models/run5_ep301.nequip.pt2` a
   - So the model's host code is tied to the CPU of the node it was compiled on (production: an A30 b-node). The b-node
     CPU and the exact missing instructions were not checked.
   - 1 GPU, 13824 atoms, analysis on: **2.93 ns/day (G) and 3.13 ns/day (N)**, against 1.71 on an A30 (about 1.8×).
-  - The recompiled files (`a100_model/run5_ep301.{G,N}.nequip.pt2`) are not yet promoted to `models/`. A100
-    production needs that, plus a per-node-type model choice in the submit scripts.
+  - Promoted to `models/run5_ep301.{G,N}.nequip.pt2`. `common/defaults.sh` selects the file by hostname, and the
+    production submit scripts pass it as `-var model`. End-to-end check: `model_select/` (see below).
 - **Slurm quirk**: when `--mem` forces more CPUs than `--cpus-per-task`, `srun` aborts with
   `cpus-per-task set by two different environment variables`. `run_lmp.sh` now unsets `SLURM_TRES_PER_TASK` and
   passes `--cpus-per-task` explicitly.
+
+## Per-node model selection (`model_select/`): PASS (jobs 12239230 on g005, 12239231 on n003)
+`common/defaults.sh` resolved `MODEL` from the hostname (G on g005, N on n003, both nodes new to these files). Each
+run's model_check energies are identical to production (max |ΔE| = 0, 13 frames). The mapping logic (b/d → A30
+file, g → G, n → N, anything else aborts before LAMMPS starts, `MODEL=` overrides) was also checked on the login
+node with a stub `hostname`.
 
 ## 1a. Smoke (`smoke/`): PASS (job 12234221; rerun after the `nxb`→`ncb` rename: job 12235755; verdict from
 `smoke/check_smoke.py` → `smoke/RESULT.txt`)

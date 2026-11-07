@@ -25,6 +25,24 @@ AOTInductor output is not byte-reproducible, so the hash above identifies this s
 
 `tests/model_check` confirms that this file reproduces the checkpoint's energies and forces (see `tests/RESULTS.md`).
 
+## Compiled files per node type
+An AOT-compiled model's host code runs only on the CPU type it was compiled on. On other CPUs it dies with
+`Illegal instruction` in the model loader (`tests/RESULTS.md`, environment probe). `common/defaults.sh` picks the
+file from the hostname when a job starts.
+
+| file | compiled on | used on | sha256 | validated |
+|---|---|---|---|---|
+| `run5_ep301.nequip.pt2` | a30 b-node (reference run, 2026-11-05) | a30 b-nodes; d-nodes assumed, untested | `0a1a1b31…01b1` | all of `tests/`, 1a–1i |
+| `run5_ep301.G.nequip.pt2` | a100-40gb gilbreth-g000 (AMD EPYC 7662), 2026-11-06 | a100-40gb g-nodes | `94f52d392dedbaadad35efa74c30058a9700988986419db0616aa90ca6249b33` | `tests/a100_model` (g000); `tests/model_select` (g005) |
+| `run5_ep301.N.nequip.pt2` | a100-40gb gilbreth-n019 (AMD EPYC 7413), 2026-11-06 | a100-40gb n-nodes | `4077268cb713995582f2d0a402bfecb8f9dcbbc4de75eb251c555b275fe819f4` | `tests/a100_model` (n019); `tests/model_select` (n003); also ran `tests/glass_relax` on n002 and n010 |
+
+- All three are the same model: max |ΔE| = 0 on the 13 model_check frames. They are not byte-identical, because
+  AOTInductor output depends on the build machine.
+- All were compiled from the same checkpoint with `compile_model.sh`. G and N copies are from `tests/a100_model/`;
+  the hashes were checked against those copies.
+- a100-80gb (strachan's k- and i-nodes) has no compatible file yet. Build one there with `compile_model.sh` and add
+  it to `common/defaults.sh`.
+
 ## Container
 
 | | |

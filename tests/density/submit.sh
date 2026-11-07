@@ -14,6 +14,6 @@
 set -euo pipefail
 cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ../..)
-source $ROOT/common/defaults.sh
-$ROOT/common/run_lmp.sh 1 -in in.density -log log.density_x0_300K -var cell x0 -var T 300 -var dt $DT
+source $ROOT/common/defaults.sh             # DT, MODEL (per node type)
+$ROOT/common/run_lmp.sh 1 -in in.density -log log.density_x0_300K -var cell x0 -var T 300 -var dt $DT -var model $MODEL
 cat density_*.txt | tee RESULT.txt
