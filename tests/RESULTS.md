@@ -212,6 +212,32 @@ for 20 ps, density averaged over the last 10 ps (`glass_relax/RESULT.txt`):
   The rerun reproduces the class densities within 0.003 g/cc (first run kept in `glass_relax/run1/`; GPU runs on
   different nodes are not bit-identical).
 
+## 1j. Model vs DFT equations of state on the training EOS frames (`am_eos/`; job 12252986 on a perc A100)
+Each `*_EOS_Eform_train.xyz` set (from `/depot/prism/data/rapplet/cgst-vasp-data/xyz_files/train/`) is one
+144-atom structure (plus C), rescaled uniformly to ~24 volumes, with fixed fractional coordinates and unrelaxed ions
+(the amorphous frame has F_max ≈ 1.5–3 eV/Å, a thermal snapshot). The zero crossing of the static P(V) (cubic fit)
+gives the following (`am_eos/RESULT.txt`, per frame in `frames.csv`):
+
+| set | ρ0 DFT (g/cc) | ρ0 model (g/cc) | model − DFT | P bias (kbar) |
+|---|---|---|---|---|
+| GST_AM_EOS | 6.142 | 6.169 | +0.44% | −1.9 |
+| GST_CUB_EOS | 6.303 | 6.300 | −0.04% | +4.0 |
+| GST_HEX_EOS | 6.385 | 6.353 | −0.51% | +5.3 |
+| C1/C5/C10/C14/C18 AM_EOS | 6.13 / 6.16 / 6.12 / 6.11 / 6.06 | | +0.41 to +0.62% | −1.9 to −3.3 |
+| C1/C5/C10 CUB_EOS | 6.35 / 6.46 / 6.62 | | −0.34 / −0.84 / −1.61% | +5 to +10 |
+
+- **The model reproduces DFT's EOS on these structures** (these frames are training data). The amorphous zero is
+  0.4–0.6% too dense, consistent with 1h's ≈ −2 kbar bias. For GST, the fitting error narrows the glass–cubic gap
+  by only ≈ 0.5% (amorphous +0.44%, cubic −0.04%). With C, the crystal shifts grow to −1.6% (C10 cubic).
+- **DFT puts this amorphous structure 2.6% less dense than the cubic crystal** (6.14 vs 6.30 static). That is
+  smaller than the experimental ~6–7%, so part of 1g's "7% error" is the DFT reference, not the model. Measured
+  against DFT, the model glass (6.287 at 300 K) is ≈ 2.4% too dense (≈ 3% after a thermal correction of a few
+  tenths of a percent to the static value).
+- **Reading:** the model is right on the structure it was fitted to, yet its MD relaxes amorphous GST to ≈ 6.29
+  (1g, 1i). The excess density therefore comes from the structural relaxation, which a frozen-ion EOS does not
+  sample. This is still consistent with 1h's PES-hole hypothesis, but the EOS cannot tell whether DFT would relax the
+  same way. Only DFT on the relaxed structures (`glass_relax/relaxed_for_dft.xyz`) can settle that.
+
 ## Analysis environment (`env/`)
 `env/environment.yml` → `env/cgst-ana` (exact build: `env/environment.lock.txt`): python 3.12, numpy 2.2.6,
 scipy 1.15.2, matplotlib 3.10.9, OVITO 3.17.2 (from conda.ovito.org). Each package names its consumer in the yml.
