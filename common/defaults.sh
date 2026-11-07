@@ -14,7 +14,7 @@ if [ -z "${MODEL:-}" ]; then
     _models=$(cd "$(dirname "${BASH_SOURCE[0]}")/../models" && pwd)
     case "$(hostname -s)" in
         gilbreth-b*) MODEL=$_models/run5_ep301.nequip.pt2 ;;     # a30 b-nodes (compiled there)
-        gilbreth-d*) MODEL=$_models/run5_ep301.nequip.pt2 ;;     # a30 d-nodes: untested, assumed same as b
+        gilbreth-d*) MODEL=$_models/run5_ep301.nequip.pt2 ;;     # a30 d-nodes (ran there: tests/RESULTS.md, 1d)
         gilbreth-g*) MODEL=$_models/run5_ep301.G.nequip.pt2 ;;   # a100-40gb g-nodes, AMD EPYC 7662
         gilbreth-n*) MODEL=$_models/run5_ep301.N.nequip.pt2 ;;   # a100-40gb n-nodes, AMD EPYC 7413
         *) echo "common/defaults.sh: no compiled model for node $(hostname -s); build one there with" \

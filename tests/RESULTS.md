@@ -17,7 +17,7 @@ LAMMPS runs go through `common/run_lmp.sh` with `models/run5_ep301.nequip.pt2` a
   no LAMMPS banner (`lmp_help_stable.txt`); `lammps_debug.sif` printed the same errors, then ran. Through the
   production launch path both work (1f).
 - GPUs: the A30 on gilbreth-b006 reports compute capability 8.0, matching the sm_80 compiled model. Every A30 job so
-  far ran on b-nodes (b003, b006, b008, b013); d-nodes are untested.
+  far ran on b-nodes (b003, b006, b008, b013) or, since 1d, d-nodes (d000, d005).
 - **A100 nodes: the production model file crashes there; a model recompiled on the A100 node works.**
   - With `models/run5_ep301.nequip.pt2`, `lmp` dies with `Illegal instruction` inside the
     `torch::inductor::AOTIModelContainerRunner` constructor (the CUDA subclass on a100-40gb), the AOT model loader. Seen on a100-80gb k022 and i002
@@ -88,16 +88,26 @@ Margin = threshold / observed. The thresholds were fixed before the run and are 
   at a stale offset (syntax error at line 15). `RESULT.txt` was then produced by hand. From now on, files that jobs
   read are replaced atomically (write a temp file, then `mv`), never edited in place while jobs run.
 
-## 1d/1e. Scaling and analysis overhead (`scaling/`): partial
+## 1d/1e. Scaling and analysis overhead (`scaling/`): done → **2 A30s per production job; keep on-the-fly analysis**
 13824 atoms (3×3×3 x10), NPT 600 K, dt = 2 fs; timed 3000-step run (`python3 scaling/summarize.py`):
 
-| run | ns/day | steps/s | katom-steps/s | job |
+| run | ns/day | steps/s | katom-steps/s | job (node) |
 |---|---|---|---|---|
 | a30, 1 GPU, analysis on | 1.69 | 9.8 | 134.9 | 12234704 (b008) |
+| a30, 2 GPUs, analysis on | 3.35 | 19.4 | 267.8 | 12234299 (d005) |
+| a30, 2 GPUs, analysis off (1e) | 3.33 | 19.3 | 266.3 | 12234301 (d000) |
+| a100-40gb g-node, 1 GPU, analysis on (G model) | 2.93 | 16.9 | 234.0 | 12236152 (g000), `a100_model/` |
+| a100-40gb n-node, 1 GPU, analysis on (N model) | 3.13 | 18.1 | 250.2 | 12236153 (n019), `a100_model/` |
 
-Still pending: a30 with 2 GPUs (analysis on and off; the off run is 1e), and a100-80gb i-nodes with 1 and 2 GPUs
-(jobs 12234299, 12234301, 12234705, 12234706). The 3-GPU a30 run (12234300) was cancelled: strachan's 6-A30 cap,
-with 4 held long-term by another user, means production can never get 3 A30s, so the number would change nothing.
+- **2 A30s scale at 99% efficiency** (1.98×). That supports the 2-GPU default in the production submit scripts.
+- **1e: the on-the-fly analysis costs nothing measurable** (3.35 vs 3.33 ns/day). The `fix STORE/ATOM` Kokkos
+  fallback warning (`log.a30_g1_ana1`) has no measurable cost, so the per-species MSD columns stay.
+- One A100 ≈ 2 A30s. A100 multi-GPU scaling was not measured: the 2- and 4-GPU A100 benches ran with the
+  A30-built model and crashed. The "incomplete" rows in `summarize.py` are those runs and the a100-80gb ones.
+  Until A100 scaling is measured, run 1 GPU per job on A100 (it uses the 10 perc GPUs best).
+- The 3-GPU a30 run (12234300) was cancelled: strachan's 6-A30 cap, with 4 held long-term by another user, means
+  production can never get 3 A30s.
+- Both 2-GPU runs landed on a30 d-nodes, so **d-nodes run the A30-built model**, which was untested before.
 
 ## Tuning: ghost cutoff and PMIx noise (`tuning/`; job 12235756): no change adopted
 13824 atoms, 1 A30, analysis on (`tuning/RESULT.txt`):

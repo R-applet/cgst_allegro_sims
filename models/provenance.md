@@ -32,7 +32,7 @@ file from the hostname when a job starts.
 
 | file | compiled on | used on | sha256 | validated |
 |---|---|---|---|---|
-| `run5_ep301.nequip.pt2` | a30 b-node (reference run, 2026-11-05) | a30 b-nodes; d-nodes assumed, untested | `0a1a1b31…01b1` | all of `tests/`, 1a–1i |
+| `run5_ep301.nequip.pt2` | a30 b-node (reference run, 2026-11-05) | a30 b- and d-nodes (d000, d005: `tests/scaling`, 1d) | `0a1a1b31…01b1` | all of `tests/`, 1a–1i |
 | `run5_ep301.G.nequip.pt2` | a100-40gb gilbreth-g000 (AMD EPYC 7662), 2026-11-06 | a100-40gb g-nodes | `94f52d392dedbaadad35efa74c30058a9700988986419db0616aa90ca6249b33` | `tests/a100_model` (g000); `tests/model_select` (g005) |
 | `run5_ep301.N.nequip.pt2` | a100-40gb gilbreth-n019 (AMD EPYC 7413), 2026-11-06 | a100-40gb n-nodes | `4077268cb713995582f2d0a402bfecb8f9dcbbc4de75eb251c555b275fe819f4` | `tests/a100_model` (n019); `tests/model_select` (n003); also ran `tests/glass_relax` on n002 and n010 |
 
