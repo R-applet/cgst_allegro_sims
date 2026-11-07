@@ -1,0 +1,25 @@
+# large or regenerable simulation outputs
+*.lammpstrj
+*.lammpstrj.gz
+*.restart*
+restart.*
+*.pt2
+*.ckpt
+*.npy
+slurm-*.out
+# generated structures (rebuild with structures/build_supercells.py)
+structures/111/
+structures/222/
+structures/333/
+# data files under tests/: LAMMPS outputs, plus model_check/frame_*.data written by model_check.py prepare.
+# Together with *.npy (reference forces), 1b inputs are not tracked; rerun `model_check.py prepare` to regenerate.
+tests/**/*.data
+meltquench/runs/
+recryst/runs/
+# conda env
+env/cgst-ana/
+env/create.log
+# vendored skill files
+skills/
+# python bytecode
+__pycache__/

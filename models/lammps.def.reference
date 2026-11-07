@@ -1,0 +1,83 @@
+Bootstrap: docker
+From: nvidia/cuda:12.6.0-devel-ubuntu22.04
+
+%labels
+    Author Rushik Desai
+    Description LAMMPS with Allegro, NequIP AOT, KOKKOS, and PyTorch 2.8
+
+%environment
+    export CONDA_DIR=/opt/conda
+    export PATH=${CONDA_DIR}/envs/lmp_env/bin:${CONDA_DIR}/bin:/usr/local/bin:$PATH
+    export LD_LIBRARY_PATH=${CONDA_DIR}/envs/lmp_env/lib:$LD_LIBRARY_PATH
+    export OMPI_MCA_btl_vader_single_copy_mechanism=none
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    
+    # 1. Create Purdue Cluster Mount Points
+    mkdir -p /apps /depot /scratch
+
+    # 2. System Dependencies
+    apt-get update && apt-get install -y \
+        build-essential gcc-12 g++-12 git wget \
+        libopenmpi-dev openmpi-bin libmkl-full-dev
+
+    # 3. Install Miniforge
+    wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O /tmp/miniforge.sh
+    bash /tmp/miniforge.sh -b -p /opt/conda
+    export PATH=/opt/conda/bin:$PATH
+    rm /tmp/miniforge.sh
+
+    # 4. Create Environment with Python 3.13 AND modern CMake
+    mamba create -y -n lmp_env python=3.13 cmake
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate lmp_env
+
+    # 5. Install PyTorch 2.8 and ML Potentials
+    pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu126
+    pip install nequip-allegro
+
+    # 6. Fetch LAMMPS and Allegro Plugin
+    cd /opt
+    git clone -b release --depth 1 https://github.com/lammps/lammps.git lammps_source
+
+    sed -i '/Kokkos::parallel_for(nall, f);/i \      f.sharedsize = 0;' /opt/lammps_source/src/KOKKOS/npair_kokkos.cpp
+
+
+    git clone --depth=1 https://github.com/mir-group/pair_nequip_allegro
+    
+    cd pair_nequip_allegro 
+    ./patch_lammps.sh /opt/lammps_source
+    
+    cd /opt/lammps_source 
+    mkdir build && cd build
+
+    # Bypass PyTorch's auto-detection (8.0 corresponds to Ampere/A100)
+    export TORCH_CUDA_ARCH_LIST="8.0"
+
+    # 7. Execute CMake (Using the modern version from Conda)
+    cmake ../cmake/ \
+        -D CMAKE_C_COMPILER=gcc-12 \
+        -D CMAKE_CXX_COMPILER=g++-12 \
+        -D CMAKE_BUILD_TYPE=Debug \
+        -D NEQUIP_AOT_COMPILE=ON \
+        -D CMAKE_PREFIX_PATH=$(python -c 'import torch;print(torch.utils.cmake_prefix_path)') \
+        -D MKL_INCLUDE_DIR=/usr/include/mkl \
+        -D PKG_KOKKOS=ON \
+        -D Kokkos_ENABLE_CUDA=ON \
+        -D Kokkos_ARCH_AMPERE80=ON \
+        -D Kokkos_ARCH_HOSTARCH=ON \
+        -D PKG_MOLECULE=yes \
+        -D PKG_KSPACE=yes \
+        -D PKG_ML-ALLEGRO=yes \
+        -D PKG_PYTHON=yes \
+	    -D PKG_REAXFF=yes \
+        -D PKG_SHOCK=yes \
+        -D PYTHON_EXECUTABLE=$(which python)
+
+    # 8. Compile and Install
+    make -j4
+    cp lmp /usr/local/bin/lmp
+
+%runscript
+    exec lmp "$@"

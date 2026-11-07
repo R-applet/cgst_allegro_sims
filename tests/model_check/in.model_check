@@ -1,0 +1,28 @@
+# Test 1b: single-point energy and forces of the compiled model on each frame written by model_check.py prepare.
+# Run with -var frames "<i j k ...>" (the list in frames.txt). Appends "frame PE pxx pyy pzz pyz pxz pxy" (eV, bar;
+# velocities are zero, so the pressure is the virial alone) to lammps_energies.txt
+# and writes forces_<frame>.dump (id fx fy fz), all in the current directory, which must hold frame_<i>.data.
+# Optional: -var root <project root> (default ../.., i.e. run from tests/model_check), -var model <file>.
+
+variable        root  index ../..
+variable        model index ${root}/models/run5_ep301.nequip.pt2
+variable        dt    index 0.001
+variable        f     index ${frames}
+shell           rm -f lammps_energies.txt
+
+label           loop
+clear
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+include         ${root}/common/in.potential
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
+dump            fr all custom 1 forces_${f}.dump id fx fy fz
+dump_modify     fr sort id format float %20.12g
+run             0
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)" &
+                append lammps_energies.txt screen no
+undump          fr
+next            f
+jump            SELF loop

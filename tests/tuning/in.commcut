@@ -1,0 +1,21 @@
+# Review items 8 (ghost cutoff) and 10 (PMIx noise). 3x3x3 x10, NPT 600 K, dt 2 fs, analysis on.
+# Run with -var cc <ghost cutoff, A>: overrides comm_modify from common/in.potential, then a timed 3000-step run
+# and a 1 ps RDF window to 6.0 A, which LAMMPS refuses if the ghost shell is too thin.
+units           metal
+atom_style      atomic
+boundary        p p p
+variable        model     index ../../models/run5_ep301.nequip.pt2
+variable        dt        index 0.002
+variable        thermo_ps index 1.0
+variable        out       index commcut_${cc}
+read_data       ../../structures/333/x10.data
+include         ../../common/in.potential
+comm_modify     cutoff ${cc}
+include         ../../common/in.analysis
+velocity        all create 600.0 87287 mom yes rot yes dist gaussian
+fix             npt all npt temp 600.0 600.0 $(100*dt) iso 0.0 0.0 $(1000*dt)
+run             500
+run             3000
+variable        rdf_ps   index 1.0
+variable        rdf_file index rdf_cc${cc}.dat
+include         ../../common/in.rdf

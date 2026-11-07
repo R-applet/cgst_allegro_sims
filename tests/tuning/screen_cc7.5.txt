@@ -1,0 +1,281 @@
+--------------------------------------------------------------------------
+A requested component was not found, or was unable to be opened.  This
+means that this component is either not installed or is unable to be
+used on your system (e.g., sometimes this means that shared libraries
+that the component requires are unable to be found/loaded).  Note that
+PMIx stopped checking at the first component that it did not find.
+
+Host:      gilbreth-b003.rcac.purdue.edu
+Framework: psec
+Component: munge
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+A requested component was not found, or was unable to be opened.  This
+means that this component is either not installed or is unable to be
+used on your system (e.g., sometimes this means that shared libraries
+that the component requires are unable to be found/loaded).  Note that
+PMIx stopped checking at the first component that it did not find.
+
+Host:      gilbreth-b003.rcac.purdue.edu
+Framework: psec
+Component: munge
+--------------------------------------------------------------------------
+
+[gilbreth-b003.rcac.purdue.edu:702688] PMIX ERROR: ERROR in file ../../../../../../src/mca/gds/ds12/gds_ds12_lock_pthread.c at line 169
+LAMMPS (30 Mar 2026)
+KOKKOS mode with Kokkos version 5.0.2 is enabled
+  using double precision
+  using view layout = legacy
+  will use up to 1 GPU(s) per node
+  using 1 OpenMP thread(s) per MPI task
+Reading data file ...
+  orthogonal box = (0 0 0) to (72.36 72.36 72.36)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  13824 atoms
+  read_data CPU = 0.240 seconds
+NequIP/Allegro is using input precision d and output precision d
+NequIP/Allegro: Loading model from ../../models/run5_ep301.nequip.pt2
+Type mapping:
+NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
+0 | Ge | 1 | Ge
+1 | Sb | 2 | Sb
+2 | Te | 3 | Te
+3 | C | 4 | C
+ti=0 tj=0 cut=6.00
+ti=0 tj=1 cut=6.00
+ti=0 tj=2 cut=6.00
+ti=0 tj=3 cut=6.00
+ti=1 tj=0 cut=6.00
+ti=1 tj=1 cut=6.00
+ti=1 tj=2 cut=6.00
+ti=1 tj=3 cut=6.00
+ti=2 tj=0 cut=6.00
+ti=2 tj=1 cut=6.00
+ti=2 tj=2 cut=6.00
+ti=2 tj=3 cut=6.00
+ti=3 tj=0 cut=6.00
+ti=3 tj=1 cut=6.00
+ti=3 tj=2 cut=6.00
+ti=3 tj=3 cut=6.00
+2754 atoms in group Ge
+2781 atoms in group Sb
+6912 atoms in group Te
+1377 atoms in group C
+
+CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE
+
+Your simulation uses code contributions which should be cited:
+- KOKKOS package: https://doi.org/10.1145/3731599.3767498
+The log file lists these citations in BibTeX format.
+
+CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE
+
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 11 11 11
+  3 neighbor lists, perpetual/occasional/extra = 1 2 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+  (2) compute orientorder/atom/kk, occasional, copy from (1)
+      attributes: full, newton on, kokkos_device
+      pair build: copy/kk/device
+      stencil: none
+      bin: none
+  (3) compute coord/atom/kk, occasional, copy from (1)
+      attributes: full, newton on, kokkos_device
+      pair build: copy/kk/device
+      stencil: none
+      bin: none
+Setting up Verlet run ...
+  Unit style    : metal
+  Current step  : 0
+  Time step     : 0.002
+WARNING: Fix STORE/ATOM not compatible with sending data in Kokkos communication (src/KOKKOS/comm_kokkos.cpp:934)
+WARNING: Fix with atom-based arrays not compatible with sending data in Kokkos communication, switching to legacy exchange/border communication (src/KOKKOS/comm_kokkos.cpp:941)
+WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
+WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
+Per MPI rank memory allocation (min/avg/max) = 12.43 | 12.43 | 12.43 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
+         0   0              600           -14931.26       378874.76      27.407028      6.2987571      0.35183604     0.17397056     2.0058524e-25  5.6697011e-25  3.5502527e-25  1.0804239e-26  1            
+       500   1              787.32814     -167.83753      396237.45      28.66301       6.0227524      0.21090326     0.30966342     0.86207897     0.83603082     0.90334438     14.183782      0.67975984   
+Loop time of 50.0715 on 1 procs for 500 steps with 13824 atoms
+
+Performance: 1.726 ns/day, 13.909 hours/ns, 9.986 timesteps/s, 138.043 katom-step/s
+99.7% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 49.4       | 49.4       | 49.4       |   0.0 | 98.66
+Neigh   | 0.091541   | 0.091541   | 0.091541   |   0.0 |  0.18
+Comm    | 0.30438    | 0.30438    | 0.30438    |   0.0 |  0.61
+Output  | 0.0061852  | 0.0061852  | 0.0061852  |   0.0 |  0.01
+Modify  | 0.14147    | 0.14147    | 0.14147    |   0.0 |  0.28
+Other   |            | 0.1281     |            |       |  0.26
+
+Nlocal:          13824 ave       13824 max       13824 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:          10517 ave       10517 max       10517 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:       686282 ave      686282 max      686282 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 686282
+Ave neighs/atom = 49.644242
+Neighbor list builds = 105
+Dangerous builds = 0
+Setting up Verlet run ...
+  Unit style    : metal
+  Current step  : 500
+  Time step     : 0.002
+WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
+WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
+Per MPI rank memory allocation (min/avg/max) = 12.26 | 12.26 | 12.26 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
+       500   1              787.32814     -167.83753      396237.45      28.66301       6.0227524      0.21090326     0.30966342     0.86207897     0.83603082     0.90334438     14.183782      0.67975984   
+      1000   2              603.33748     -525.74987      392347.98      28.381654      6.0824579      0.16646659     0.23513507     0.81143234     0.82642035     0.88863167     14.872251      0.69408275   
+      1500   3              610.68873      51.086162      392499.23      28.392595      6.080114       0.16256476     0.24240207     0.89422101     0.92840346     0.96535613     15.174497      0.68590856   
+      2000   4              596.17035      77.496512      391654.06      28.331457      6.0932346      0.15525836     0.23368423     0.87797999     0.97660285     0.99273823     15.195037      0.67042824   
+      2500   5              599.94846     -332.50781      391877.25      28.347602      6.0897642      0.15466384     0.22632453     0.9856778      1.0443202      1.0543394      15.432498      0.67795139   
+      3000   6              600.67937     -437.02586      392280.06      28.376741      6.083511       0.15339363     0.22329159     1.0203405      1.1243031      1.1015106      15.648293      0.66710069   
+      3500   7              599.68593     -25.884582      391986.53      28.355507      6.0880666      0.15095781     0.22800959     1.0636898      1.1370612      1.1188534      15.648254      0.67382812   
+Loop time of 304.556 on 1 procs for 3000 steps with 13824 atoms
+
+Performance: 1.702 ns/day, 14.100 hours/ns, 9.850 timesteps/s, 136.172 katom-step/s
+99.7% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 301.87     | 301.87     | 301.87     |   0.0 | 99.12
+Neigh   | 0.30144    | 0.30144    | 0.30144    |   0.0 |  0.10
+Comm    | 1.1012     | 1.1012     | 1.1012     |   0.0 |  0.36
+Output  | 0.038239   | 0.038239   | 0.038239   |   0.0 |  0.01
+Modify  | 0.74888    | 0.74888    | 0.74888    |   0.0 |  0.25
+Other   |            | 0.5001     |            |       |  0.16
+
+Nlocal:          13824 ave       13824 max       13824 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:          10528 ave       10528 max       10528 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:       697492 ave      697492 max      697492 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 697492
+Ave neighs/atom = 50.45515
+Neighbor list builds = 347
+Dangerous builds = 0
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 11 11 11
+  4 neighbor lists, perpetual/occasional/extra = 1 3 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+  (2) compute orientorder/atom/kk, occasional, copy from (1)
+      attributes: full, newton on, kokkos_device
+      pair build: copy/kk/device
+      stencil: none
+      bin: none
+  (3) compute coord/atom/kk, occasional, copy from (1)
+      attributes: full, newton on, kokkos_device
+      pair build: copy/kk/device
+      stencil: none
+      bin: none
+  (4) compute rdf, occasional
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton
+      stencil: half/bin/3d
+      bin: standard
+Setting up Verlet run ...
+  Unit style    : metal
+  Current step  : 3500
+  Time step     : 0.002
+WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
+WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
+Per MPI rank memory allocation (min/avg/max) = 13.34 | 13.34 | 13.34 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
+      3500   7              599.68593     -25.884582      391986.53      28.355507      6.0880666      0.15095781     0.22800959     1.0636898      1.1370612      1.1188534      15.648254      0.67382812   
+Loop time of 0.000360202 on 1 procs for 0 steps with 13824 atoms
+
+100.2% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0003602  |            |       |100.00
+
+Nlocal:          13824 ave       13824 max       13824 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:          10528 ave       10528 max       10528 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:       697454 ave      697454 max      697454 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 697454
+Ave neighs/atom = 50.452402
+Neighbor list builds = 0
+Dangerous builds = 0
+Setting up Verlet run ...
+  Unit style    : metal
+  Current step  : 3500
+  Time step     : 0.002
+WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
+WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
+Per MPI rank memory allocation (min/avg/max) = 13.34 | 13.34 | 13.34 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
+      3500   7              599.68593     -25.884582      391986.53      28.355507      6.0880666      0.15095781     0.22800959     1.0636898      1.1370612      1.1188534      15.648254      0.67382812   
+      4000   8              600.52197      174.58843      391463.62      28.317681      6.0961988      0.14974807     0.23045178     1.0845544      1.1529979      1.126556       15.789873      0.66963252   
+Loop time of 51.4296 on 1 procs for 500 steps with 13824 atoms
+
+Performance: 1.680 ns/day, 14.286 hours/ns, 9.722 timesteps/s, 134.397 katom-step/s
+99.6% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 50.48      | 50.48      | 50.48      |   0.0 | 98.15
+Neigh   | 0.091705   | 0.091705   | 0.091705   |   0.0 |  0.18
+Comm    | 0.16532    | 0.16532    | 0.16532    |   0.0 |  0.32
+Output  | 0.0065671  | 0.0065671  | 0.0065671  |   0.0 |  0.01
+Modify  | 0.60881    | 0.60881    | 0.60881    |   0.0 |  1.18
+Other   |            | 0.07751    |            |       |  0.15
+
+Nlocal:          13824 ave       13824 max       13824 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:          10524 ave       10524 max       10524 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         349156 ave      349156 max      349156 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:       698278 ave      698278 max      698278 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 698278
+Ave neighs/atom = 50.512008
+Neighbor list builds = 51
+Dangerous builds = 0
+Total wall time: 0:06:47

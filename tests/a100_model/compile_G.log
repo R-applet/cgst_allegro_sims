@@ -1,0 +1,12 @@
+[2026-11-06 16:55:16,149][nequip.scripts.compile][INFO] - [rank: 0] Compiling for device: cuda
+[2026-11-06 16:55:16,150][nequip.model.saved_models.load_utils][INFO] - [rank: 0] Loading model from /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/run5_ep301.ckpt ...
+[2026-11-06 16:55:16,153][nequip.model.saved_models.checkpoint][INFO] - [rank: 0] Loading model from checkpoint file: /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/run5_ep301.ckpt ...
+/depot/prism/data/rushik/zbl_updated/nequip/nequip/model/saved_models/checkpoint.py:69: UserWarning: `torch` versions differ between the checkpoint file (2.12.1+cu130) and the current run (2.8.0+cu126) -- `ModelFromCheckpoint` will be built with the current run's versions, but please check that this decision is as intended.
+  warnings.warn(
+/opt/conda/envs/lmp_env/lib/python3.13/site-packages/lightning/pytorch/utilities/migration/utils.py:56: The loaded checkpoint was produced with Lightning v2.6.5, which is newer than your current Lightning version: v2.6.1
+[2026-11-06 16:55:16,557][nequip.model.saved_models.checkpoint][INFO] - [rank: 0] Loading model from checkpoint file: /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/outputs/2026-10-22/09-32-54/best.ckpt ...
+[2026-11-06 16:55:16,708][nequip.train.ema][INFO] - [rank: 0] Loading EMA weights for evaluation model.
+[2026-11-06 16:55:16,740][nequip.train.ema][INFO] - [rank: 0] Loading EMA weights for evaluation model.
+[2026-11-06 16:55:16,778][nequip.data.datamodule._base_datamodule][INFO] - [rank: 0] Found 1 training dataset(s), 1 validation dataset(s), 1 test dataset(s), and 0 predict dataset(s).
+[2026-11-06 16:56:28,368][nequip.scripts.compile][INFO] - [rank: 0] Exported model saved to /scratch/gilbreth/rapplet/cgst_allegro_sims/tests/a100_model/run5_ep301.G.nequip.pt2
+94f52d392dedbaadad35efa74c30058a9700988986419db0616aa90ca6249b33  /scratch/gilbreth/rapplet/cgst_allegro_sims/tests/a100_model/run5_ep301.G.nequip.pt2

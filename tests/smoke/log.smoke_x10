@@ -1,0 +1,478 @@
+LAMMPS (30 Mar 2026)
+KOKKOS mode with Kokkos version 5.0.2 is enabled
+  using double precision
+  using view layout = legacy
+  will use up to 1 GPU(s) per node
+  using 1 OpenMP thread(s) per MPI task
+package kokkos
+package kokkos newton on neigh half
+# Test 1a (smoke): the model loads with every type present, the shared includes run, and every output is written.
+# Run with -var cell <x0|x10>. x0 has no C atoms (exercises the empty-C guard); x10 has the most C.
+#   minimize -> NPT 600 K 2 ps (thermo every 0.1 ps) -> RDF averaged over 1 ps -> write_data
+# Pass: no errors or lost atoms, finite PE, smoke_${cell}.dat has 13 columns, rdf_${cell}.dat has one non-empty block.
+
+units           metal
+atom_style      atomic
+boundary        p p p
+
+variable        model     index ../../models/run5_ep301.nequip.pt2
+variable        dt        index 0.001
+variable        out       index smoke_${cell}
+variable        out       index smoke_x10
+variable        thermo_ps index 0.1
+
+read_data       ../../structures/111/${cell}.data
+read_data       ../../structures/111/x10.data
+Reading data file ...
+  orthogonal box = (0 0 0) to (24.12 24.12 24.12)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  512 atoms
+  read_data CPU = 0.064 seconds
+include         ../../common/in.potential
+# Shared potential, neighbor and group setup for every run in this project.
+# Include after read_data / read_restart. Caller must define:
+#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
+# Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
+
+newton          on
+
+pair_style      allegro
+pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
+pair_coeff      * * ../../models/run5_ep301.nequip.pt2 Ge Sb Te C     
+
+neighbor        1.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 7.5                  # ghost shell >= 6.0 A RDF range + 1.0 A skin
+
+group           Ge type 1
+102 atoms in group Ge
+group           Sb type 2
+103 atoms in group Sb
+group           Te type 3
+256 atoms in group Te
+group           C  type 4
+51 atoms in group C
+variable        nC equal count(C)
+
+timestep        ${dt}
+timestep        0.001
+
+thermo          10
+thermo_style    custom step pe press vol
+minimize        1.0e-6 1.0e-8 200 2000
+
+CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE
+
+Your simulation uses code contributions which should be cited:
+
+- KOKKOS package: https://doi.org/10.1145/3731599.3767498
+
+@inproceedings{Johansson25,
+ author = {A. Johansson and E. Weinberg and C. Trott and M. McCarthy and S. Moore},
+ title = {{LAMMPS-KOKKOS}: {P}erformance Portable Molecular Dynamics Across Exascale Architectures},
+ year = 2025,
+ booktitle = {Proceedings of the SC '25 Workshops of the International Conference for High Performance Computing,
+  Networking, Storage and Analysis},
+ pages = {1217–1232},
+}
+
+CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE
+
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 4 4 4
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+WARNING: Fix MINIMIZE/kk not compatible with sending data in Kokkos communication (src/KOKKOS/comm_kokkos.cpp:934)
+WARNING: Fix with atom-based arrays not compatible with sending data in Kokkos communication, switching to legacy exchange/border communication (src/KOKKOS/comm_kokkos.cpp:941)
+WARNING: Fix MINIMIZE/kk not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
+WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
+Per MPI rank memory allocation (min/avg/max) = 4.609 | 4.609 | 4.609 Mbytes
+   Step         PotEng         Press          Volume    
+         0   180.14005     -17953.589      14032.399    
+        10   106.15643     -15215.488      14032.399    
+        20   92.656857     -6131.2706      14032.399    
+        30   91.053088     -4110.8017      14032.399    
+        40   90.823507     -4077.4024      14032.399    
+        50   90.784587     -4053.1882      14032.399    
+        60   90.747792     -3996.1084      14032.399    
+        70   90.710695     -3982.8869      14032.399    
+        80   90.696909     -3988.6467      14032.399    
+        90   90.618603     -3932.6108      14032.399    
+       100   90.535996     -3863.3356      14032.399    
+       110   90.347776     -3766.9803      14032.399    
+       120   90.29693      -3654.7208      14032.399    
+       130   90.237826     -3493.1157      14032.399    
+       140   89.985536     -3291.2126      14032.399    
+       150   89.891451     -3238.472       14032.399    
+       160   89.826026     -3177.2913      14032.399    
+       170   89.780765     -3156.2864      14032.399    
+       180   89.540995     -3143.4058      14032.399    
+       190   89.513331     -3154.1921      14032.399    
+       200   89.507598     -3201.0727      14032.399    
+Loop time of 1.73485 on 1 procs for 200 steps with 512 atoms
+
+98.1% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = max iterations
+  Energy initial, next-to-last, final = 
+      180.140054457945   89.5077890602729   89.5075978918894
+  Force two-norm initial, final = 13.074768 0.050457274
+  Force max component initial, final = 1.0032189 0.013909079
+  Final line search alpha, max atom move = 1 0.013909079
+  Iterations, force evaluations = 200 368
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 1.6117     | 1.6117     | 1.6117     |   0.0 | 92.90
+Neigh   | 0.0097513  | 0.0097513  | 0.0097513  |   0.0 |  0.56
+Comm    | 0.032845   | 0.032845   | 0.032845   |   0.0 |  1.89
+Output  | 0.0033684  | 0.0033684  | 0.0033684  |   0.0 |  0.19
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.07721    |            |       |  4.45
+
+Nlocal:            512 ave         512 max         512 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           1685 ave        1685 max        1685 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        27322 ave       27322 max       27322 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 27322
+Ave neighs/atom = 53.363281
+Neighbor list builds = 13
+Dangerous builds = 0
+reset_timestep  0
+
+include         ../../common/in.analysis
+# Shared on-the-fly analysis: thermodynamics, per-species MSD and crystallinity, written every thermo_ps.
+# Include after common/in.potential. Caller must define:
+#   out        prefix for output files (writes ${out}.dat)
+#   thermo_ps  output interval in ps (1.0 in production)
+# Optional overrides (-var or set before the include), defaults below:
+#   q_rc q_thr q_nmin   crystallinity criterion; calibrated in recryst/calib (see recryst/README.md)
+#   dat_mode            file (default: start ${out}.dat afresh) | append (continue it, e.g. after a restart)
+#
+# Columns of ${out}.dat:
+#   step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom
+#   msdGe msdSb msdTe msdC (A^2, centre-of-mass corrected, reference = positions when this file is included)
+#   xfrac (fraction of atoms classed crystalline)
+# MSD references reset when the include runs again (e.g. in a job restarted from a restart file).
+# Partial coordination numbers are not computed here: a single coord/atom cutoff cannot serve both C-X (~2 A) and
+# Ge/Sb-Te (~3 A) bonds. They come from the running-coordination columns of common/in.rdf, read at each pair's
+# first g(r) minimum (analysis/mq_summary.py). coord/atom is used here only for the Q4 crystal-like bond count.
+
+variable        nthermo equal round(${thermo_ps}/${dt})
+variable        nthermo equal round(0.1/${dt})
+variable        nthermo equal round(0.1/0.001)
+variable        dat_mode index file
+
+# ---------- thermodynamics ----------
+compute         epot all pe
+compute         ekin all ke
+variable        Vat  equal vol/atoms
+variable        PEat equal c_epot/atoms
+# enthalpy per atom: E_pot + E_kin + P*V, with bar*A^3 -> eV (1 eV = 1602176.6 bar*A^3)
+variable        Hat  equal (c_epot+c_ekin+press*vol/1602176.6)/atoms
+
+# ---------- per-species MSD (msd on an empty group divides by zero, so C is guarded) ----------
+compute         msdGe Ge msd com yes
+compute         msdSb Sb msd com yes
+compute         msdTe Te msd com yes
+if "${nC} > 0" then    "compute     msdC C msd com yes"    "variable    msdC equal c_msdC[4]" else    "variable    msdC equal 0.0"
+compute     msdC C msd com yes
+variable    msdC equal c_msdC[4]
+
+# ---------- crystallinity: Q4 bond-order connections (ten Wolde-style) ----------
+# q4 uses all neighbours within q_rc, which sits between the rocksalt first shell (~2.9-3.4 A, Peierls-split)
+# and second shell (~4.3 A). A bond i-j is crystal-like if the normalized q4(i).q4(j) > q_thr; an atom is
+# crystalline with >= q_nmin crystal-like bonds. coord/atom orientorder reuses the q4 compute's cutoff.
+variable        q_rc   index 3.6
+variable        q_thr  index 0.5
+variable        q_nmin index 4
+compute         q4 all orientorder/atom degrees 1 4 nnn NULL cutoff ${q_rc} components 4
+compute         q4 all orientorder/atom degrees 1 4 nnn NULL cutoff 3.6 components 4
+compute         ncb all coord/atom orientorder q4 ${q_thr}
+compute         ncb all coord/atom orientorder q4 0.5
+variable        xtal atom c_ncb>=${q_nmin}
+variable        xtal atom c_ncb>=4
+compute         nxtal all reduce sum v_xtal
+variable        xfrac equal c_nxtal/atoms
+
+# ---------- output ----------
+thermo_style    custom step time temp press vol v_Vat density v_PEat v_Hat                 c_msdGe[4] c_msdSb[4] c_msdTe[4] v_msdC v_xfrac
+thermo_modify   flush yes
+thermo          ${nthermo}
+thermo          100
+
+fix             log all print ${nthermo}                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac)"                 ${dat_mode} ${out}.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac"
+fix             log all print 100                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac)"                 ${dat_mode} ${out}.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac"
+fix             log all print 100                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac)"                 file ${out}.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac"
+fix             log all print 100                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac)"                 file smoke_x10.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac"
+
+dump            traj all custom 500 smoke_${cell}.lammpstrj.gz id type x y z c_q4[1] c_ncb
+dump            traj all custom 500 smoke_x10.lammpstrj.gz id type x y z c_q4[1] c_ncb
+dump_modify     traj sort id element Ge Sb Te C
+
+velocity        all create 600.0 4928459 mom yes rot yes dist gaussian
+fix             npt all npt temp 600.0 600.0 $(100*dt) iso 0.0 0.0 $(1000*dt)
+fix             npt all npt temp 600.0 600.0 0.10000000000000000555 iso 0.0 0.0 $(1000*dt)
+fix             npt all npt temp 600.0 600.0 0.10000000000000000555 iso 0.0 0.0 1
+run             2000
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 4 4 4
+  3 neighbor lists, perpetual/occasional/extra = 1 2 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+  (2) compute orientorder/atom/kk, occasional, copy from (1)
+      attributes: full, newton on, kokkos_device
+      pair build: copy/kk/device
+      stencil: none
+      bin: none
+  (3) compute coord/atom/kk, occasional, copy from (1)
+      attributes: full, newton on, kokkos_device
+      pair build: copy/kk/device
+      stencil: none
+      bin: none
+WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
+WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
+Per MPI rank memory allocation (min/avg/max) = 8.455 | 8.455 | 8.455 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
+         0   0              600           -184.42926      14032.399      27.407028      6.2987571      0.17481953     0.24906927     6.3108872e-30  4.4605106e-29  1.26341e-29    3.341058e-30   0.93359375   
+       100   0.1            237.44418     -1785.3906      14224.064      27.781375      6.213883       0.22638096     0.22605482     0.080590766    0.070410156    0.051485836    0.063772636    0.9140625    
+       200   0.2            353.63678      1181.1049      14223.939      27.781131      6.2139377      0.2243756      0.29047737     0.11386651     0.11477209     0.076599394    0.093759417    0.89453125   
+       300   0.3            442.16076      125.21959      14176.168      27.687828      6.2348774      0.22992102     0.28912713     0.13078955     0.16187691     0.10108607     0.16244825     0.91992188   
+       400   0.4            506.2281       1146.9493      14311.536      27.952219      6.1759036      0.23959229     0.32490974     0.17408722     0.2305127      0.14818269     0.22610744     0.875        
+       500   0.5            550.5549      -1042.4655      14465.097      28.252143      6.1103404      0.2513874      0.30403079     0.21292611     0.30983507     0.2251389      0.34977135     0.8515625    
+       600   0.6            590.01337     -1269.59        14513.945      28.347548      6.0897758      0.26161975     0.31527296     0.33228421     0.40261584     0.28018398     0.54968575     0.82226562   
+       700   0.7            639.62767      2548.9193      14484.334      28.289715      6.1022252      0.26618404     0.39370733     0.38902682     0.44900698     0.34196238     0.70338367     0.8125       
+       800   0.8            623.18985     -1513.5376      14558.245      28.434072      6.0712448      0.26929868     0.32283398     0.38545876     0.47637696     0.41623987     0.71607267     0.80078125   
+       900   0.9            629.38799     -878.81183      14507.887      28.335718      6.0923184      0.26295077     0.32860419     0.42679152     0.47598632     0.42488488     0.78857608     0.77734375   
+      1000   1              587.88207     -429.97227      14402.028      28.128962      6.1370986      0.25905539     0.32734779     0.41727804     0.49501728     0.42018112     0.9096648      0.78515625   
+      1100   1.1            586.61587      2366.1626      14274.851      27.880568      6.1917754      0.25064473     0.36749789     0.39177486     0.51009779     0.41753982     0.96812956     0.76953125   
+      1200   1.2            591.70963     -230.94661      14374.748      28.07568       6.1487455      0.24623856     0.31852667     0.41047535     0.53063837     0.41744679     1.0160181      0.76171875   
+      1300   1.3            587.31765     -2911.0109      14495.547      28.311616      6.0975047      0.2470835      0.27141232     0.45741356     0.54004887     0.42863563     0.97250568     0.74609375   
+      1400   1.4            620.92567      1381.0894      14352.603      28.032428      6.1582326      0.24591095     0.35017932     0.44759377     0.52204068     0.4248609      0.99543331     0.69921875   
+      1500   1.5            622.90995     -1010.5683      14413.957      28.15226       6.1320197      0.24366071     0.30626392     0.38213898     0.53445876     0.44488326     0.93416962     0.70703125   
+      1600   1.6            566.8541      -2041.7723      14473.665      28.268877      6.1067235      0.24782709     0.2849305      0.37147465     0.6120254      0.43769691     0.93795404     0.7265625    
+      1700   1.7            627.29351      1350.41        14355.233      28.037565      6.1571043      0.24222096     0.34677837     0.3551114      0.62248392     0.41153723     1.0977833      0.73046875   
+      1800   1.8            594.71025     -487.27807      14405.028      28.13482       6.1358208      0.2427836      0.31094901     0.37793458     0.66240905     0.42773631     1.1083551      0.67382812   
+      1900   1.9            554.43974     -558.5369       14486.043      28.293053      6.1015054      0.24549621     0.30715992     0.38157821     0.73551806     0.46326366     1.1487964      0.65820312   
+      2000   2              630.4235      -269.03638      14501.561      28.323362      6.0949761      0.24038068     0.31695412     0.36557381     0.78376116     0.49703317     1.1970205      0.64453125   
+Loop time of 9.53194 on 1 procs for 2000 steps with 512 atoms
+
+Performance: 18.129 ns/day, 1.324 hours/ns, 209.821 timesteps/s, 107.428 katom-step/s
+99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 8.6709     | 8.6709     | 8.6709     |   0.0 | 90.97
+Neigh   | 0.049267   | 0.049267   | 0.049267   |   0.0 |  0.52
+Comm    | 0.18134    | 0.18134    | 0.18134    |   0.0 |  1.90
+Output  | 0.052895   | 0.052895   | 0.052895   |   0.0 |  0.55
+Modify  | 0.42146    | 0.42146    | 0.42146    |   0.0 |  4.42
+Other   |            | 0.1561     |            |       |  1.64
+
+Nlocal:            512 ave         512 max         512 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           1666 ave        1666 max        1666 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        25958 ave       25958 max       25958 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 25958
+Ave neighs/atom = 50.699219
+Neighbor list builds = 72
+Dangerous builds = 0
+
+variable        rdf_ps   index 1.0
+variable        rdf_file index rdf_${cell}.dat
+variable        rdf_file index rdf_x10.dat
+include         ../../common/in.rdf
+# Time-averaged partial RDFs over the next rdf_ps of whatever integrator fix is active.
+# Include at the point where averaging should start. Caller must define:
+#   rdf_ps    averaging window in ps
+#   rdf_file  output file
+# Writes one block at the end of the window: total g(r) plus all 10 partials (Ge-Ge Ge-Sb Ge-Te Ge-C
+# Sb-Sb Sb-Te Sb-C Te-Te Te-C C-C), each with its running coordination number. 300 bins to 6.0 A.
+#
+# fix ave/time only writes on timesteps that are multiples of Nfreq, and only when the whole sampling window
+# lies after the fix was defined. The example run in md_meltquench lost its RDF for this reason. So first run
+# "pad" steps up to the next multiple of Nfreq, then define the fix and run exactly one window.
+
+variable        rdf_N   equal round(${rdf_ps}/${dt})        # window length (steps) = Nfreq
+variable        rdf_N   equal round(1.0/${dt})        
+variable        rdf_N   equal round(1.0/0.001)        
+variable        rdf_nev equal round(0.1/${dt})              # sample every 0.1 ps
+variable        rdf_nev equal round(0.1/0.001)              
+variable        rdf_nrep equal ${rdf_N}/${rdf_nev}
+variable        rdf_nrep equal 1000/${rdf_nev}
+variable        rdf_nrep equal 1000/100
+variable        rdf_pad equal ${rdf_N}*ceil(step/${rdf_N})-step
+variable        rdf_pad equal 1000*ceil(step/${rdf_N})-step
+variable        rdf_pad equal 1000*ceil(step/1000)-step
+
+compute         rdf all rdf 300 * * 1 1 1 2 1 3 1 4 2 2 2 3 2 4 3 3 3 4 4 4 cutoff 6.0
+run             ${rdf_pad}
+run             0
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 4 4 4
+  4 neighbor lists, perpetual/occasional/extra = 1 3 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+  (2) compute orientorder/atom/kk, occasional, copy from (1)
+      attributes: full, newton on, kokkos_device
+      pair build: copy/kk/device
+      stencil: none
+      bin: none
+  (3) compute coord/atom/kk, occasional, copy from (1)
+      attributes: full, newton on, kokkos_device
+      pair build: copy/kk/device
+      stencil: none
+      bin: none
+  (4) compute rdf, occasional
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton
+      stencil: half/bin/3d
+      bin: standard
+WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
+WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
+Per MPI rank memory allocation (min/avg/max) = 10.34 | 10.34 | 10.34 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
+      2000   2              630.4235      -269.03638      14501.561      28.323362      6.0949761      0.24038068     0.31695412     0.36557381     0.78376116     0.49703317     1.1970205      0.64453125   
+Loop time of 0.000285883 on 1 procs for 0 steps with 512 atoms
+
+100.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.0002859  |            |       |100.00
+
+Nlocal:            512 ave         512 max         512 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           1664 ave        1664 max        1664 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        25966 ave       25966 max       25966 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 25966
+Ave neighs/atom = 50.714844
+Neighbor list builds = 0
+Dangerous builds = 0
+fix             rdf all ave/time ${rdf_nev} ${rdf_nrep} ${rdf_N} c_rdf[*] file ${rdf_file} mode vector
+fix             rdf all ave/time 100 ${rdf_nrep} ${rdf_N} c_rdf[*] file ${rdf_file} mode vector
+fix             rdf all ave/time 100 10 ${rdf_N} c_rdf[*] file ${rdf_file} mode vector
+fix             rdf all ave/time 100 10 1000 c_rdf[*] file ${rdf_file} mode vector
+fix             rdf all ave/time 100 10 1000 c_rdf[*] file rdf_x10.dat mode vector
+run             ${rdf_N}
+run             1000
+WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
+WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
+Per MPI rank memory allocation (min/avg/max) = 10.34 | 10.34 | 10.34 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
+      2000   2              630.4235      -269.03638      14501.561      28.323362      6.0949761      0.24038068     0.31695412     0.36557381     0.78376116     0.49703317     1.1970205      0.64453125   
+      2100   2.1            621.9453      -409.44389      14460.356      28.242883      6.1123439      0.24144629     0.31446441     0.42872506     0.74291413     0.5344759      1.3593256      0.65820312   
+      2200   2.2            566.06134      111.19457      14399.583      28.124185      6.138141       0.24474074     0.31971889     0.45176386     0.79136588     0.56816766     1.6207606      0.65820312   
+      2300   2.3            584.76948      1031.1172      14418.825      28.161768      6.1299494      0.24146853     0.33503243     0.47024783     0.83970686     0.58002091     1.6106042      0.640625     
+      2400   2.4            578.42696     -368.48755      14449.873      28.222408      6.1167783      0.24274189     0.31087248     0.53997032     0.87499598     0.60631431     1.4702822      0.63085938   
+      2500   2.5            614.73613      87.362943      14433.437      28.190306      6.1237438      0.24114668     0.32198952     0.62198681     0.96455272     0.65011779     1.6066788      0.65625      
+      2600   2.6            614.28867      1204.3296      14454.215      28.230889      6.1149407      0.24197959     0.34244824     0.62564324     1.043587       0.6993607      1.736329       0.60546875   
+      2700   2.7            587.56276     -896.09055      14498.358      28.317105      6.0963228      0.24134312     0.30130559     0.62840992     1.1283694      0.72769944     1.7639184      0.609375     
+      2800   2.8            594.81912     -270.38678      14468.183      28.25817       6.1090373      0.24074258     0.3127099      0.64945        1.2001297      0.72636003     1.8325674      0.59765625   
+      2900   2.9            625.43956     -659.62009      14396.33       28.117831      6.139528       0.24104546     0.31015579     0.62061563     1.2103348      0.75187556     1.7797108      0.61914062   
+      3000   3              602.5575       1826.2337      14368.33       28.063144      6.1514923      0.24338402     0.35310622     0.66164318     1.2097297      0.77160012     1.9970868      0.56445312   
+Loop time of 4.78437 on 1 procs for 1000 steps with 512 atoms
+
+Performance: 18.059 ns/day, 1.329 hours/ns, 209.014 timesteps/s, 107.015 katom-step/s
+99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 4.3268     | 4.3268     | 4.3268     |   0.0 | 90.44
+Neigh   | 0.031911   | 0.031911   | 0.031911   |   0.0 |  0.67
+Comm    | 0.089811   | 0.089811   | 0.089811   |   0.0 |  1.88
+Output  | 0.026497   | 0.026497   | 0.026497   |   0.0 |  0.55
+Modify  | 0.23209    | 0.23209    | 0.23209    |   0.0 |  4.85
+Other   |            | 0.07722    |            |       |  1.61
+
+Nlocal:            512 ave         512 max         512 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           1650 ave        1650 max        1650 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:          13129 ave       13129 max       13129 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+FullNghs:        26346 ave       26346 max       26346 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 26346
+Ave neighs/atom = 51.457031
+Neighbor list builds = 36
+Dangerous builds = 0
+unfix           rdf
+uncompute       rdf
+
+write_data      smoke_${cell}_final.data
+write_data      smoke_x10_final.data
+System init for write_data ...
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7
+  ghost atom cutoff = 7.5
+  binsize = 7, bins = 4 4 4
+  3 neighbor lists, perpetual/occasional/extra = 1 2 0
+  (1) pair allegro/kk, perpetual
+      attributes: full, newton on, kokkos_device
+      pair build: full/bin/kk/device
+      stencil: full/bin/3d
+      bin: kk/device
+  (2) compute orientorder/atom/kk, occasional, copy from (1)
+      attributes: full, newton on, kokkos_device
+      pair build: copy/kk/device
+      stencil: none
+      bin: none
+  (3) compute coord/atom/kk, occasional, copy from (1)
+      attributes: full, newton on, kokkos_device
+      pair build: copy/kk/device
+      stencil: none
+      bin: none
+Total wall time: 0:00:17

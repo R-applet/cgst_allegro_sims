@@ -1,0 +1,18 @@
+# Analysis-only Python environment (simulations run inside the LAMMPS container; see common/run_lmp.sh).
+# Create:   module load conda/2025.09
+#           export CONDA_PKGS_DIRS=/scratch/gilbreth/$USER/.conda_pkgs   (home quota is too small for the cache)
+#           conda env create -p env/cgst-ana -f env/environment.yml
+# Use:      module load conda/2025.09 && conda activate ./env/cgst-ana
+# Exact versions that resolved are recorded in env/environment.lock.txt (conda list --explicit).
+name: cgst-ana
+channels:
+  - https://conda.ovito.org   # OVITO's own channel; the PyPI wheel conflicts with conda's Qt
+  - conda-forge
+dependencies:
+# Each package names its consumer; add a package only together with the script that needs it.
+  - python=3.12
+  - numpy=2.2       # every analysis script
+  - scipy=1.15      # analysis/bondorder.py (cKDTree, spherical harmonics, connected components)
+  - matplotlib=3.10 # planned: figures for the Part 2/3 reports
+  - https://conda.ovito.org::ovito=3.17.2=py312*   # planned: bond-angle distributions, cluster rendering (Part 2/3);
+                                                    # Python-module build; conda-forge "ovito" is the desktop app

@@ -1,0 +1,36 @@
+# Test 1a (smoke): the model loads with every type present, the shared includes run, and every output is written.
+# Run with -var cell <x0|x10>. x0 has no C atoms (exercises the empty-C guard); x10 has the most C.
+#   minimize -> NPT 600 K 2 ps (thermo every 0.1 ps) -> RDF averaged over 1 ps -> write_data
+# Pass: no errors or lost atoms, finite PE, smoke_${cell}.dat has 13 columns, rdf_${cell}.dat has one non-empty block.
+
+units           metal
+atom_style      atomic
+boundary        p p p
+
+variable        model     index ../../models/run5_ep301.nequip.pt2
+variable        dt        index 0.001
+variable        out       index smoke_${cell}
+variable        thermo_ps index 0.1
+
+read_data       ../../structures/111/${cell}.data
+include         ../../common/in.potential
+
+thermo          10
+thermo_style    custom step pe press vol
+minimize        1.0e-6 1.0e-8 200 2000
+reset_timestep  0
+
+include         ../../common/in.analysis
+
+dump            traj all custom 500 smoke_${cell}.lammpstrj.gz id type x y z c_q4[1] c_ncb
+dump_modify     traj sort id element Ge Sb Te C
+
+velocity        all create 600.0 4928459 mom yes rot yes dist gaussian
+fix             npt all npt temp 600.0 600.0 $(100*dt) iso 0.0 0.0 $(1000*dt)
+run             2000
+
+variable        rdf_ps   index 1.0
+variable        rdf_file index rdf_${cell}.dat
+include         ../../common/in.rdf
+
+write_data      smoke_${cell}_final.data

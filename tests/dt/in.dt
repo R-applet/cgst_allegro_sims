@@ -1,0 +1,48 @@
+# Test 1c: timestep choice from NVE energy conservation in the hottest, most C-rich state we simulate.
+#   2x2x2 x10 cell (4096 atoms, 408 C) -> minimize -> NPT 1500 K, 20 ps at dt = 1 fs (liquid, C mobile)
+#   -> for dt in 0.5, 1, 2 fs: NVE 20 ps from that same liquid, total energy every 0.1 ps -> nve_dt<dt>.dat
+# tests/dt/analyze_dt.py fits the drift. Pass: largest dt with |drift| <= 0.05 meV/atom/ps and
+# std(E_tot) <= 1% of std(PE) (see tests/RESULTS.md).
+# Optional: -var root <project root> (default ../..), -var seed <int> (default 1730561), -var nve_ps <ps> (default 20).
+# The defaults reproduce the original run in tests/dt; seed2/ holds the repeat (second seed, 40 ps).
+
+units           metal
+atom_style      atomic
+boundary        p p p
+
+variable        root  index ../..
+variable        seed  index 1730561
+variable        nve_ps index 20
+variable        model index ${root}/models/run5_ep301.nequip.pt2
+variable        dt    equal 0.001        # equal-style so the loop below can redefine it
+read_data       ${root}/structures/222/x10.data
+include         ${root}/common/in.potential
+
+thermo          100
+minimize        1.0e-6 1.0e-8 500 5000
+reset_timestep  0
+velocity        all create 1500.0 ${seed} mom yes rot yes dist gaussian
+fix             npt all npt temp 1500.0 1500.0 0.1 iso 0.0 0.0 1.0
+thermo_style    custom step time temp press vol pe
+run             20000
+write_data      liquid_1500.data
+
+variable        h index 0.0005 0.001 0.002
+label           loop
+clear
+units           metal
+atom_style      atomic
+boundary        p p p
+variable        dt equal ${h}
+read_data       liquid_1500.data
+include         ${root}/common/in.potential
+variable        nout equal round(0.1/dt)
+variable        nrun equal round(${nve_ps}/dt)
+fix             nve all nve
+thermo_style    custom step time temp pe etotal
+thermo          ${nout}
+fix             e all print ${nout} "$(time) $(temp) $(pe/atoms:%.10f) $(etotal/atoms:%.10f)" &
+                file nve_dt${h}.dat screen no title "time_ps T_K PE_eV_per_atom Etot_eV_per_atom"
+run             ${nrun}
+next            h
+jump            SELF loop

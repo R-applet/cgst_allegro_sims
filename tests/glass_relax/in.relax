@@ -1,0 +1,30 @@
+# Relax each DFT frame with the model: NPT iso 0 bar at 300 K for 20 ps (dt 2 fs), density averaged over the last
+# 10 ps. Appends "frame rho_start rho_final V_per_atom_final P_bar" to relax.txt and writes the final structure to
+# relaxed_<frame>.data (positions at the end of the 20 ps, for DFT single points).
+# Run with -var frames "<ids>" -var model <compiled model for this node> -var root <project root>.
+variable        dt index 0.002
+variable        f  index ${frames}
+shell           rm -f relax.txt
+label           loop
+clear
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       frame_${f}.data
+include         ${root}/common/in.potential
+variable        rho0 equal density
+variable        r0 equal ${rho0}
+velocity        all create 300.0 4242 mom yes rot yes dist gaussian
+fix             npt all npt temp 300.0 300.0 0.2 iso 0.0 0.0 2.0
+thermo          500
+thermo_style    custom step temp press density
+run             5000
+variable        Vat equal vol/atoms
+variable        rho equal density
+fix             av all ave/time 10 500 5000 v_rho v_Vat c_thermo_press
+run             5000
+print           "${f} ${r0} $(f_av[1]:%.4f) $(f_av[2]:%.3f) $(f_av[3]:%.1f)" append relax.txt screen no
+write_data      relaxed_${f}.data nocoeff
+unfix           av
+next            f
+jump            SELF loop

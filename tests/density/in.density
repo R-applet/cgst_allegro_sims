@@ -1,0 +1,25 @@
+# Test 1g: equilibrium density of the rocksalt crystal with the production model (epoch 301), for comparison with
+# the amorphous density of the reference melt-quench (md_meltquench, same model: 30.14 A^3/atom at 300 K).
+#   3x3x3 x0 rocksalt -> minimize -> NPT iso 0 bar at T: 20 ps equilibration, then V/atom and density averaged
+#   over 20 ps -> density_<cell>_<T>K.txt. The equilibration length equals the averaging window, so the window
+#   starts on a multiple of Nfreq (fix ave/time only writes at multiples of Nfreq; see common/in.rdf).
+# Run with -var T <K>. dt from common/defaults.sh (passed by submit.sh).
+units           metal
+atom_style      atomic
+boundary        p p p
+variable        model index ../../models/run5_ep301.nequip.pt2
+read_data       ../../structures/333/${cell}.data
+include         ../../common/in.potential
+thermo          100
+minimize        1.0e-6 1.0e-8 1000 10000
+reset_timestep  0
+velocity        all create ${T} 515151 mom yes rot yes dist gaussian
+fix             npt all npt temp ${T} ${T} $(100*dt) iso 0.0 0.0 $(1000*dt)
+thermo_style    custom step time temp press vol density
+thermo          $(round(1.0/dt))
+run             $(round(20.0/dt))
+variable        Vat equal vol/atoms
+variable        rho equal density
+fix             av all ave/time $(round(0.1/dt)) $(round(20.0/dt/round(0.1/dt))) $(round(20.0/dt)) v_Vat c_thermo_press v_rho
+run             $(round(20.0/dt))
+print           "cell ${cell} T ${T} V_A3_per_atom $(f_av[1]:%.4f) P_bar $(f_av[2]:%.1f) rho_gcc $(f_av[3]:%.4f)" file density_${cell}_${T}K.txt

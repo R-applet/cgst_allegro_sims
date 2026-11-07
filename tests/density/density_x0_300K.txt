@@ -1,0 +1,1 @@
+cell x0 T 300 V_A3_per_atom 30.3808 P_bar -4.8 rho_gcc 6.2382

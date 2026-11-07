@@ -1,0 +1,4 @@
+gilbreth-g000.rcac.purdue.edu
+Model name:                              AMD EPYC 7662 64-Core Processor
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+bench 1 GPU: Performance: 2.925 ns/day, 8.206 hours/ns, 16.924 timesteps/s, 233.962 katom-step/s
