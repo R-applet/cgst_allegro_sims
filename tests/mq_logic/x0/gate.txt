@@ -1,0 +1,1 @@
+hold_ps 100 min_species_msd_A2 55.1 gate_A2 10 passed 1

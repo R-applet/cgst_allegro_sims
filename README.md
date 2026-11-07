@@ -6,9 +6,9 @@ the others in vacancy count as well as C content; see `structures/build_supercel
 
 | Part | Directory | Status |
 |---|---|---|
-| 1. Environment, model, Slurm tests | `env/`, `models/`, `common/`, `tests/` | tests finishing (`tests/RESULTS.md`) |
-| 2. Melt-quench | `meltquench/` | inputs drafted; logic test queued; no production runs |
-| 3. Recrystallization (Tx ramp, isothermal anneal) | `recryst/` | inputs drafted; logic test queued; calibration needs Part 2 |
+| 1. Environment, model, Slurm tests | `env/`, `models/`, `common/`, `tests/` | done (`tests/RESULTS.md`); glass as dense as the crystal, inherited from the DFT reference (1g, 1k) |
+| 2. Melt-quench | `meltquench/` | inputs and analysis drafted, logic test passing; in review; no production runs |
+| 3. Recrystallization (Tx ramp, isothermal anneal) | `recryst/` | inputs drafted, logic test passing; calibration needs Part 2 |
 
 ## Layout
 - `structures/`: the original 512-site cells (untouched) and `build_supercells.py`. The builder writes cleaned NxNxN cells to
@@ -16,9 +16,15 @@ the others in vacancy count as well as C content; see `structures/build_supercel
   gst/c1/c2_5 and the missing masses in gst/c10; see its docstring.
 - `models/`: the compiled potential, its provenance and hashes, and a recompile script.
 - `common/`: shared LAMMPS includes (`in.potential`, `in.analysis`, `in.rdf`), `run_lmp.sh` (container launcher,
-  one MPI rank per GPU) and `defaults.sh` (production timestep, sourced by the Part 2/3 submit scripts).
-- `tests/`: Part 1 tests (results in `tests/RESULTS.md`) and the logic tests of the Part 2/3 inputs (`mq_logic/`,
-  `recryst_logic/`, reported in `meltquench/README.md` and `recryst/README.md`).
+  one MPI rank per GPU) and `defaults.sh` (production timestep `DT` and per-node compiled model `MODEL`; sourced
+  by the Part 2/3 submit scripts and some tests; the Part 2/3 logic tests take only `MODEL`).
+- `tests/`: Part 1 tests (results in `tests/RESULTS.md`), the logic tests of the Part 2/3 inputs (`mq_logic/`,
+  `recryst_logic/`) and the melt-quench analysis checks (`mq_analysis/`, `dft_glass/`), reported in
+  `meltquench/README.md` and `recryst/README.md`. Each writes a `RESULT.txt`; `tests/collect.sh` prints them all.
+- `meltquench/`, `recryst/`: the Part 2 and Part 3 inputs, submit scripts and READMEs (protocol, outputs, running).
+- `analysis/`: post-processing with `env/`: `mq_summary.py` and `mq_structure.py` (Part 2), `recryst_summary.py`
+  (Part 3), and the shared helpers `runio.py` (run-output readers) and `bondorder.py` (Q4 crystallinity, matching
+  `common/in.analysis`). `latent_features.py` (exploratory, `tests/latent_feasibility/`) runs in the container.
 - `env/`: the analysis-only conda environment (`environment.yml`). Simulations run in the container.
 
 ## Running

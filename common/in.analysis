@@ -11,9 +11,10 @@
 #   msdGe msdSb msdTe msdC (A^2, centre-of-mass corrected, reference = positions when this file is included)
 #   xfrac (fraction of atoms classed crystalline)
 # MSD references reset when the include runs again (e.g. in a job restarted from a restart file).
-# Partial coordination numbers are not computed here: a single coord/atom cutoff cannot serve both C-X (~2 A) and
-# Ge/Sb-Te (~3 A) bonds. They come from the running-coordination columns of common/in.rdf, read at each pair's
-# first g(r) minimum (analysis/mq_summary.py). coord/atom is used here only for the Q4 crystal-like bond count.
+# Coordination numbers are not computed here: a single coord/atom cutoff cannot serve both C-X (~2 A) and
+# Ge/Sb-Te (~3 A) bonds. They come afterwards, with fixed per-pair bond cutoffs: averages from the running-
+# coordination columns of common/in.rdf (analysis/mq_summary.py), per-atom values from the trajectory
+# (analysis/mq_structure.py). coord/atom is used here only for the Q4 crystal-like bond count.
 
 variable        nthermo equal round(${thermo_ps}/${dt})
 variable        dat_mode index file

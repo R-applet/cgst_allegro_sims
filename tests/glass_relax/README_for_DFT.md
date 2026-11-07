@@ -1,5 +1,10 @@
 # Relaxed structures for DFT single points (run5_ep301 dense-glass check)
 
+> **Status (2026-11-07): no longer needed to diagnose the model.** DFT's own cold melt-quenched glass in the
+> training set is at 6.24 g/cc and zero pressure, with the same coordination as the model glass (`tests/RESULTS.md`
+> 1k), so the dense glass comes from the DFT reference. The background below (1g–1i) predates that comparison and
+> its "5.8 g/cc DFT glass" figure averaged hot frames. The single points would still be a direct check, if cheap.
+
 **Request:** DFT single points (energy and stress, same settings as the CGST training data) on the structures in
 `relaxed_for_dft.xyz`. They test whether run5_ep301's amorphous GST density (~6.28 g/cc) is real at the DFT level.
 

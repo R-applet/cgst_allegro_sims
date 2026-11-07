@@ -1,8 +1,9 @@
 # Part 1 test results
 
 Each test directory has a batch script, run from inside that directory with `sbatch`: `submit.sh`, except
-`scaling/submit_all.sh` (plain bash, submits the jobs itself) and `env_probe/probe.sh`. These are Part 1 tests;
-`mq_logic/` and `recryst_logic/` test the Part 2/3 inputs and are reported in those parts' READMEs.
+`scaling/submit_all.sh` (plain bash, submits the jobs itself), `env_probe/probe.sh`, and the CPU-only Python checks
+`dft_glass/check.py` (1k) and `mq_analysis/check.py`, run with `env/cgst-ana`. These are Part 1 tests; `mq_logic/`,
+`mq_analysis/` and `recryst_logic/` test the Part 2/3 inputs and analysis and are reported in those parts' READMEs.
 LAMMPS runs go through `common/run_lmp.sh` with `models/run5_ep301.nequip.pt2` and `lammps_debug.sif`. Exceptions:
 1f also runs `lammps_stable.sif` (via `SIF`), the compile check runs a recompiled model, and Python steps (1b
 `prepare`, `models/compile_model.sh`) use `apptainer exec` directly.
@@ -142,7 +143,12 @@ Both containers run through the production srun path (`common/run_lmp.sh`, `SIF`
 - The sha256 differs (`886e4f7b…` vs production `0a1a1b31…`). The files are not byte-identical, but numerically
   they are the same model; `provenance.md` keeps the production hash as the reference.
 
-## 1g. Density check (`density/`): **FAIL, amorphous denser than crystal** (job 12235695)
+## 1g. Density check (`density/`): amorphous denser than crystal (job 12235695)
+> **Reading revised by 1k.** The measurement stands: the model's glass is 0.8% denser than its crystal. But DFT's
+> own cold melt-quenched glass has the same density (6.24 g/cc) and coordination, so this is a property of the DFT
+> reference that the model reproduces, not a model error. The "error in the amorphous phase" and "no production
+> runs" bullets below are superseded.
+
 The same model (run5_ep301) at NPT 300 K and 0 bar:
 
 | state | V (Å³/atom) | ρ (g/cc) | source |
@@ -181,10 +187,13 @@ per frame in `frames.csv`):
   (5.79 g/cc for 2:2:5) with a DFT virial of −2.1 kbar (≈ 0 total once the thermal pressure is added; frame
   temperatures unknown, so this is an estimate). AM_GST_runs at 31.1 Å³/atom has a DFT virial of +12.9 kbar,
   meaning it wants to expand.
-- **Reading (a hypothesis):** the model reproduces DFT on DFT-sampled glasses, but its own melt-quench finds
-  denser amorphous structures that are not in the training data and where its energies are wrong (a hole in the
-  potential-energy surface). Neither a fitting bias on the training distribution nor the DFT reference is the
-  main cause.
+- **Superseded by 1k:** the 32.7 Å³/atom average mixes hot liquid frames with the glass; the coldest frames sit at
+  30.4 Å³/atom (6.24 g/cc) at zero DFT pressure. The "DFT glasses near the experimental density" bullet above and
+  the reading below rest on that average; the pressure-bias bullet stands.
+- **Reading (a hypothesis, superseded by 1k):** the model reproduces DFT on DFT-sampled glasses, but its own
+  melt-quench finds denser amorphous structures that are not in the training data and where its energies are wrong
+  (a hole in the potential-energy surface). Neither a fitting bias on the training distribution nor the DFT
+  reference is the main cause.
 - **Checks to confirm:**
   1. Relax the DFT GST_Melt_Quench frames with the model at NPT 300 K and 0 bar, and see whether they collapse
      toward 6.3 g/cc.
@@ -201,6 +210,9 @@ for 20 ps, density averaged over the last 10 ps (`glass_relax/RESULT.txt`):
 | CUB_GST_runs (crystal control) | 6.22 ± 0.09 | 6.27 ± 0.01 | +0.8% |
 
 - **Every class ends at 6.27–6.29 g/cc, the density of the model's own melt-quenched glass (6.287, 1g).**
+- **Superseded by 1k:** the GST_Melt_Quench starting frames are mostly hot (the 5.8 g/cc average includes the
+  liquid), so their densification on cooling to 300 K says nothing about the model. The next bullet's conclusion
+  does not hold.
 - DFT's pressures say its glasses are near equilibrium at about 5.8 g/cc (1h). So the model's potential-energy
   surface drives amorphous GST about 7% denser than the DFT supports. That supports 1h's reading: a model
   (training-coverage) problem, not the workflow and not the DFT reference.
@@ -233,10 +245,42 @@ gives the following (`am_eos/RESULT.txt`, per frame in `frames.csv`):
   smaller than the experimental ~6–7%, so part of 1g's "7% error" is the DFT reference, not the model. Measured
   against DFT, the model glass (6.287 at 300 K) is ≈ 2.4% too dense (≈ 3% after a thermal correction of a few
   tenths of a percent to the static value).
+- **Superseded by 1k:** the frozen snapshot's 6.14 g/cc is not DFT's glass density; DFT's relaxed (NPT) cold glass
+  is at 6.24 g/cc, 0.85% below the model glass. The "≈ 2.4–3% too dense" figure and the reading below are withdrawn.
 - **Reading:** the model is right on the structure it was fitted to, yet its MD relaxes amorphous GST to ≈ 6.29
   (1g, 1i). The excess density therefore comes from the structural relaxation, which a frozen-ion EOS does not
   sample. This is still consistent with 1h's PES-hole hypothesis, but the EOS cannot tell whether DFT would relax the
   same way. Only DFT on the relaxed structures (`glass_relax/relaxed_for_dft.xyz`) can settle that.
+
+## 1k. Model glass vs DFT's own melt-quenched glass (`dft_glass/`): **CONSISTENT**
+The like-for-like comparison 1h–1j lacked: the same observables, with the same code and cutoffs
+(`analysis/mq_structure.frame_stats`), on DFT's NPT melt-quench (`GST_Melt_Quench_Eform_train.xyz`, 200 frames of
+144 atoms, every frame with its own cell volume) and on the model's 10 K/ps glass (`md_meltquench`, 7200 atoms,
+300 K, 0 bar). The DFT frames have no temperature, so frame energy ranks them; the coldest are the quenched glass
+(`dft_glass/RESULT.txt`):
+
+| | V (Å³/atom) | ρ (g/cc) | DFT static P (kbar) | Z_Ge | Z_Sb | Z_Te | Ge angles > 160° |
+|---|---|---|---|---|---|---|---|
+| DFT, coldest 10 / 20 / 40 frames | 30.39 / 30.38 / 30.33 | 6.233 / 6.235 / 6.247 | −0.9 / −0.7 / −0.2 | 4.46–4.51 | 3.92–3.98 | 3.04–3.07 | 0.102–0.106 |
+| DFT, all 200 frames (hot included) | 32.72 | 5.790 | | 4.01 | 3.27 | 2.67 | 0.059 |
+| model glass | 30.13 | 6.288 | | 4.46 | 3.85 | 3.01 | 0.100 |
+
+- **The model reproduces DFT's own glass:** 0.85% denser (about half of that is the −2 kbar pressure bias of 1h),
+  coordination within 0.08 per species, the same fraction of near-linear Ge bonds. The result does not depend on
+  how many cold frames are taken.
+- **DFT's cold glass is at zero pressure:** static P of −0.7 kbar is what a 300 K sample at zero total pressure
+  shows (thermal pressure ≈ +1.3 kbar). So 6.24 g/cc is DFT's equilibrium glass density, not a constrained cell.
+- **So the dense glass (1g) is a property of the DFT reference**, which puts its glass at its crystal's density,
+  unlike experiment (~6–7% less dense). Candidate causes: the functional and dispersion treatment, and a DFT quench
+  orders of magnitude faster than experiment. Retraining on more of the same DFT would not change it.
+- **Where 1h–1j went wrong:** 1h averaged all GST_Melt_Quench frames, most of them hot liquid; 1i relaxed those hot
+  frames (they densify on cooling in any potential, as its caveat said); 1j took one frozen snapshot's EOS as DFT's
+  glass density. Each reading carries a note pointing here.
+- **Open:** the DFT frames' temperatures and the DFT protocol (NPT, temperature schedule, functional, dispersion)
+  should be confirmed with Rushik. The energy ranking makes "coldest" a proxy, not a measurement.
+- **Consequences for this project:** the caveat in `meltquench/README.md` and `recryst/README.md` is restated as a
+  property of the DFT reference (the model inherits it); the DFT single-point request (`glass_relax/README_for_DFT.md`)
+  is no longer needed to diagnose the model.
 
 ## Analysis environment (`env/`)
 `env/environment.yml` → `env/cgst-ana` (exact build: `env/environment.lock.txt`): python 3.12, numpy 2.2.6,

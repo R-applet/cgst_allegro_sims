@@ -1,0 +1,11 @@
+# Frozen copies of external reference data used by tests/mq_analysis and tests/dft_glass (2026-11-07).
+# sha256 of each copy here, then of its source. model_glass_300K.npz holds the last 11 frames of the source
+# trajectory (steps, box, pos as float32 relative to the box origin, types 1-4), read with analysis/bondorder.read_dump.
+e75e8d6ccc25beac6422b338d36e26aa9953f0bfb83df316a77207338921829f  meltquench.dat
+7dfc26dccfeedd7bc6a67df4c26a0bf3e8615bd71dc9cf01e5d3f1efec2411f6  rdf_amorphous_300K_from_traj.dat
+3a09f5e32f0de0073144df22f5268ab8e487ab2a7c4c5a338782279a3f5a6a3c  model_glass_300K.npz
+# sources
+e75e8d6ccc25beac6422b338d36e26aa9953f0bfb83df316a77207338921829f  /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/meltquench.dat
+7dfc26dccfeedd7bc6a67df4c26a0bf3e8615bd71dc9cf01e5d3f1efec2411f6  /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/rdf_amorphous_300K_from_traj.dat
+ac21f2d3320b3fd1e7d103d482b098539ba96c46ca27d5f07ef6f0f6461226af  /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/traj.lammpstrj
+db096d92669b6b98e6c04c172ab3b9db28930b529feadc99206c745db7611047  /depot/prism/data/rapplet/cgst-vasp-data/xyz_files/train/GST_Melt_Quench_Eform_train.xyz
