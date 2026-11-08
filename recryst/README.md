@@ -172,9 +172,9 @@ chain, default 4); `EXTRA_VARS` (extra LAMMPS `-var`
 options for either, e.g. the calibrated criterion or `-var baro aniso`).
 
 ## Validation
-**`tests/recryst_logic`: PASS** (job 12267760; `check.py` writes `RESULT.txt`). On the 1×1×1 x0 glass (461 atoms)
+**`tests/recryst_logic`: PASS** (job 12289716; `check.py` writes `RESULT.txt`). On the 1×1×1 x0 glass (461 atoms)
 from `tests/mq_logic`, dt 1 fs:
-- **Ramp** (10 K/ps): exit 0; `snap_350K` … `snap_900K`; T follows the programmed schedule (mean deviation +2.6 K);
+- **Ramp** (10 K/ps): exit 0; `snap_350K` … `snap_900K`; T follows the programmed schedule (mean deviation +2.1 K);
   `stress.dat` has a row for every `ramp.dat` step.
 - **Anneal with resume** (tscale 0.1): both jobs exit 0; the hold ends at the programmed step 24000; `anneal.dat`
   (0–24000) and `stress.dat` (4000–24000) continue across the resume with no gap; restarts every 5000 steps;

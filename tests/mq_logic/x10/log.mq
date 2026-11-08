@@ -63,7 +63,7 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   512 atoms
-  read_data CPU = 0.087 seconds
+  read_data CPU = 0.189 seconds
 include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
@@ -90,6 +90,8 @@ group           Te type 3
 256 atoms in group Te
 group           C  type 4
 51 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+461 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
@@ -139,28 +141,28 @@ Per MPI rank memory allocation (min/avg/max) = 4.609 | 4.609 | 4.609 Mbytes
        100   90.535996     -3863.3356      14032.399    
        200   89.507598     -3201.0727      14032.399    
        207   89.506681     -3210.7713      14032.399    
-Loop time of 1.8901 on 1 procs for 207 steps with 512 atoms
+Loop time of 1.81155 on 1 procs for 207 steps with 512 atoms
 
-98.6% CPU use with 1 MPI tasks x 1 OpenMP threads
+98.1% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 Minimization stats:
   Stopping criterion = energy tolerance
   Energy initial, next-to-last, final = 
-      180.140054457945   89.5067590335812   89.5066809795789
-  Force two-norm initial, final = 13.074768 0.032901857
-  Force max component initial, final = 1.0032189 0.010507053
-  Final line search alpha, max atom move = 1 0.010507053
+      180.140054457945   89.5067590335595   89.5066809795399
+  Force two-norm initial, final = 13.074768 0.032901849
+  Force max component initial, final = 1.0032189 0.010507022
+  Final line search alpha, max atom move = 1 0.010507022
   Iterations, force evaluations = 207 382
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 1.7209     | 1.7209     | 1.7209     |   0.0 | 91.05
-Neigh   | 0.010876   | 0.010876   | 0.010876   |   0.0 |  0.58
-Comm    | 0.055835   | 0.055835   | 0.055835   |   0.0 |  2.95
-Output  | 0.00077564 | 0.00077564 | 0.00077564 |   0.0 |  0.04
+Pair    | 1.6864     | 1.6864     | 1.6864     |   0.0 | 93.09
+Neigh   | 0.0099495  | 0.0099495  | 0.0099495  |   0.0 |  0.55
+Comm    | 0.03583    | 0.03583    | 0.03583    |   0.0 |  1.98
+Output  | 0.00066558 | 0.00066558 | 0.00066558 |   0.0 |  0.04
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.1017     |            |       |  5.38
+Other   |            | 0.07874    |            |       |  4.35
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -190,7 +192,10 @@ include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.analysis
 # Columns of ${out}.dat:
 #   step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom
 #   msdGe msdSb msdTe msdC (A^2, centre-of-mass corrected, reference = positions when this file is included)
-#   xfrac (fraction of atoms classed crystalline)
+#   xfrac (fraction of all atoms classed crystalline), xfracGST (the same over Ge, Sb and Te only)
+# xfracGST is the measure for crystallization (recryst/): even on rocksalt sites C scores crystalline far less often
+# than Ge/Sb/Te (minimized x10 rocksalt: C 0.55, Ge/Sb/Te 0.98), and a growing crystal is expected to reject much of
+# the C, so counting C would lower the crystalline ceiling with C content and bias any fixed threshold.
 # MSD references reset when the include runs again (e.g. in a job restarted from a restart file).
 # Coordination numbers are not computed here: a single coord/atom cutoff cannot serve both C-X (~2 A) and
 # Ge/Sb-Te (~3 A) bonds. They come afterwards, with fixed per-pair bond cutoffs: averages from the running-
@@ -233,17 +238,19 @@ variable        xtal atom c_ncb>=${q_nmin}
 variable        xtal atom c_ncb>=4
 compute         nxtal all reduce sum v_xtal
 variable        xfrac equal c_nxtal/atoms
+compute         nxtalGST GST reduce sum v_xtal
+variable        xfracGST equal c_nxtalGST/count(GST)
 
 # ---------- output ----------
-thermo_style    custom step time temp press vol v_Vat density v_PEat v_Hat                 c_msdGe[4] c_msdSb[4] c_msdTe[4] v_msdC v_xfrac
+thermo_style    custom step time temp press vol v_Vat density v_PEat v_Hat                 c_msdGe[4] c_msdSb[4] c_msdTe[4] v_msdC v_xfrac v_xfracGST
 thermo_modify   flush yes
 thermo          ${nthermo}
 thermo          1000
 
-fix             log all print ${nthermo}                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac)"                 ${dat_mode} ${out}.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac"
-fix             log all print 1000                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac)"                 ${dat_mode} ${out}.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac"
-fix             log all print 1000                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac)"                 file ${out}.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac"
-fix             log all print 1000                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac)"                 file mq.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac"
+fix             log all print ${nthermo}                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac) $(v_xfracGST)"                 ${dat_mode} ${out}.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac xfracGST"
+fix             log all print 1000                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac) $(v_xfracGST)"                 ${dat_mode} ${out}.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac xfracGST"
+fix             log all print 1000                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac) $(v_xfracGST)"                 file ${out}.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac xfracGST"
+fix             log all print 1000                 "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac) $(v_xfracGST)"                 file mq.dat screen no                 title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac xfracGST"
 restart         $(round(50*v_tscale*v_nps)) mq.restart.a mq.restart.b
 restart         5000 mq.restart.a mq.restart.b
 
@@ -285,25 +292,25 @@ Neighbor list info ...
       bin: none
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 8.455 | 8.455 | 8.455 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-         0   0              300           -1702.4496      14032.399      27.407028      6.2987571      0.17481774     0.18439773     3.1554436e-30  1.5838489e-29  1.9018943e-29  2.8398993e-29  0.93359375   
-      1000   1              281.54579      128.28323      14128.462      27.594652      6.2559301      0.21266386     0.25119488     0.12984332     0.086915592    0.091530283    0.16710796     0.90039062   
-      2000   2              304.89866      1726.7578      14081.539      27.503005      6.2767763      0.2106281      0.27960394     0.13790436     0.12079076     0.12208684     0.37281353     0.90429688   
-Loop time of 10.0652 on 1 procs for 2000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 8.58 | 8.58 | 8.58 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+         0   0              300           -1702.4496      14032.399      27.407028      6.2987571      0.17481774     0.18439773     9.4044594e-30  1.5777218e-29  9.429353e-30   0              0.93359375     0.97613883   
+      1000   1              281.54579      128.28332      14128.462      27.594652      6.2559301      0.21266386     0.25119489     0.12984332     0.086915592    0.091530283    0.16710796     0.90039062     0.94577007   
+      2000   2              304.89867      1726.758       14081.539      27.503005      6.2767763      0.2106281      0.27960395     0.13790436     0.12079075     0.12208684     0.37281353     0.90429688     0.94143167   
+Loop time of 9.53105 on 1 procs for 2000 steps with 512 atoms
 
-Performance: 17.168 ns/day, 1.398 hours/ns, 198.705 timesteps/s, 101.737 katom-step/s
+Performance: 18.130 ns/day, 1.324 hours/ns, 209.840 timesteps/s, 107.438 katom-step/s
 99.3% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 8.9868     | 8.9868     | 8.9868     |   0.0 | 89.29
-Neigh   | 0.037204   | 0.037204   | 0.037204   |   0.0 |  0.37
-Comm    | 0.28006    | 0.28006    | 0.28006    |   0.0 |  2.78
-Output  | 0.0051793  | 0.0051793  | 0.0051793  |   0.0 |  0.05
-Modify  | 0.5592     | 0.5592     | 0.5592     |   0.0 |  5.56
-Other   |            | 0.1967     |            |       |  1.95
+Pair    | 8.7907     | 8.7907     | 8.7907     |   0.0 | 92.23
+Neigh   | 0.033498   | 0.033498   | 0.033498   |   0.0 |  0.35
+Comm    | 0.17532    | 0.17532    | 0.17532    |   0.0 |  1.84
+Output  | 0.0043635  | 0.0043635  | 0.0043635  |   0.0 |  0.05
+Modify  | 0.37476    | 0.37476    | 0.37476    |   0.0 |  3.93
+Other   |            | 0.1524     |            |       |  1.60
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -332,48 +339,48 @@ run             $(round(120*v_tscale*v_nps))
 run             12000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-      2000   2              304.89866      1726.7578      14081.539      27.503005      6.2767763      0.2106281      0.27960394     0.13790436     0.12079076     0.12208684     0.37281353     0.90429688   
-      3000   3              380.1234      -2705.0141      14318.206      27.965246      6.1730268      0.22122328     0.22304736     0.1709393      0.2005781      0.1891433      0.65625242     0.84179688   
-      4000   4              490.84932     -2323.2006      14453.473      28.22944       6.1152547      0.2271941      0.24958396     0.27736233     0.28491242     0.27765657     1.2571501      0.79882812   
-      5000   5              600.40097      458.47309      14370.386      28.06716       6.1506121      0.2338939      0.31938184     0.47273869     0.44082843     0.45811931     2.1805318      0.75195312   
-      6000   6              726.22128     -1599.55        14502.209      28.324626      6.094704       0.2446246      0.31003453     0.68496786     0.75059276     0.62609518     2.881484       0.66992188   
-      7000   7              773.84858      2646.1204      14617.374      28.549559      6.0466859      0.25536404     0.40234829     0.95893643     0.88283143     0.88843727     3.8621177      0.54296875   
-      8000   8              905.58772     -1213.4134      14848.58       29.001132      5.9525335      0.26617705     0.36104073     1.2538225      1.5667454      1.3692871      5.0476443      0.4296875    
-      9000   9              1038.5993     -51.753525      14683.8        28.679296      6.0193322      0.27406845     0.40712934     1.6288621      2.2455627      1.9641853      6.1539209      0.38671875   
-     10000   10             1093.2827      435.01502      15026.459      29.348553      5.8820691      0.31547728     0.46448772     3.4575955      2.7571731      2.8530623      7.6008186      0.15820312   
-     11000   11             1194.9839     -2002.7541      15231.971      29.749944      5.8027071      0.3463078      0.46328185     7.0290232      5.2071763      4.3718485      10.693015      0.041015625  
-     12000   12             1335.8169     -439.51221      15495.766      30.265168      5.7039239      0.37310358     0.53713182     9.3406196      8.2759566      7.0276972      14.546532      0.033203125  
-     13000   13             1463.0206     -2167.6639      15869.05       30.994237      5.5697519      0.39761953     0.54442679     13.744719      13.668136      11.469343      18.514772      0.017578125  
-     14000   14             1411.2229     -1862.36        15894.556      31.044055      5.5608139      0.41899928     0.56497247     19.283665      19.080486      17.365153      22.934491      0.009765625  
-Loop time of 59.7593 on 1 procs for 12000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+      2000   2              304.89867      1726.758       14081.539      27.503005      6.2767763      0.2106281      0.27960395     0.13790436     0.12079075     0.12208684     0.37281353     0.90429688     0.94143167   
+      3000   3              380.12339     -2705.0177      14318.206      27.965247      6.1730267      0.22122328     0.22304729     0.1709393      0.2005781      0.18914332     0.65625239     0.84179688     0.90455531   
+      4000   4              490.83974     -2323.1573      14453.472      28.229438      6.1152551      0.22719521     0.2495846      0.27736145     0.28491527     0.27766043     1.2571367      0.79882812     0.86334056   
+      5000   5              616.74158      502.4724       14376.638      28.079371      6.1479374      0.23016177     0.31853238     0.44416621     0.46365731     0.47287067     1.9337512      0.74609375     0.80477223   
+      6000   6              693.05307      3.2029767      14472.52       28.26664       6.1072066      0.24051178     0.32997746     0.56941342     0.73586298     0.70915786     2.5882528      0.65234375     0.71800434   
+      7000   7              822.57173      1794.9774      14582.549      28.48154       6.0611263      0.25893465     0.39696164     0.76299354     1.0696153      0.9237742      3.2020721      0.578125       0.63340564   
+      8000   8              860.45479      126.75044      14697.463      28.705983      6.0137364      0.28253696     0.39581321     1.1437923      1.6776912      1.2390465      3.8319493      0.453125       0.4989154    
+      9000   9              1019.4949     -1897.948       14932.653      29.165338      5.9190199      0.29016834     0.38714158     1.5713041      1.9253236      1.7885229      5.3747901      0.375          0.40780911   
+     10000   10             1063.6207     -752.36738      15064.255      29.422374      5.8673108      0.30388649     0.42728526     2.1196023      3.0617256      2.3549419      6.7340403      0.22070312     0.24078091   
+     11000   11             1251.7719     -1004.0572      15317.45       29.916894      5.7703253      0.35390579     0.49664557     3.5354355      4.7156757      3.8373483      7.5569555      0.1640625      0.18221258   
+     12000   12             1246.8417      354.5475       15524.053      30.320416      5.6935306      0.38968402     0.55724583     6.6871985      7.2109731      5.4951648      10.980054      0.078125       0.082429501  
+     13000   13             1338.6415      969.76369      15686.527      30.637748      5.6345595      0.3957162      0.58695562     12.246031      11.50381       9.9398073      15.389473      0.01953125     0.017353579  
+     14000   14             1504.8665      1902.1886      15995.42       31.241055      5.5257486      0.43384667     0.66507704     18.807212      16.83456       14.060524      21.166536      0.0234375      0.017353579  
+Loop time of 57.4933 on 1 procs for 12000 steps with 512 atoms
 
-Performance: 17.350 ns/day, 1.383 hours/ns, 200.805 timesteps/s, 102.812 katom-step/s
-99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.033 ns/day, 1.331 hours/ns, 208.720 timesteps/s, 106.865 katom-step/s
+99.3% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 53.392     | 53.392     | 53.392     |   0.0 | 89.35
-Neigh   | 0.45608    | 0.45608    | 0.45608    |   0.0 |  0.76
-Comm    | 1.6399     | 1.6399     | 1.6399     |   0.0 |  2.74
-Output  | 0.11028    | 0.11028    | 0.11028    |   0.0 |  0.18
-Modify  | 2.9144     | 2.9144     | 2.9144     |   0.0 |  4.88
-Other   |            | 1.247      |            |       |  2.09
+Pair    | 52.552     | 52.552     | 52.552     |   0.0 | 91.41
+Neigh   | 0.42209    | 0.42209    | 0.42209    |   0.0 |  0.73
+Comm    | 1.1921     | 1.1921     | 1.1921     |   0.0 |  2.07
+Output  | 0.070123   | 0.070123   | 0.070123   |   0.0 |  0.12
+Modify  | 2.2387     | 2.2387     | 2.2387     |   0.0 |  3.89
+Other   |            | 1.018      |            |       |  1.77
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1524 ave        1524 max        1524 min
+Nghost:           1533 ave        1533 max        1533 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        23390 ave       23390 max       23390 min
+FullNghs:        23204 ave       23204 max       23204 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 23390
-Ave neighs/atom = 45.683594
-Neighbor list builds = 625
+Total # of neighbors = 23204
+Ave neighs/atom = 45.320312
+Neighbor list builds = 617
 Dangerous builds = 0
 print           "heat_end_ps $(step*dt)" append stages.txt
 heat_end_ps 14
@@ -405,55 +412,55 @@ run             $(round((v_hold_ps-20)*v_tscale*v_nps))
 run             8000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 11.27 | 11.27 | 11.27 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     14000   14             1411.2229     -1862.36        15894.556      31.044055      5.5608139      0.41899928     0.56497247     19.283665      19.080486      17.365153      22.934491      0.009765625  
-     15000   15             1640.1158      800.31939      15946.325      31.145166      5.542761       0.40878687     0.63593205     25.759698      26.628243      22.99553       25.911461      0.01953125   
-     16000   16             1518.6712     -3111.7126      16133.606      31.510949      5.4784199      0.42726055     0.56198092     33.86203       32.577297      28.883605      31.752072      0.0078125    
-     17000   17             1543.5495      248.41597      16125.01       31.494161      5.4813403      0.41607763     0.62009051     39.897682      38.478366      34.573996      37.439058      0.017578125  
-     18000   18             1505.2605      6126.2245      15904.809      31.064079      5.5572293      0.41432085     0.72729039     45.959703      45.518219      40.489674      43.652756      0.02734375   
-     19000   19             1581.4886      521.84165      15929.803      31.112897      5.5485098      0.39073002     0.60488792     47.994815      49.530071      46.905139      45.618711      0.037109375  
-     20000   20             1400.1391      1565.7111      16024.422      31.297699      5.5157478      0.41839571     0.62960978     55.751819      58.14706       51.908963      50.11569       0.017578125  
-     21000   21             1461.5591     -2406.9434      16266.314      31.770144      5.4337246      0.39903136     0.53985555     62.218684      65.249727      59.035347      52.113465      0.01953125   
-     22000   22             1609.4111      2106.7314      16130.139      31.504177      5.4795976      0.40035541     0.64940722     68.051711      68.542591      65.017329      53.601182      0.013671875  
-Loop time of 38.0094 on 1 procs for 8000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 11.39 | 11.39 | 11.39 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     14000   14             1504.8665      1902.1886      15995.42       31.241055      5.5257486      0.43384667     0.66507704     18.807212      16.83456       14.060524      21.166536      0.0234375      0.017353579  
+     15000   15             1506.3276     -1582.7752      16049.188      31.346069      5.5072364      0.42341134     0.58677269     29.376549      23.164304      20.378922      27.122239      0.01953125     0.019522777  
+     16000   16             1521.5209      2033.8354      15764.067      30.789193      5.6068443      0.39226975     0.62764205     32.983226      29.556386      26.35321       29.632129      0.0078125      0.0065075922 
+     17000   17             1472.1697      760.00084      16167.82       31.577773      5.4668267      0.42110478     0.62600506     39.914124      32.537         32.488185      35.658277      0.01171875     0.010845987  
+     18000   18             1359.1814      3201.2726      15954.015      31.160185      5.5400895      0.41975924     0.65736455     42.335317      36.827619      36.526439      37.15585       0.009765625    0.0065075922 
+     19000   19             1485.4294     -2132.4592      16118.553      31.481549      5.4835362      0.40456497     0.55429557     45.786484      42.785668      42.858461      47.500823      0.01953125     0.013015184  
+     20000   20             1539.0652     -1623.8272      15953.438      31.159059      5.5402898      0.40373012     0.57070124     53.258734      50.437006      48.132619      45.884278      0.005859375    0.0065075922 
+     21000   21             1524.0385      5420.1435      16008.52       31.26664       5.5212269      0.40054865     0.70293598     58.81025       61.480504      54.366702      54.574491      0.01953125     0.017353579  
+     22000   22             1495.9615      340.63383      16239.931      31.718616      5.4425519      0.4006501      0.60038422     63.827165      68.306673      61.375715      62.315051      0.015625       0.017353579  
+Loop time of 36.8062 on 1 procs for 8000 steps with 512 atoms
 
-Performance: 18.185 ns/day, 1.320 hours/ns, 210.474 timesteps/s, 107.763 katom-step/s
+Performance: 18.779 ns/day, 1.278 hours/ns, 217.355 timesteps/s, 111.286 katom-step/s
 99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 33.853     | 33.853     | 33.853     |   0.0 | 89.06
-Neigh   | 0.34567    | 0.34567    | 0.34567    |   0.0 |  0.91
-Comm    | 1.0717     | 1.0717     | 1.0717     |   0.0 |  2.82
-Output  | 0.043876   | 0.043876   | 0.043876   |   0.0 |  0.12
-Modify  | 1.8541     | 1.8541     | 1.8541     |   0.0 |  4.88
-Other   |            | 0.8412     |            |       |  2.21
+Pair    | 33.405     | 33.405     | 33.405     |   0.0 | 90.76
+Neigh   | 0.33957    | 0.33957    | 0.33957    |   0.0 |  0.92
+Comm    | 0.82687    | 0.82687    | 0.82687    |   0.0 |  2.25
+Output  | 0.027605   | 0.027605   | 0.027605   |   0.0 |  0.08
+Modify  | 1.4983     | 1.4983     | 1.4983     |   0.0 |  4.07
+Other   |            | 0.7092     |            |       |  1.93
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1511 ave        1511 max        1511 min
+Nghost:           1514 ave        1514 max        1514 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        23148 ave       23148 max       23148 min
+FullNghs:        23018 ave       23018 max       23018 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 23148
-Ave neighs/atom = 45.210938
-Neighbor list builds = 484
+Total # of neighbors = 23018
+Ave neighs/atom = 44.957031
+Neighbor list builds = 505
 Dangerous builds = 0
 # gate.txt: hold length (ps, before tscale), the smallest per-species MSD over the first hold_ps-20 ps, the gate it
 # was compared with (gate_A2 x tscale), and passed (1/0)
 variable        hmin_now equal ${hmin}
-variable        hmin_now equal 30.6716815151219
+variable        hmin_now equal 34.468894729397
 variable        gate_now equal $(v_gate_A2*v_tscale)
 variable        gate_now equal 10
 variable        passed   equal $(v_hmin_now>=v_gate_now)
 variable        passed   equal 1
 print           "hold_ps ${hold_ps} min_species_msd_A2 $(v_hmin_now:%.1f) gate_A2 $(v_gate_now:%.6g) passed ${passed}"                 file gate.txt
-hold_ps 100 min_species_msd_A2 30.7 gate_A2 10 passed 1
+hold_ps 100 min_species_msd_A2 34.5 gate_A2 10 passed 1
 if "${passed} == 0" then    "print 'ERROR: MSD gate not met within the 1500 K hold; rerun every composition with a longer hold_ps (HOLD_PS)'"    "quit 1"
 # last 20 ps of the hold: liquid RDF
 variable        rdf_ps   index $(20*v_tscale)
@@ -516,12 +523,12 @@ Neighbor list info ...
       bin: standard
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 11.84 | 11.84 | 11.84 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     22000   22             1609.4111      2106.7314      16130.139      31.504177      5.4795976      0.40035541     0.64940722     68.051711      68.542591      65.017329      53.601182      0.013671875  
-Loop time of 0.000377857 on 1 procs for 0 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 11.96 | 11.96 | 11.96 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     22000   22             1495.9615      340.63383      16239.931      31.718616      5.4425519      0.4006501      0.60038422     63.827165      68.306673      61.375715      62.315051      0.015625       0.017353579  
+Loop time of 0.000294181 on 1 procs for 0 steps with 512 atoms
 
-98.7% CPU use with 1 MPI tasks x 1 OpenMP threads
+99.6% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -531,19 +538,19 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.0003779  |            |       |100.00
+Other   |            | 0.0002942  |            |       |100.00
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1511 ave        1511 max        1511 min
+Nghost:           1506 ave        1506 max        1506 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        23168 ave       23168 max       23168 min
+FullNghs:        23028 ave       23028 max       23028 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 23168
-Ave neighs/atom = 45.25
+Total # of neighbors = 23028
+Ave neighs/atom = 44.976562
 Neighbor list builds = 0
 Dangerous builds = 0
 fix             rdf all ave/time ${rdf_nev} ${rdf_nrep} ${rdf_N} c_rdf[*] file ${rdf_file} mode vector
@@ -555,38 +562,38 @@ run             ${rdf_N}
 run             2000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 11.84 | 11.84 | 11.84 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     22000   22             1609.4111      2106.7314      16130.139      31.504177      5.4795976      0.40035541     0.64940722     68.051711      68.542591      65.017329      53.601182      0.013671875  
-     23000   23             1575.4661     -4067.114       16163.492      31.569321      5.4682903      0.38745571     0.51056444     77.29843       73.115555      70.556556      60.735617      0.009765625  
-     24000   24             1550.851       1557.1342      16204.974      31.650339      5.4542927      0.39784152     0.62867375     83.108305      77.761911      76.479739      57.941175      0.021484375  
-Loop time of 9.61959 on 1 procs for 2000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 11.96 | 11.96 | 11.96 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     22000   22             1495.9615      340.63383      16239.931      31.718616      5.4425519      0.4006501      0.60038422     63.827165      68.306673      61.375715      62.315051      0.015625       0.017353579  
+     23000   23             1488.6338     -1446.3259      15992.656      31.235656      5.5267036      0.40871448     0.57256244     69.949501      72.251251      67.951766      67.48955       0.01953125     0.015184382  
+     24000   24             1563.4613     -477.61139      16025.305      31.299425      5.5154437      0.38644229     0.57881041     77.81947       74.127554      73.726177      73.066474      0.03515625     0.028199566  
+Loop time of 9.2604 on 1 procs for 2000 steps with 512 atoms
 
-Performance: 17.963 ns/day, 1.336 hours/ns, 207.909 timesteps/s, 106.449 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.660 ns/day, 1.286 hours/ns, 215.973 timesteps/s, 110.578 katom-step/s
+99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 8.4783     | 8.4783     | 8.4783     |   0.0 | 88.14
-Neigh   | 0.11518    | 0.11518    | 0.11518    |   0.0 |  1.20
-Comm    | 0.26916    | 0.26916    | 0.26916    |   0.0 |  2.80
-Output  | 0.0049618  | 0.0049618  | 0.0049618  |   0.0 |  0.05
-Modify  | 0.54087    | 0.54087    | 0.54087    |   0.0 |  5.62
-Other   |            | 0.2111     |            |       |  2.19
+Pair    | 8.3426     | 8.3426     | 8.3426     |   0.0 | 90.09
+Neigh   | 0.10436    | 0.10436    | 0.10436    |   0.0 |  1.13
+Comm    | 0.2038     | 0.2038     | 0.2038     |   0.0 |  2.20
+Output  | 0.0043686  | 0.0043686  | 0.0043686  |   0.0 |  0.05
+Modify  | 0.43074    | 0.43074    | 0.43074    |   0.0 |  4.65
+Other   |            | 0.1745     |            |       |  1.88
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1539 ave        1539 max        1539 min
+Nghost:           1552 ave        1552 max        1552 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Neighs:          11452 ave       11452 max       11452 min
+Neighs:          11643 ave       11643 max       11643 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        22962 ave       22962 max       22962 min
+FullNghs:        23302 ave       23302 max       23302 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 22962
-Ave neighs/atom = 44.847656
-Neighbor list builds = 122
+Total # of neighbors = 23302
+Ave neighs/atom = 45.511719
+Neighbor list builds = 120
 Dangerous builds = 0
 unfix           rdf
 uncompute       rdf
@@ -642,37 +649,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     24000   24             1550.851       1557.1342      16204.974      31.650339      5.4542927      0.39784152     0.62867375     83.108305      77.761911      76.479739      57.941175      0.021484375  
-     25000   25             1365.5461     -938.40345      15721.682      30.70641       5.6219601      0.37425839     0.53243941     87.844857      87.91914       80.458829      63.353543      0.033203125  
-Loop time of 4.7583 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     24000   24             1563.4613     -477.61139      16025.305      31.299425      5.5154437      0.38644229     0.57881041     77.81947       74.127554      73.726177      73.066474      0.03515625     0.028199566  
+     25000   25             1434.8811      1973.5248      15746.451      30.754787      5.6131169      0.3732626      0.59625633     79.77227       77.360669      79.596318      74.277383      0.013671875    0.013015184  
+Loop time of 4.59706 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 18.158 ns/day, 1.322 hours/ns, 210.159 timesteps/s, 107.601 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.795 ns/day, 1.277 hours/ns, 217.530 timesteps/s, 111.375 katom-step/s
+99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.2343     | 4.2343     | 4.2343     |   0.0 | 88.99
-Neigh   | 0.044796   | 0.044796   | 0.044796   |   0.0 |  0.94
-Comm    | 0.13426    | 0.13426    | 0.13426    |   0.0 |  2.82
-Output  | 0.0078952  | 0.0078952  | 0.0078952  |   0.0 |  0.17
-Modify  | 0.2313     | 0.2313     | 0.2313     |   0.0 |  4.86
-Other   |            | 0.1057     |            |       |  2.22
+Pair    | 4.1675     | 4.1675     | 4.1675     |   0.0 | 90.66
+Neigh   | 0.043637   | 0.043637   | 0.043637   |   0.0 |  0.95
+Comm    | 0.10378    | 0.10378    | 0.10378    |   0.0 |  2.26
+Output  | 0.0063632  | 0.0063632  | 0.0063632  |   0.0 |  0.14
+Modify  | 0.18657    | 0.18657    | 0.18657    |   0.0 |  4.06
+Other   |            | 0.08921    |            |       |  1.94
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1586 ave        1586 max        1586 min
+Nghost:           1576 ave        1576 max        1576 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        23746 ave       23746 max       23746 min
+FullNghs:        23676 ave       23676 max       23676 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 23746
-Ave neighs/atom = 46.378906
-Neighbor list builds = 60
+Total # of neighbors = 23676
+Ave neighs/atom = 46.242188
+Neighbor list builds = 64
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_1400K.data
@@ -693,37 +700,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     25000   25             1365.5461     -938.40345      15721.682      30.70641       5.6219601      0.37425839     0.53243941     87.844857      87.91914       80.458829      63.353543      0.033203125  
-     26000   26             1347.8244      681.90719      15570.34       30.41082       5.676605       0.34580432     0.53262726     92.862925      92.263982      84.635283      69.395341      0.009765625  
-Loop time of 4.74329 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     25000   25             1434.8811      1973.5248      15746.451      30.754787      5.6131169      0.3732626      0.59625633     79.77227       77.360669      79.596318      74.277383      0.013671875    0.013015184  
+     26000   26             1303.4397      508.75259      15532.867      30.337631      5.6902997      0.34365161     0.5214387      82.472012      79.765158      83.76376       76.519608      0.005859375    0.0065075922 
+Loop time of 4.5922 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 18.215 ns/day, 1.318 hours/ns, 210.824 timesteps/s, 107.942 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.814 ns/day, 1.276 hours/ns, 217.760 timesteps/s, 111.493 katom-step/s
+99.3% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.2188     | 4.2188     | 4.2188     |   0.0 | 88.94
-Neigh   | 0.044758   | 0.044758   | 0.044758   |   0.0 |  0.94
-Comm    | 0.13553    | 0.13553    | 0.13553    |   0.0 |  2.86
-Output  | 0.0054577  | 0.0054577  | 0.0054577  |   0.0 |  0.12
-Modify  | 0.23225    | 0.23225    | 0.23225    |   0.0 |  4.90
-Other   |            | 0.1065     |            |       |  2.24
+Pair    | 4.1696     | 4.1696     | 4.1696     |   0.0 | 90.80
+Neigh   | 0.039726   | 0.039726   | 0.039726   |   0.0 |  0.87
+Comm    | 0.10121    | 0.10121    | 0.10121    |   0.0 |  2.20
+Output  | 0.0046812  | 0.0046812  | 0.0046812  |   0.0 |  0.10
+Modify  | 0.18919    | 0.18919    | 0.18919    |   0.0 |  4.12
+Other   |            | 0.08779    |            |       |  1.91
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1589 ave        1589 max        1589 min
+Nghost:           1592 ave        1592 max        1592 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        23924 ave       23924 max       23924 min
+FullNghs:        24008 ave       24008 max       24008 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 23924
-Ave neighs/atom = 46.726562
-Neighbor list builds = 62
+Total # of neighbors = 24008
+Ave neighs/atom = 46.890625
+Neighbor list builds = 57
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_1300K.data
@@ -744,37 +751,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     26000   26             1347.8244      681.90719      15570.34       30.41082       5.676605       0.34580432     0.53262726     92.862925      92.263982      84.635283      69.395341      0.009765625  
-     27000   27             1247.5124      793.74852      15556.545      30.383877      5.6816388      0.32886742     0.50485885     101.80597      97.797265      91.399944      73.560829      0.037109375  
-Loop time of 4.72149 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     26000   26             1303.4397      508.75259      15532.867      30.337631      5.6902997      0.34365161     0.5214387      82.472012      79.765158      83.76376       76.519608      0.005859375    0.0065075922 
+     27000   27             1138.0117     -3879.448       15849.172      30.955415      5.5767372      0.33662082     0.40847884     88.289995      83.834912      90.876101      84.362786      0.04296875     0.032537961  
+Loop time of 4.58472 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 18.299 ns/day, 1.312 hours/ns, 211.798 timesteps/s, 108.440 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.845 ns/day, 1.274 hours/ns, 218.116 timesteps/s, 111.675 katom-step/s
+99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.2105     | 4.2105     | 4.2105     |   0.0 | 89.18
-Neigh   | 0.039584   | 0.039584   | 0.039584   |   0.0 |  0.84
-Comm    | 0.13105    | 0.13105    | 0.13105    |   0.0 |  2.78
-Output  | 0.0058332  | 0.0058332  | 0.0058332  |   0.0 |  0.12
-Modify  | 0.23107    | 0.23107    | 0.23107    |   0.0 |  4.89
-Other   |            | 0.1034     |            |       |  2.19
+Pair    | 4.1673     | 4.1673     | 4.1673     |   0.0 | 90.89
+Neigh   | 0.036211   | 0.036211   | 0.036211   |   0.0 |  0.79
+Comm    | 0.099942   | 0.099942   | 0.099942   |   0.0 |  2.18
+Output  | 0.0046962  | 0.0046962  | 0.0046962  |   0.0 |  0.10
+Modify  | 0.18946    | 0.18946    | 0.18946    |   0.0 |  4.13
+Other   |            | 0.08714    |            |       |  1.90
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1580 ave        1580 max        1580 min
+Nghost:           1525 ave        1525 max        1525 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        23898 ave       23898 max       23898 min
+FullNghs:        23470 ave       23470 max       23470 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 23898
-Ave neighs/atom = 46.675781
-Neighbor list builds = 55
+Total # of neighbors = 23470
+Ave neighs/atom = 45.839844
+Neighbor list builds = 53
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_1200K.data
@@ -795,37 +802,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     27000   27             1247.5124      793.74852      15556.545      30.383877      5.6816388      0.32886742     0.50485885     101.80597      97.797265      91.399944      73.560829      0.037109375  
-     28000   28             1100.6867      723.01527      15256.155      29.797179      5.7935087      0.30113989     0.45658353     104.96859      98.191703      93.940856      73.69808       0.02734375   
-Loop time of 4.71648 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     27000   27             1138.0117     -3879.448       15849.172      30.955415      5.5767372      0.33662082     0.40847884     88.289995      83.834912      90.876101      84.362786      0.04296875     0.032537961  
+     28000   28             1131.7441      2326.2573      15247.127      29.779545      5.7969392      0.30265994     0.4919016      91.29089       84.990057      90.399247      83.704259      0.033203125    0.019522777  
+Loop time of 4.5904 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 18.319 ns/day, 1.310 hours/ns, 212.023 timesteps/s, 108.556 katom-step/s
+Performance: 18.822 ns/day, 1.275 hours/ns, 217.846 timesteps/s, 111.537 katom-step/s
 99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.2079     | 4.2079     | 4.2079     |   0.0 | 89.22
-Neigh   | 0.039492   | 0.039492   | 0.039492   |   0.0 |  0.84
-Comm    | 0.13034    | 0.13034    | 0.13034    |   0.0 |  2.76
-Output  | 0.0054227  | 0.0054227  | 0.0054227  |   0.0 |  0.11
-Modify  | 0.23031    | 0.23031    | 0.23031    |   0.0 |  4.88
-Other   |            | 0.103      |            |       |  2.18
+Pair    | 4.171      | 4.171      | 4.171      |   0.0 | 90.86
+Neigh   | 0.035606   | 0.035606   | 0.035606   |   0.0 |  0.78
+Comm    | 0.10022    | 0.10022    | 0.10022    |   0.0 |  2.18
+Output  | 0.0048071  | 0.0048071  | 0.0048071  |   0.0 |  0.10
+Modify  | 0.19139    | 0.19139    | 0.19139    |   0.0 |  4.17
+Other   |            | 0.08743    |            |       |  1.90
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1563 ave        1563 max        1563 min
+Nghost:           1571 ave        1571 max        1571 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        24420 ave       24420 max       24420 min
+FullNghs:        24544 ave       24544 max       24544 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 24420
-Ave neighs/atom = 47.695312
-Neighbor list builds = 54
+Total # of neighbors = 24544
+Ave neighs/atom = 47.9375
+Neighbor list builds = 52
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_1100K.data
@@ -846,37 +853,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     28000   28             1100.6867      723.01527      15256.155      29.797179      5.7935087      0.30113989     0.45658353     104.96859      98.191703      93.940856      73.69808       0.02734375   
-     29000   29             1012.61       -853.39269      15269.807      29.823842      5.7883291      0.28653012     0.40127904     104.8346       104.22472      98.247384      77.142627      0.04296875   
-Loop time of 4.88476 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     28000   28             1131.7441      2326.2573      15247.127      29.779545      5.7969392      0.30265994     0.4919016      91.29089       84.990057      90.399247      83.704259      0.033203125    0.019522777  
+     29000   29             1024.6028      712.13758      15240.651      29.766897      5.7994024      0.28671711     0.43212957     94.303551      86.936228      96.901887      83.85047       0.041015625    0.030368764  
+Loop time of 4.75982 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 17.688 ns/day, 1.357 hours/ns, 204.718 timesteps/s, 104.816 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.152 ns/day, 1.322 hours/ns, 210.092 timesteps/s, 107.567 katom-step/s
+98.9% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.3852     | 4.3852     | 4.3852     |   0.0 | 89.77
-Neigh   | 0.036126   | 0.036126   | 0.036126   |   0.0 |  0.74
-Comm    | 0.12743    | 0.12743    | 0.12743    |   0.0 |  2.61
-Output  | 0.00546    | 0.00546    | 0.00546    |   0.0 |  0.11
-Modify  | 0.22941    | 0.22941    | 0.22941    |   0.0 |  4.70
-Other   |            | 0.1011     |            |       |  2.07
+Pair    | 4.3488     | 4.3488     | 4.3488     |   0.0 | 91.36
+Neigh   | 0.032708   | 0.032708   | 0.032708   |   0.0 |  0.69
+Comm    | 0.098569   | 0.098569   | 0.098569   |   0.0 |  2.07
+Output  | 0.0047272  | 0.0047272  | 0.0047272  |   0.0 |  0.10
+Modify  | 0.18956    | 0.18956    | 0.18956    |   0.0 |  3.98
+Other   |            | 0.08548    |            |       |  1.80
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1569 ave        1569 max        1569 min
+Nghost:           1580 ave        1580 max        1580 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        24466 ave       24466 max       24466 min
+FullNghs:        24598 ave       24598 max       24598 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 24466
-Ave neighs/atom = 47.785156
-Neighbor list builds = 50
+Total # of neighbors = 24598
+Ave neighs/atom = 48.042969
+Neighbor list builds = 48
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_1000K.data
@@ -897,37 +904,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     29000   29             1012.61       -853.39269      15269.807      29.823842      5.7883291      0.28653012     0.40127904     104.8346       104.22472      98.247384      77.142627      0.04296875   
-     30000   30             966.31575     -472.78702      15048.193      29.391003      5.8735734      0.26264109     0.37863024     106.23169      101.72314      98.279719      76.124652      0.044921875  
-Loop time of 4.87941 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     29000   29             1024.6028      712.13758      15240.651      29.766897      5.7994024      0.28671711     0.43212957     94.303551      86.936228      96.901887      83.85047       0.041015625    0.030368764  
+     30000   30             920.57624     -1523.5146      15096.069      29.48451       5.854946       0.25782084     0.34854534     92.203105      87.624596      99.813826      84.760905      0.03515625     0.030368764  
+Loop time of 4.73777 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 17.707 ns/day, 1.355 hours/ns, 204.943 timesteps/s, 104.931 katom-step/s
-99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.236 ns/day, 1.316 hours/ns, 211.070 timesteps/s, 108.068 katom-step/s
+98.9% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.3824     | 4.3824     | 4.3824     |   0.0 | 89.82
-Neigh   | 0.032953   | 0.032953   | 0.032953   |   0.0 |  0.68
-Comm    | 0.12524    | 0.12524    | 0.12524    |   0.0 |  2.57
-Output  | 0.0077079  | 0.0077079  | 0.0077079  |   0.0 |  0.16
-Modify  | 0.23122    | 0.23122    | 0.23122    |   0.0 |  4.74
-Other   |            | 0.09984    |            |       |  2.05
+Pair    | 4.3345     | 4.3345     | 4.3345     |   0.0 | 91.49
+Neigh   | 0.028593   | 0.028593   | 0.028593   |   0.0 |  0.60
+Comm    | 0.095963   | 0.095963   | 0.095963   |   0.0 |  2.03
+Output  | 0.0064908  | 0.0064908  | 0.0064908  |   0.0 |  0.14
+Modify  | 0.18905    | 0.18905    | 0.18905    |   0.0 |  3.99
+Other   |            | 0.08315    |            |       |  1.76
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1601 ave        1601 max        1601 min
+Nghost:           1603 ave        1603 max        1603 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        24958 ave       24958 max       24958 min
+FullNghs:        24834 ave       24834 max       24834 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 24958
-Ave neighs/atom = 48.746094
-Neighbor list builds = 45
+Total # of neighbors = 24834
+Ave neighs/atom = 48.503906
+Neighbor list builds = 42
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_900K.data
@@ -948,37 +955,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     30000   30             966.31575     -472.78702      15048.193      29.391003      5.8735734      0.26264109     0.37863024     106.23169      101.72314      98.279719      76.124652      0.044921875  
-     31000   31             815.04493     -2202.31        14888.232      29.078578      5.93668        0.24058313     0.30575954     105.97184      103.77919      98.896402      78.922155      0.046875     
-Loop time of 4.85034 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     30000   30             920.57624     -1523.5146      15096.069      29.48451       5.854946       0.25782084     0.34854534     92.203105      87.624596      99.813826      84.760905      0.03515625     0.030368764  
+     31000   31             781.71321      1250.3958      14741.218      28.79144       5.9958866      0.23200631     0.35532319     93.822559      91.012953      99.377601      86.45571       0.052734375    0.043383948  
+Loop time of 4.73543 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 17.813 ns/day, 1.347 hours/ns, 206.171 timesteps/s, 105.560 katom-step/s
-99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.245 ns/day, 1.315 hours/ns, 211.174 timesteps/s, 108.121 katom-step/s
+98.9% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.3659     | 4.3659     | 4.3659     |   0.0 | 90.01
-Neigh   | 0.030492   | 0.030492   | 0.030492   |   0.0 |  0.63
-Comm    | 0.12255    | 0.12255    | 0.12255    |   0.0 |  2.53
-Output  | 0.0054339  | 0.0054339  | 0.0054339  |   0.0 |  0.11
-Modify  | 0.22829    | 0.22829    | 0.22829    |   0.0 |  4.71
-Other   |            | 0.09771    |            |       |  2.01
+Pair    | 4.3322     | 4.3322     | 4.3322     |   0.0 | 91.48
+Neigh   | 0.029321   | 0.029321   | 0.029321   |   0.0 |  0.62
+Comm    | 0.096261   | 0.096261   | 0.096261   |   0.0 |  2.03
+Output  | 0.0045637  | 0.0045637  | 0.0045637  |   0.0 |  0.10
+Modify  | 0.18919    | 0.18919    | 0.18919    |   0.0 |  4.00
+Other   |            | 0.08391    |            |       |  1.77
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1617 ave        1617 max        1617 min
+Nghost:           1591 ave        1591 max        1591 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        25100 ave       25100 max       25100 min
+FullNghs:        25434 ave       25434 max       25434 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 25100
-Ave neighs/atom = 49.023438
-Neighbor list builds = 41
+Total # of neighbors = 25434
+Ave neighs/atom = 49.675781
+Neighbor list builds = 43
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_800K.data
@@ -999,37 +1006,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     31000   31             815.04493     -2202.31        14888.232      29.078578      5.93668        0.24058313     0.30575954     105.97184      103.77919      98.896402      78.922155      0.046875     
-     32000   32             721.57353      282.25295      14870.029      29.043025      5.9439474      0.22361726     0.32182226     106.99388      103.74187      99.997676      79.731948      0.05859375   
-Loop time of 4.9764 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     31000   31             781.71321      1250.3958      14741.218      28.79144       5.9958866      0.23200631     0.35532319     93.822559      91.012953      99.377601      86.45571       0.052734375    0.043383948  
+     32000   32             678.73255     -2120.932       14790.334      28.887371      5.9759753      0.21553563     0.26485677     94.532482      90.548323      99.341073      86.884401      0.04296875     0.032537961  
+Loop time of 4.70665 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 17.362 ns/day, 1.382 hours/ns, 200.948 timesteps/s, 102.886 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.357 ns/day, 1.307 hours/ns, 212.465 timesteps/s, 108.782 katom-step/s
+99.1% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.4196     | 4.4196     | 4.4196     |   0.0 | 88.81
-Neigh   | 0.025977   | 0.025977   | 0.025977   |   0.0 |  0.52
-Comm    | 0.14472    | 0.14472    | 0.14472    |   0.0 |  2.91
-Output  | 0.0055896  | 0.0055896  | 0.0055896  |   0.0 |  0.11
-Modify  | 0.27803    | 0.27803    | 0.27803    |   0.0 |  5.59
-Other   |            | 0.1025     |            |       |  2.06
+Pair    | 4.3227     | 4.3227     | 4.3227     |   0.0 | 91.84
+Neigh   | 0.022383   | 0.022383   | 0.022383   |   0.0 |  0.48
+Comm    | 0.090616   | 0.090616   | 0.090616   |   0.0 |  1.93
+Output  | 0.0047027  | 0.0047027  | 0.0047027  |   0.0 |  0.10
+Modify  | 0.18727    | 0.18727    | 0.18727    |   0.0 |  3.98
+Other   |            | 0.07893    |            |       |  1.68
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1652 ave        1652 max        1652 min
+Nghost:           1598 ave        1598 max        1598 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        25262 ave       25262 max       25262 min
+FullNghs:        25510 ave       25510 max       25510 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 25262
-Ave neighs/atom = 49.339844
-Neighbor list builds = 33
+Total # of neighbors = 25510
+Ave neighs/atom = 49.824219
+Neighbor list builds = 32
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_700K.data
@@ -1050,37 +1057,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     32000   32             721.57353      282.25295      14870.029      29.043025      5.9439474      0.22361726     0.32182226     106.99388      103.74187      99.997676      79.731948      0.05859375   
-     33000   33             648.34637      1449.5826      14500.279      28.320858      6.0955149      0.17993836     0.28920356     105.27591      102.90108      99.441486      78.557071      0.0625       
-Loop time of 4.95568 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     32000   32             678.73255     -2120.932       14790.334      28.887371      5.9759753      0.21553563     0.26485677     94.532482      90.548323      99.341073      86.884401      0.04296875     0.032537961  
+     33000   33             618.69224      2737.3423      14512.96       28.345626      6.0901889      0.19189171     0.32013668     94.501507      88.525209      99.290173      86.174271      0.068359375    0.054229935  
+Loop time of 4.69725 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 17.435 ns/day, 1.377 hours/ns, 201.789 timesteps/s, 103.316 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.394 ns/day, 1.305 hours/ns, 212.890 timesteps/s, 109.000 katom-step/s
+99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.4081     | 4.4081     | 4.4081     |   0.0 | 88.95
-Neigh   | 0.022309   | 0.022309   | 0.022309   |   0.0 |  0.45
-Comm    | 0.14186    | 0.14186    | 0.14186    |   0.0 |  2.86
-Output  | 0.0055517  | 0.0055517  | 0.0055517  |   0.0 |  0.11
-Modify  | 0.27714    | 0.27714    | 0.27714    |   0.0 |  5.59
-Other   |            | 0.1007     |            |       |  2.03
+Pair    | 4.3251     | 4.3251     | 4.3251     |   0.0 | 92.08
+Neigh   | 0.018189   | 0.018189   | 0.018189   |   0.0 |  0.39
+Comm    | 0.087171   | 0.087171   | 0.087171   |   0.0 |  1.86
+Output  | 0.0045883  | 0.0045883  | 0.0045883  |   0.0 |  0.10
+Modify  | 0.18559    | 0.18559    | 0.18559    |   0.0 |  3.95
+Other   |            | 0.0766     |            |       |  1.63
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1624 ave        1624 max        1624 min
+Nghost:           1606 ave        1606 max        1606 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        25880 ave       25880 max       25880 min
+FullNghs:        25956 ave       25956 max       25956 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 25880
-Ave neighs/atom = 50.546875
-Neighbor list builds = 29
+Total # of neighbors = 25956
+Ave neighs/atom = 50.695312
+Neighbor list builds = 26
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_600K.data
@@ -1101,37 +1108,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     33000   33             648.34637      1449.5826      14500.279      28.320858      6.0955149      0.17993836     0.28920356     105.27591      102.90108      99.441486      78.557071      0.0625       
-     34000   34             498.10587      1001.2013      14472.142      28.265903      6.107366       0.16814039     0.25006325     106.74931      102.99449      99.147292      79.164538      0.0703125    
-Loop time of 4.94329 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     33000   33             618.69224      2737.3423      14512.96       28.345626      6.0901889      0.19189171     0.32013668     94.501507      88.525209      99.290173      86.174271      0.068359375    0.054229935  
+     34000   34             498.77359      2928.6793      14386.195      28.098037      6.1438532      0.17039098     0.28609807     93.853014      89.365181      99.282267      87.069308      0.06640625     0.067245119  
+Loop time of 4.69627 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 17.478 ns/day, 1.373 hours/ns, 202.295 timesteps/s, 103.575 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 18.398 ns/day, 1.305 hours/ns, 212.935 timesteps/s, 109.023 katom-step/s
+99.3% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.4073     | 4.4073     | 4.4073     |   0.0 | 89.16
-Neigh   | 0.017604   | 0.017604   | 0.017604   |   0.0 |  0.36
-Comm    | 0.13816    | 0.13816    | 0.13816    |   0.0 |  2.79
-Output  | 0.0056312  | 0.0056312  | 0.0056312  |   0.0 |  0.11
-Modify  | 0.27646    | 0.27646    | 0.27646    |   0.0 |  5.59
-Other   |            | 0.09812    |            |       |  1.98
+Pair    | 4.3247     | 4.3247     | 4.3247     |   0.0 | 92.09
+Neigh   | 0.017021   | 0.017021   | 0.017021   |   0.0 |  0.36
+Comm    | 0.086588   | 0.086588   | 0.086588   |   0.0 |  1.84
+Output  | 0.0048072  | 0.0048072  | 0.0048072  |   0.0 |  0.10
+Modify  | 0.18687    | 0.18687    | 0.18687    |   0.0 |  3.98
+Other   |            | 0.07629    |            |       |  1.62
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1640 ave        1640 max        1640 min
+Nghost:           1629 ave        1629 max        1629 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        26072 ave       26072 max       26072 min
+FullNghs:        26186 ave       26186 max       26186 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 26072
-Ave neighs/atom = 50.921875
-Neighbor list builds = 23
+Total # of neighbors = 26186
+Ave neighs/atom = 51.144531
+Neighbor list builds = 24
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_500K.data
@@ -1152,36 +1159,36 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     34000   34             498.10587      1001.2013      14472.142      28.265903      6.107366       0.16814039     0.25006325     106.74931      102.99449      99.147292      79.164538      0.0703125    
-     35000   35             426.75659     -1025.428       14377.001      28.080081      6.1477819      0.1456503      0.18273331     104.99818      101.6384       98.739542      77.902256      0.0703125    
-Loop time of 4.93635 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     34000   34             498.77359      2928.6793      14386.195      28.098037      6.1438532      0.17039098     0.28609807     93.853014      89.365181      99.282267      87.069308      0.06640625     0.067245119  
+     35000   35             398.42435     -2693.0398      14470.095      28.261905      6.10823        0.15007139     0.15396679     95.096995      89.757968      100.58468      89.903721      0.087890625    0.073752711  
+Loop time of 4.67745 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 17.503 ns/day, 1.371 hours/ns, 202.579 timesteps/s, 103.720 katom-step/s
+Performance: 18.472 ns/day, 1.299 hours/ns, 213.792 timesteps/s, 109.461 katom-step/s
 99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.4011     | 4.4011     | 4.4011     |   0.0 | 89.16
-Neigh   | 0.017093   | 0.017093   | 0.017093   |   0.0 |  0.35
-Comm    | 0.13764    | 0.13764    | 0.13764    |   0.0 |  2.79
-Output  | 0.0073542  | 0.0073542  | 0.0073542  |   0.0 |  0.15
-Modify  | 0.2757     | 0.2757     | 0.2757     |   0.0 |  5.59
-Other   |            | 0.0975     |            |       |  1.98
+Pair    | 4.3122     | 4.3122     | 4.3122     |   0.0 | 92.19
+Neigh   | 0.015263   | 0.015263   | 0.015263   |   0.0 |  0.33
+Comm    | 0.085359   | 0.085359   | 0.085359   |   0.0 |  1.82
+Output  | 0.006103   | 0.006103   | 0.006103   |   0.0 |  0.13
+Modify  | 0.18392    | 0.18392    | 0.18392    |   0.0 |  3.93
+Other   |            | 0.07462    |            |       |  1.60
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1648 ave        1648 max        1648 min
+Nghost:           1620 ave        1620 max        1620 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        26328 ave       26328 max       26328 min
+FullNghs:        26014 ave       26014 max       26014 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 26328
-Ave neighs/atom = 51.421875
+Total # of neighbors = 26014
+Ave neighs/atom = 50.808594
 Neighbor list builds = 22
 Dangerous builds = 0
 write_data      snap_${T2}K.data
@@ -1203,37 +1210,37 @@ run             $(round(100.0/v_qrate*v_tscale*v_nps))
 run             1000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     35000   35             426.75659     -1025.428       14377.001      28.080081      6.1477819      0.1456503      0.18273331     104.99818      101.6384       98.739542      77.902256      0.0703125    
-     36000   36             320.18342     -1428.012       14287.792      27.905843      6.1861673      0.12559217     0.14202595     105.14522      102.57018      99.346005      77.737685      0.08203125   
-Loop time of 4.92738 on 1 procs for 1000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     35000   35             398.42435     -2693.0398      14470.095      28.261905      6.10823        0.15007139     0.15396679     95.096995      89.757968      100.58468      89.903721      0.087890625    0.073752711  
+     36000   36             304.36715     -1285.0015      14382.078      28.089995      6.145612       0.12790532     0.14464187     94.654372      89.045356      99.523624      88.321215      0.078125       0.069414317  
+Loop time of 4.94732 on 1 procs for 1000 steps with 512 atoms
 
-Performance: 17.535 ns/day, 1.369 hours/ns, 202.948 timesteps/s, 103.909 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 17.464 ns/day, 1.374 hours/ns, 202.129 timesteps/s, 103.490 katom-step/s
+99.3% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 4.4034     | 4.4034     | 4.4034     |   0.0 | 89.37
-Neigh   | 0.012963   | 0.012963   | 0.012963   |   0.0 |  0.26
-Comm    | 0.13441    | 0.13441    | 0.13441    |   0.0 |  2.73
-Output  | 0.0055236  | 0.0055236  | 0.0055236  |   0.0 |  0.11
-Modify  | 0.27555    | 0.27555    | 0.27555    |   0.0 |  5.59
-Other   |            | 0.09551    |            |       |  1.94
+Pair    | 4.5866     | 4.5866     | 4.5866     |   0.0 | 92.71
+Neigh   | 0.01313    | 0.01313    | 0.01313    |   0.0 |  0.27
+Comm    | 0.083962   | 0.083962   | 0.083962   |   0.0 |  1.70
+Output  | 0.0047138  | 0.0047138  | 0.0047138  |   0.0 |  0.10
+Modify  | 0.18508    | 0.18508    | 0.18508    |   0.0 |  3.74
+Other   |            | 0.07381    |            |       |  1.49
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1652 ave        1652 max        1652 min
+Nghost:           1618 ave        1618 max        1618 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        26444 ave       26444 max       26444 min
+FullNghs:        26342 ave       26342 max       26342 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 26444
-Ave neighs/atom = 51.648438
-Neighbor list builds = 17
+Total # of neighbors = 26342
+Ave neighs/atom = 51.449219
+Neighbor list builds = 19
 Dangerous builds = 0
 write_data      snap_${T2}K.data
 write_data      snap_300K.data
@@ -1254,41 +1261,41 @@ run             $(round(50*v_tscale*v_nps))
 run             5000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 9.691 | 9.691 | 9.691 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     36000   36             320.18342     -1428.012       14287.792      27.905843      6.1861673      0.12559217     0.14202595     105.14522      102.57018      99.346005      77.737685      0.08203125   
-     37000   37             301.87073      305.36205      14261.919      27.855311      6.1973896      0.12126769     0.16552033     105.66339      102.73307      100.17355      78.720592      0.064453125  
-     38000   38             311.34402      483.63323      14306.292      27.941977      6.1781674      0.12123208     0.16983242     106.65278      103.59677      99.919535      78.35867       0.091796875  
-     39000   39             316.67063     -213.6845       14292.295      27.914638      6.1842182      0.11752699     0.15465692     105.87383      102.76049      100.31037      78.761682      0.109375     
-     40000   40             319.27355     -1320.9518      14337.731      28.00338       6.1646206      0.11713896     0.13523966     106.77503      104.14038      100.77474      78.682401      0.10546875   
-     41000   41             299.99412     -123.28901      14343.338      28.014332      6.1622105      0.11640646     0.15295227     106.37797      103.75325      101.03709      78.78828       0.109375     
-Loop time of 25.8588 on 1 procs for 5000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 9.816 | 9.816 | 9.816 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     36000   36             304.36715     -1285.0015      14382.078      28.089995      6.145612       0.12790532     0.14464187     94.654372      89.045356      99.523624      88.321215      0.078125       0.069414317  
+     37000   37             310.62934      2066.8209      14271.58       27.87418       6.1931943      0.12218787     0.19821936     95.133068      88.219485      99.688137      87.586626      0.09765625     0.088937093  
+     38000   38             279.27874     -1146.2854      14338.661      28.005197      6.1642206      0.11818376     0.1341764      95.691248      88.277022      100.07633      86.669715      0.0703125      0.062906725  
+     39000   39             295.95025      688.88841      14261.422      27.85434       6.1976056      0.11484767     0.16500406     95.47472       88.463539      99.630652      86.905293      0.1015625      0.084598698  
+     40000   40             309.06558     -600.31395      14302.233      27.934049      6.1799209      0.11218969     0.14159501     95.341623      88.087058      99.511081      86.022012      0.095703125    0.082429501  
+     41000   41             318.16218      72.821142      14355.531      28.038146      6.1569767      0.11419799     0.15651773     96.640046      88.82083       99.16173       86.772622      0.09765625     0.084598698  
+Loop time of 24.7901 on 1 procs for 5000 steps with 512 atoms
 
-Performance: 16.706 ns/day, 1.437 hours/ns, 193.358 timesteps/s, 98.999 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 17.426 ns/day, 1.377 hours/ns, 201.694 timesteps/s, 103.267 katom-step/s
+99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 23.297     | 23.297     | 23.297     |   0.0 | 90.09
-Neigh   | 0.050051   | 0.050051   | 0.050051   |   0.0 |  0.19
-Comm    | 0.65849    | 0.65849    | 0.65849    |   0.0 |  2.55
-Output  | 0.01759    | 0.01759    | 0.01759    |   0.0 |  0.07
-Modify  | 1.3709     | 1.3709     | 1.3709     |   0.0 |  5.30
-Other   |            | 0.4652     |            |       |  1.80
+Pair    | 23.065     | 23.065     | 23.065     |   0.0 | 93.04
+Neigh   | 0.042352   | 0.042352   | 0.042352   |   0.0 |  0.17
+Comm    | 0.40175    | 0.40175    | 0.40175    |   0.0 |  1.62
+Output  | 0.015105   | 0.015105   | 0.015105   |   0.0 |  0.06
+Modify  | 0.91438    | 0.91438    | 0.91438    |   0.0 |  3.69
+Other   |            | 0.3516     |            |       |  1.42
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1630 ave        1630 max        1630 min
+Nghost:           1614 ave        1614 max        1614 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        26216 ave       26216 max       26216 min
+FullNghs:        26384 ave       26384 max       26384 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 26216
-Ave neighs/atom = 51.203125
-Neighbor list builds = 65
+Total # of neighbors = 26384
+Ave neighs/atom = 51.53125
+Neighbor list builds = 61
 Dangerous builds = 0
 variable        rdf_ps   delete
 variable        rdf_ps   index $(50*v_tscale)
@@ -1351,40 +1358,40 @@ Neighbor list info ...
       bin: standard
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 10.34 | 10.34 | 10.34 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     41000   41             299.99412     -123.28901      14343.338      28.014332      6.1622105      0.11640646     0.15295227     106.37797      103.75325      101.03709      78.78828       0.109375     
-     42000   42             299.13414     -2470.2722      14396.953      28.119048      6.1392623      0.11649349     0.11172951     105.99201      103.22406      100.45049      78.339516      0.08984375   
-     43000   43             313.21646      867.61357      14303.691      27.936897      6.1792908      0.11097285     0.16650862     105.63883      103.02343      100.2849       78.550655      0.091796875  
-     44000   44             299.32242     -2522.3614      14361.462      28.04973       6.1544342      0.11269751     0.10715275     106.87282      104.07649      101.12738      78.983247      0.091796875  
-     45000   45             320.26331      711.77033      14305.171      27.939788      6.1786516      0.11274133     0.16647007     106.0541       104.04944      100.68551      79.605442      0.10546875   
-Loop time of 20.8998 on 1 procs for 4000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 10.47 | 10.47 | 10.47 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     41000   41             318.16218      72.821142      14355.531      28.038146      6.1569767      0.11419799     0.15651773     96.640046      88.82083       99.16173       86.772622      0.09765625     0.084598698  
+     42000   42             315.04354      271.12314      14306.267      27.941927      6.1781785      0.11189886     0.15727028     96.725064      88.571049      99.217434      87.048605      0.10546875     0.095444685  
+     43000   43             295.35806     -326.12634      14298.308      27.926382      6.1816175      0.10861277     0.14103176     96.997493      89.485744      99.778134      87.276444      0.091796875    0.080260304  
+     44000   44             311.71936      2081.2154      14200.414      27.735183      6.224232       0.10879368     0.18503567     96.179046      88.509795      99.31923       86.759466      0.099609375    0.080260304  
+     45000   45             305.36594     -1251.6612      14352.538      28.0323        6.1582607      0.1092777      0.12677271     95.970814      90.060207      99.860613      87.370342      0.13867188     0.11930586   
+Loop time of 19.8452 on 1 procs for 4000 steps with 512 atoms
 
-Performance: 16.536 ns/day, 1.451 hours/ns, 191.390 timesteps/s, 97.992 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 17.415 ns/day, 1.378 hours/ns, 201.560 timesteps/s, 103.199 katom-step/s
+99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 18.83      | 18.83      | 18.83      |   0.0 | 90.10
-Neigh   | 0.054065   | 0.054065   | 0.054065   |   0.0 |  0.26
-Comm    | 0.52856    | 0.52856    | 0.52856    |   0.0 |  2.53
-Output  | 0.015165   | 0.015165   | 0.015165   |   0.0 |  0.07
-Modify  | 1.0984     | 1.0984     | 1.0984     |   0.0 |  5.26
-Other   |            | 0.3733     |            |       |  1.79
+Pair    | 18.457     | 18.457     | 18.457     |   0.0 | 93.00
+Neigh   | 0.041922   | 0.041922   | 0.041922   |   0.0 |  0.21
+Comm    | 0.32025    | 0.32025    | 0.32025    |   0.0 |  1.61
+Output  | 0.015118   | 0.015118   | 0.015118   |   0.0 |  0.08
+Modify  | 0.73012    | 0.73012    | 0.73012    |   0.0 |  3.68
+Other   |            | 0.281      |            |       |  1.42
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1651 ave        1651 max        1651 min
+Nghost:           1622 ave        1622 max        1622 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        26354 ave       26354 max       26354 min
+FullNghs:        26438 ave       26438 max       26438 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 26354
-Ave neighs/atom = 51.472656
-Neighbor list builds = 54
+Total # of neighbors = 26438
+Ave neighs/atom = 51.636719
+Neighbor list builds = 48
 Dangerous builds = 0
 fix             rdf all ave/time ${rdf_nev} ${rdf_nrep} ${rdf_N} c_rdf[*] file ${rdf_file} mode vector
 fix             rdf all ave/time 100 ${rdf_nrep} ${rdf_N} c_rdf[*] file ${rdf_file} mode vector
@@ -1395,41 +1402,41 @@ run             ${rdf_N}
 run             5000
 WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/KOKKOS/atom_kokkos.cpp:219)
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
-Per MPI rank memory allocation (min/avg/max) = 10.34 | 10.34 | 10.34 Mbytes
-   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac    
-     45000   45             320.26331      711.77033      14305.171      27.939788      6.1786516      0.11274133     0.16647007     106.0541       104.04944      100.68551      79.605442      0.10546875   
-     46000   46             290.71174     -912.27327      14332.563      27.993287      6.1668433      0.11249317     0.13405794     106.16573      104.82552      101.50862      78.935326      0.072265625  
-     47000   47             295.39973      1506.694       14279.387      27.889428      6.1898083      0.11089926     0.17523544     106.00145      103.65309      100.89848      78.69333       0.099609375  
-     48000   48             298.97139      833.70807      14370.573      28.067525      6.150532       0.11002732     0.16320213     105.75521      104.59157      101.5733       79.923188      0.10351562   
-     49000   49             299.09793     -254.44398      14282.156      27.894836      6.1886082      0.10815111     0.14230702     105.11748      104.05695      101.42915      78.608323      0.11132812   
-     50000   50             314.58392     -156.38947      14315.358      27.959684      6.1742549      0.10951532     0.1473699      105.63874      104.41178      101.72836      79.730005      0.091796875  
-Loop time of 26.2964 on 1 procs for 5000 steps with 512 atoms
+Per MPI rank memory allocation (min/avg/max) = 10.47 | 10.47 | 10.47 Mbytes
+   Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
+     45000   45             305.36594     -1251.6612      14352.538      28.0323        6.1582607      0.1092777      0.12677271     95.970814      90.060207      99.860613      87.370342      0.13867188     0.11930586   
+     46000   46             291.8878      -986.52895      14278.944      27.888562      6.1900004      0.10742627     0.12790986     96.677956      89.778846      99.462056      87.070729      0.12109375     0.10629067   
+     47000   47             294.50735     -2374.9305      14340.354      28.008504      6.1634928      0.10468122     0.10115751     97.047974      89.821011      99.9919        87.451461      0.11914062     0.11062907   
+     48000   48             312.73491     -884.36866      14307.14       27.943634      6.1778012      0.10411239     0.12903328     97.202687      90.221011      100.23471      88.11065       0.11523438     0.097613883  
+     49000   49             291.32128      271.83159      14240.286      27.813059      6.2068043      0.1060546      0.14835616     96.69799       89.501154      99.774662      87.044582      0.08203125     0.067245119  
+     50000   50             311.10341     -215.80121      14339.494      28.006824      6.1638625      0.10368631     0.14004873     96.406829      89.93485       100.19197      87.57844       0.087890625    0.080260304  
+Loop time of 24.9445 on 1 procs for 5000 steps with 512 atoms
 
-Performance: 16.428 ns/day, 1.461 hours/ns, 190.140 timesteps/s, 97.352 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 17.318 ns/day, 1.386 hours/ns, 200.445 timesteps/s, 102.628 katom-step/s
+99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 23.523     | 23.523     | 23.523     |   0.0 | 89.45
-Neigh   | 0.064348   | 0.064348   | 0.064348   |   0.0 |  0.24
-Comm    | 0.65954    | 0.65954    | 0.65954    |   0.0 |  2.51
-Output  | 0.017865   | 0.017865   | 0.017865   |   0.0 |  0.07
-Modify  | 1.5668     | 1.5668     | 1.5668     |   0.0 |  5.96
-Other   |            | 0.4653     |            |       |  1.77
+Pair    | 23.048     | 23.048     | 23.048     |   0.0 | 92.40
+Neigh   | 0.058731   | 0.058731   | 0.058731   |   0.0 |  0.24
+Comm    | 0.40435    | 0.40435    | 0.40435    |   0.0 |  1.62
+Output  | 0.015718   | 0.015718   | 0.015718   |   0.0 |  0.06
+Modify  | 1.0636     | 1.0636     | 1.0636     |   0.0 |  4.26
+Other   |            | 0.3543     |            |       |  1.42
 
 Nlocal:            512 ave         512 max         512 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1676 ave        1676 max        1676 min
+Nghost:           1623 ave        1623 max        1623 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Neighs:          13146 ave       13146 max       13146 min
+Neighs:          13149 ave       13149 max       13149 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        26292 ave       26292 max       26292 min
+FullNghs:        26298 ave       26298 max       26298 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 26292
-Ave neighs/atom = 51.351562
-Neighbor list builds = 65
+Total # of neighbors = 26298
+Ave neighs/atom = 51.363281
+Neighbor list builds = 68
 Dangerous builds = 0
 unfix           rdf
 uncompute       rdf
@@ -1457,4 +1464,4 @@ Neighbor list info ...
       pair build: copy/kk/device
       stencil: none
       bin: none
-Total wall time: 0:04:13
+Total wall time: 0:04:02

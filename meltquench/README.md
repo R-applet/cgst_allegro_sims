@@ -98,7 +98,7 @@ replica mean ± sample std of:
 ## Validation
 Both tests write a `RESULT.txt` with one PASS/FAIL line per check (`tests/collect.sh` prints them).
 
-**`tests/mq_logic`: PASS** (job 12262741). The full input runs on the 1×1×1 x0 (461 atoms) and x10 (512) cells with
+**`tests/mq_logic`: PASS** (job 12278869, with the `xfracGST` column). The full input runs on the 1×1×1 x0 (461 atoms) and x10 (512) cells with
 every duration ×0.1, plus `x0_gatefail`: x0 with an unreachable gate (`gate_A2 1e9`). `check.py` runs at the end of
 the job and verifies:
 - every output file, including both restart files;
@@ -106,7 +106,7 @@ the job and verifies:
 - the four `stages.txt` times in order, with the temperature at each matching the schedule;
 - `gate.txt` (`passed 1`) and exit status 0;
 - that `mq_summary.py` and `mq_structure.py` run on the outputs, and that their two independent Z_i (RDF running
-  coordination; bond counting on the trajectory) agree within 0.15 (measured: within 0.04);
+  coordination; bond counting on the trajectory) agree within 0.15 (measured: within 0.06);
 - x0_gatefail: exit status non-zero, `passed 0`, the gate ERROR in `log.mq`, no quench, and the analysis scripts
   skip it naming the failed gate.
 

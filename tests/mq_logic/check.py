@@ -8,7 +8,7 @@
     clusters found), so an analysis that breaks on real outputs fails the test
   - their two independent estimates of each species' Z (RDF running coordination; bond counting on the trajectory)
     agree within 0.15. The trajectory side has only 2 frames of a ~500-atom cell here, hence the loose bound;
-    measured differences are within 0.04 (job 12262741)
+    measured differences are within 0.06 (jobs 12262741, 12278869)
 x0_gatefail (gate_A2 1e9, a gate that cannot be met): LAMMPS exited non-zero; gate.txt reads passed 0; log.mq has
 the gate ERROR; the quench never started (no quench_start_ps, no amorphous_300K.data); runio.complete_runs skips
 the run and names the failed gate.
