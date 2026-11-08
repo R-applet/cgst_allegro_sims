@@ -9,7 +9,10 @@
 # Columns of ${out}.dat:
 #   step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom
 #   msdGe msdSb msdTe msdC (A^2, centre-of-mass corrected, reference = positions when this file is included)
-#   xfrac (fraction of atoms classed crystalline)
+#   xfrac (fraction of all atoms classed crystalline), xfracGST (the same over Ge, Sb and Te only)
+# xfracGST is the measure for crystallization (recryst/): even on rocksalt sites C scores crystalline far less often
+# than Ge/Sb/Te (minimized x10 rocksalt: C 0.55, Ge/Sb/Te 0.98), and a growing crystal is expected to reject much of
+# the C, so counting C would lower the crystalline ceiling with C content and bias any fixed threshold.
 # MSD references reset when the include runs again (e.g. in a job restarted from a restart file).
 # Coordination numbers are not computed here: a single coord/atom cutoff cannot serve both C-X (~2 A) and
 # Ge/Sb-Te (~3 A) bonds. They come afterwards, with fixed per-pair bond cutoffs: averages from the running-
@@ -49,14 +52,16 @@ compute         ncb all coord/atom orientorder q4 ${q_thr}
 variable        xtal atom c_ncb>=${q_nmin}
 compute         nxtal all reduce sum v_xtal
 variable        xfrac equal c_nxtal/atoms
+compute         nxtalGST GST reduce sum v_xtal
+variable        xfracGST equal c_nxtalGST/count(GST)
 
 # ---------- output ----------
 thermo_style    custom step time temp press vol v_Vat density v_PEat v_Hat &
-                c_msdGe[4] c_msdSb[4] c_msdTe[4] v_msdC v_xfrac
+                c_msdGe[4] c_msdSb[4] c_msdTe[4] v_msdC v_xfrac v_xfracGST
 thermo_modify   flush yes
 thermo          ${nthermo}
 
 fix             log all print ${nthermo} &
-                "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac)" &
+                "$(step) $(time) $(temp) $(press) $(v_Vat) $(density) $(v_PEat) $(v_Hat) $(c_msdGe[4]) $(c_msdSb[4]) $(c_msdTe[4]) $(v_msdC) $(v_xfrac) $(v_xfracGST)" &
                 ${dat_mode} ${out}.dat screen no &
-                title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac"
+                title "step time_ps T_K P_bar V_A3_per_atom rho_gcc PE_eV_per_atom H_eV_per_atom msdGe msdSb msdTe msdC xfrac xfracGST"

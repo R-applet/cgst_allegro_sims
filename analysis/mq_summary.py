@@ -19,7 +19,7 @@ Bond cutoffs: runio.BOND_RC (fixed per pair; the reasons are there). Override wi
 Prints one row per run, then mean +- sample std over replicas per (cell, qrate) with two or more replicas.
 
 Usage: python mq_summary.py [--tscale S] [--rc GeTe=3.3 ...] [--out DIR] <run_dir> ...   (e.g. ../meltquench/runs/*)
-Run dirs named <cell>_q<qrate>_r<rep> are grouped; other names are reported individually (a group of one).
+Run dirs named <cell>_q<qrate>_r<rep> are grouped by runio.group_of; other names are reported individually.
 """
 import sys
 from pathlib import Path

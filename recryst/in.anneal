@@ -1,0 +1,81 @@
+# Isothermal crystallization: NPT 0 bar anneal (isotropic unless baro aniso) of an amorphous sample at Ta for up to
+# max_ns.
+#   fresh start: amorphous_300K.data -> 300 K, 10 ps -> heat 300 -> Ta at 10 K/ps -> hold Ta
+#   resume:      -var resume 1 -var rfile anneal.<step>.restart continues the hold from that restart file
+#                (submit_anneal.sh passes the newest one)
+# The hold stops early (fix halt) once the crystalline fraction of Ge/Sb/Te (xfracGST, common/in.analysis) exceeds
+# xstop, which is set below the xfracGST of a fully crystallized sample (from the calibration), so a run that has
+# mostly crystallized stops instead of running the full max_ns. anneal_done.txt is written when the run ends
+# either way (submit_anneal.sh uses it to stop resubmitting).
+#
+# Variables: cell, rep, seed, root, dt, model (as in meltquench; model is required); Ta (K); max_ns (hold length,
+#   5 in production);
+#   xstop (default 0.8; set it below the crystal-reference xfracGST at Ta, recryst/README.md);
+#   src (optional amorphous data file, default from meltquench/runs/<cell>_q10_r<rep>);
+#   resume (0 = fresh start, default | 1 = continue from rfile; a numeric flag because LAMMPS `if` cannot compare
+#   filenames); rfile; tscale (tests only); q_rc/q_thr/q_nmin (optional, crystallinity criterion);
+#   baro (optional, iso default | aniso; keep it the same across the jobs of one chain; recryst/README.md,
+#   "Barostat")
+# Outputs: anneal.dat (appended across resumes; every 1 ps; MSD columns restart from 0 at each resume), stress.dat
+#   (pressure tensor every 1 ps from the start of the hold, appended across resumes),
+#   log.anneal*, traj.lammpstrj.gz (every 10 ps; one file per job: traj.<first step>.lammpstrj.gz),
+#   anneal.<step>.restart (every 50 ps), final.data, anneal_done.txt, hold_start.txt (fresh start only: hold start
+#   time and the crystallinity criterion of the dumped c_ncb column)
+
+units           metal
+atom_style      atomic
+boundary        p p p
+
+variable        tscale    index 1
+variable        baro      index iso
+variable        resume    index 0
+variable        rfile     index none
+variable        xstop     index 0.8
+variable        src       index ${root}/meltquench/runs/${cell}_q10_r${rep}/amorphous_300K.data
+variable        out       index anneal
+variable        thermo_ps index 1.0
+variable        Tdamp     equal 100*${dt}
+variable        Pdamp     equal 1000*${dt}
+variable        nps       equal round(1.0/${dt})
+variable        n_eq      equal round(10*${tscale}*${nps})
+variable        n_heat    equal round((${Ta}-300)/10.0*${tscale}*${nps})
+variable        n_end     equal ${n_eq}+${n_heat}+round(${max_ns}*1000*${tscale}*${nps})
+
+if "${resume} == 1" then "jump SELF resume"
+
+# ---------- fresh start ----------
+read_data       ${src}
+include         ${root}/common/in.potential
+include         ${root}/common/in.analysis
+velocity        all create 300.0 ${seed} mom yes rot yes dist gaussian
+fix             npt all npt temp 300.0 300.0 ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
+run             ${n_eq}
+unfix           npt
+fix             npt all npt temp 300.0 ${Ta} ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
+run             ${n_heat}
+unfix           npt
+# hold start and the criterion of the dumped c_ncb, read by analysis/recryst_summary.py
+print           "hold_start_ps $(time) q_rc ${q_rc} q_thr ${q_thr} q_nmin ${q_nmin}" file hold_start.txt
+jump            SELF hold
+
+# ---------- resume from the newest restart file ----------
+label           resume
+read_restart    ${rfile}
+include         ${root}/common/in.potential
+variable        dat_mode index append                     # keep the anneal.dat rows of earlier jobs
+include         ${root}/common/in.analysis
+
+# ---------- hold at Ta ----------
+label           hold
+fix             npt all npt temp ${Ta} ${Ta} ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
+# deviatoric-stress check for the isotropic barostat (recryst_summary.py sdev_*; criterion in recryst/README.md)
+fix             stress all print ${nthermo} "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)" &
+                ${dat_mode} stress.dat screen no title "step time_ps pxx pyy pzz pxy pxz pyz"
+dump            traj all custom $(round(10*v_nps)) traj.$(step).lammpstrj.gz id type x y z c_q4[1] c_ncb
+dump_modify     traj sort id element Ge Sb Te C
+restart         $(round(50*v_tscale*v_nps)) anneal.*.restart
+fix             stop all halt ${nps} v_xfracGST > ${xstop} error continue
+run             ${n_end} upto
+write_data      final.data
+print           "step $(step) time_ps $(time) xfracGST $(v_xfracGST) (stop at xfracGST > ${xstop} or step ${n_end})" &
+                file anneal_done.txt

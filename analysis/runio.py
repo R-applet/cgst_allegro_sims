@@ -9,15 +9,19 @@ BOND_RC        bond cutoff (A) per species pair, keyed by frozenset: 3.2 between
 parse_rc(items) --rc overrides: ['GeTe=3.3', 'CC=1.8'] -> {frozenset({'Ge', 'Te'}): 3.3, frozenset({'C'}): 1.8}
 
 load_dat(path)  the .dat time series written by common/in.analysis (mq.dat, ramp.dat, anneal.dat), as a dict of
-                columns named by the file's own title line. Repeated steps are dropped: each LAMMPS run stage
-                re-prints its first step, and appended resumes repeat the restart step and the title line.
+                columns named by the file's own title line, sorted by step. A repeated step keeps its last row: each
+                LAMMPS run stage re-prints its first step (identical rows), and a job resumed from a restart file
+                rewrites the steps its killed predecessor had written after that restart, and the resumed branch is
+                the one the series continues from.
 mean_std(arrs)  mean and sample std (ddof = 1) over replicas (axis 0), ignoring NaN; the std is NaN with fewer than
                 two values, so a single replica never reports a spread of zero.
-complete_runs(runs)  the melt-quench run directories that finished (amorphous_300K.data, written last, exists);
+complete_runs(runs, marker)  the run directories that finished, i.e. contain marker, the file the run writes last
+                (melt-quench: amorphous_300K.data, the default; ramp: snap_900K.data; anneal: anneal_done.txt);
                 each other one is reported on stdout and left out, so a running or failed task does not stop the
                 summary of the others. May return an empty list.
-group_of(name)  the replica group of a run directory name: <cell>_q<qrate>_r<rep> -> <cell>_q<qrate>; any other
-                name is its own group.
+group_of(name)  the replica group of a run directory name: the name without its trailing _r<rep> (x0_q10_r2 ->
+                x0_q10, ramp_x5_h1_r3 -> ramp_x5_h1, anneal_x0_T600_r1 -> anneal_x0_T600); any other name is
+                its own group.
 """
 import re
 import warnings
@@ -47,7 +51,7 @@ def load_dat(path):
     d = np.loadtxt(path, comments=["#", names[0]], ndmin=2)
     if d.shape[1] != len(names):
         raise ValueError(f"{path}: {d.shape[1]} columns but the title line names {len(names)}")
-    d = d[np.unique(d[:, 0], return_index=True)[1]]
+    d = d[len(d) - 1 - np.unique(d[::-1, 0], return_index=True)[1]]       # last occurrence of each step
     return {c: d[:, k] for k, c in enumerate(names)}
 
 
@@ -61,19 +65,18 @@ def mean_std(arrs):
     return m, s
 
 
-def complete_runs(runs):
+def complete_runs(runs, marker="amorphous_300K.data"):
     done = []
     for r in map(Path, runs):
-        if (r / "amorphous_300K.data").exists():
+        if (r / marker).exists():
             done.append(r)
         else:
             g = r / "gate.txt"
             failed = g.exists() and g.read_text().split()[-1] == "0"
-            why = "MSD gate failed (gate.txt)" if failed else "no amorphous_300K.data"
+            why = "MSD gate failed (gate.txt)" if failed else f"no {marker}"
             print(f"{r.name}: incomplete ({why}), skipped")
     return done
 
 
 def group_of(name):
-    m = re.match(r"(.+)_q([\d.]+)_r\d+$", Path(name).name)
-    return f"{m[1]}_q{m[2]}" if m else Path(name).name
+    return re.sub(r"_r\d+$", "", Path(name).name)

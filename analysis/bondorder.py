@@ -8,7 +8,8 @@ Here: q4m(i) = mean over neighbours j within rc of Y_4m(r_ij); a bond i-j is cry
 Re[sum_m q4m(i) q4m(j)*] / (|q4(i)| |q4(j)|) > thr. Crystalline clusters are connected components of crystalline
 atoms joined by bonds shorter than rc. Requires an orthogonal periodic box (isotropic NPT keeps it cubic).
 
-Library use:  frames = read_dump(path); ncb = crystal_bonds(pos, L, rc, thr); largest_cluster(mask, pos, L, rc)
+Library use:  frames = read_dump(path); ncb = crystal_bonds(pos, L, rc, thr); cluster_sizes(mask, pos, L, rc) (all
+              crystalline cluster sizes, largest first); largest_cluster(mask, pos, L, rc)
 CLI check:    python bondorder.py traj.lammpstrj.gz [rc thr nmin]   -> per frame: xfrac (python), xfrac (LAMMPS,
               from the dumped c_ncb column, if present), largest crystalline cluster
 """
@@ -102,15 +103,21 @@ def bond_dots(pos, L, rc):
     return p, np.real(np.sum(q[p[:, 0]] * np.conj(q[p[:, 1]]), axis=1))
 
 
-def largest_cluster(mask, pos, L, rc):
-    """Size of the largest connected cluster of atoms in mask (bonds shorter than rc)."""
+def cluster_sizes(mask, pos, L, rc):
+    """Sizes of the connected clusters of atoms in mask (bonds shorter than rc), largest first."""
     idx = np.flatnonzero(mask)
     if len(idx) == 0:
-        return 0
+        return np.zeros(0, int)
     p, _ = _pairs(pos[idx], L, rc)
     g = coo_matrix((np.ones(len(p)), (p[:, 0], p[:, 1])), shape=(len(idx), len(idx)))
     _, lab = connected_components(g, directed=False)
-    return int(np.bincount(lab).max())
+    return np.sort(np.bincount(lab))[::-1]
+
+
+def largest_cluster(mask, pos, L, rc):
+    """Size of the largest connected cluster of atoms in mask (bonds shorter than rc)."""
+    s = cluster_sizes(mask, pos, L, rc)
+    return int(s[0]) if len(s) else 0
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ group           Ge type 1
 group           Sb type 2
 group           Te type 3
 group           C  type 4
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
 variable        nC equal count(C)
 
 timestep        ${dt}

@@ -1,0 +1,1 @@
+step 5000 time_ps 5 xfracGST 0.091106290672451198387 (stop at xfracGST > 0.0 or step 24000)

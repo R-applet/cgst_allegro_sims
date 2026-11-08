@@ -1,0 +1,53 @@
+# Crystallization on heating (DSC-like): NPT 0 bar ramp (isotropic unless baro aniso) of an amorphous sample from
+# 300 K to 900 K.
+#   start: meltquench/runs/<cell>_q10_r<rep>/amorphous_300K.data, with fresh velocities at 300 K
+#   300 K, 10 ps -> ramp 300 -> 900 K at hrate K/ps (600/hrate ps) in 50 K segments, snap_<T>K.data at each boundary
+# Tx = T where the Ge/Sb/Te crystalline fraction (xfracGST) has made half its rise (analysis/recryst_summary.py),
+# cross-checked against the density change and the enthalpy release. 900 K stays below the model's superheated
+# melting (~1090 K at 2 K/ps).
+#
+# Variables: cell, rep, seed, root, dt, model (as in meltquench; model is required); hrate (K/ps, 1 production;
+#   0.2 rate check);
+#   src (optional) amorphous data file, default ${root}/meltquench/runs/${cell}_q10_r${rep}/amorphous_300K.data
+#   tscale (optional, tests only), q_rc/q_thr/q_nmin (optional, crystallinity criterion; see recryst/README.md),
+#   baro (optional, iso default | aniso: barostat coupling, see recryst/README.md, "Barostat")
+# Outputs: ramp.dat (every 1 ps, columns in common/in.analysis), stress.dat (pressure tensor, every 1 ps), log.ramp,
+#   traj.lammpstrj.gz (every 5 K), snap_<T>K.data
+
+units           metal
+atom_style      atomic
+boundary        p p p
+
+variable        tscale    index 1
+variable        baro      index iso
+variable        src       index ${root}/meltquench/runs/${cell}_q10_r${rep}/amorphous_300K.data
+variable        out       index ramp
+variable        thermo_ps index 1.0
+variable        Tdamp     equal 100*${dt}
+variable        Pdamp     equal 1000*${dt}
+variable        nps       equal round(1.0/${dt})
+
+read_data       ${src}
+include         ${root}/common/in.potential
+include         ${root}/common/in.analysis
+# deviatoric-stress check for the isotropic barostat (recryst_summary.py sdev_*; criterion in recryst/README.md)
+fix             stress all print ${nthermo} "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)" &
+                ${dat_mode} stress.dat screen no title "step time_ps pxx pyy pzz pxy pxz pyz"
+
+dump            traj all custom $(round(5.0/v_hrate*v_nps)) traj.lammpstrj.gz id type x y z c_q4[1] c_ncb
+dump_modify     traj sort id element Ge Sb Te C
+
+velocity        all create 300.0 ${seed} mom yes rot yes dist gaussian
+fix             npt all npt temp 300.0 300.0 ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
+run             $(round(10*v_tscale*v_nps))
+
+variable        Ta loop 12
+label           ramp
+variable        T1 equal 250+50*${Ta}
+variable        T2 equal ${T1}+50
+unfix           npt
+fix             npt all npt temp ${T1} ${T2} ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
+run             $(round(50.0/v_hrate*v_tscale*v_nps))
+write_data      snap_${T2}K.data
+next            Ta
+jump            SELF ramp
