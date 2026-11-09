@@ -32,8 +32,10 @@ this DFT reference.
   check that it was long enough.
 - **10 K/ps quench.** This is the usual MLP/AIMD rate for GST and matches the reference run. The **1 K/ps
   sensitivity runs** (x0 and x10, one replica each) show how much the amorphous structure, density and Tg depend
-  on rate. A crystalline fraction (`xfrac`) that rises during the 1 K/ps quench means partial crystallization,
-  which is itself a result for the C-free composition.
+  on rate. The 10 K/ps glasses already read `xfrac` ≈ 0.15 at 300 K, from persistent crystal-like patches
+  (`recryst/README.md`, "Crystal-like order already in the glass"). A 1 K/ps glass well above that baseline, with a
+  crystalline fraction that rises during the quench, means partial crystallization, which is itself a result for
+  the C-free composition.
 - **3 replicas per composition**, each with a different velocity seed, give error bars that cover sample-to-sample
   variation of the glass.
 

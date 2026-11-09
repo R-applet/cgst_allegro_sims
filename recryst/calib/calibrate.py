@@ -13,6 +13,12 @@ Warns when the best value of any parameter lies on the edge of its grid (the opt
 crystal-reference temperature (300, 500, 550, 600, 650, 700 K: the anneal temperatures are sampled directly), the
 suggested anneal halt level XSTOP (0.85 x the lowest crystal-reference xfracGST) and the --x-crystal value for
 recryst_summary.py.
+Nucleation threshold: the glass already holds crystal-like patches of up to a few hundred Ge/Sb/Te atoms
+(recryst/README.md, "Crystal-like order already in the glass"), so a fixed small "nucleated" size would mark every anneal as nucleated at t = 0. For the
+amorphous references the largest crystalline Ge/Sb/Te cluster (bondorder.cluster_sizes) is found in every frame,
+under the chosen and the default criterion, and printed per temperature and composition with the suggested
+--nucleated-size for recryst_summary.py: 2 x the largest cluster over all compositions at that T, rounded up to a
+multiple of 10 (one value per T, so every composition is held to the same threshold).
 
 Usage: python calibrate.py --crystal crys_*.lammpstrj.gz --amorphous amor_*.lammpstrj.gz
 """
@@ -25,7 +31,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "analysis"))
-from bondorder import bond_dots, read_dump  # noqa: E402
+from bondorder import bond_dots, cluster_sizes, crystal_bonds, read_dump  # noqa: E402
 
 RC = [3.4, 3.5, 3.6, 3.7, 3.8]
 THR = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
@@ -49,6 +55,35 @@ def fractions(path, rc_list):
 def xfrac(frames, thr, nmin):
     k = THR.index(thr)
     return float(np.mean([(ncb[k] >= nmin).mean() for ncb in frames]))
+
+
+def largest_clusters(path, criteria):
+    """{(rc, thr, nmin): array over frames of the largest crystalline Ge/Sb/Te cluster (atoms)} for one dump."""
+    out = {k: [] for k in criteria}
+    for _, L, c in read_dump(path):
+        gst = c["type"] != 4
+        for rc, thr, nmin in criteria:
+            s = cluster_sizes((crystal_bonds(c["pos"], L, rc, thr) >= nmin) & gst, c["pos"], L, rc)
+            out[rc, thr, nmin].append(int(s[0]) if len(s) else 0)
+    return {k: np.array(v) for k, v in out.items()}
+
+
+def nucleation_thresholds(amorphous, criteria):
+    """Print, per criterion and temperature, the largest glass cluster per composition and the suggested
+    --nucleated-size (2 x the largest over compositions, rounded up to a multiple of 10)."""
+    big = {Path(f).name: largest_clusters(f, criteria) for f in amorphous}
+    for crit in criteria:
+        by_T = {}
+        for name, b in big.items():
+            m = re.search(r"amor_(.+)_(\d+)K", name)
+            key = (int(m[2]), m[1]) if m else (0, name)
+            by_T.setdefault(key[0], []).append((key[1], int(b[crit].max())))
+        print(f"largest crystalline Ge/Sb/Te cluster in the amorphous references, criterion {crit}:")
+        for T, cells in sorted(by_T.items()):
+            top = max(n for _, n in cells)
+            per = ", ".join(f"{cell} {n}" for cell, n in cells)
+            print(f"  suggested --nucleated-size at {T} K: {int(np.ceil(2 * max(top, 1) / 10) * 10)}  "
+                  f"(2 x the largest glass cluster, {top}; {per})")
 
 
 def main():
@@ -94,6 +129,8 @@ def main():
     if edges:
         print("WARNING: the best criterion is at the edge of the scanned grid (" + ", ".join(edges) + "); the optimum "
               "may lie outside it, so extend RC/THR/NMIN in calibrate.py and rerun")
+    crits = list(dict.fromkeys([(best["rc"], best["thr"], best["nmin"]), (3.6, 0.5, 4)]))
+    nucleation_thresholds(a.amorphous, crits)
     plot(refs, rows, best, default)
     print("wrote calib_scan.csv, calib.png")
 

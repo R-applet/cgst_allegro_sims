@@ -15,12 +15,14 @@ PASS  continuation: sbatch --test-only accepts the inherited resource flags  (sb
 PASS  calib: in.calib (x10 glass, x5 rocksalt) and calibrate.py exit 0  (0 0 0)
 PASS  calib: LAMMPS xfracGST = recount over Ge/Sb/Te, xfrac = recount over all (within 2 atoms); they differ  (largest difference 0.0 atoms)
 PASS  calib: calibrate.py reports xfracGST and a suggested XSTOP at 600 K  (best: q_rc 3.7  q_thr 0.7  q_nmin 3  (crystal min 0.845, amorphous max 0.028))
+PASS  calib: calibrate.py suggests --nucleated-size at 300 K = 2 x the recounted largest glass cluster  (recount largest 14 -> 30; printed: suggested --nucleated-size at 300 K: 30  (2 x the largest glass cluster, 14; x10)
 PASS  analysis: ramp() gives finite Tx_H and stress metrics  (Tx_H 753 K, sdev 1.31 -> 1.71 kbar, z 1.3)
 PASS  analysis: hold_start.txt = 4 ps with criterion 3.6/0.5/4; xstop read back (0.8 default, 0 for halt_x0)  ({'hold_start_ps': 4.0, 'q_rc': 3.6, 'q_thr': 0.5, 'q_nmin': 4.0}, 0.8, 0.0)
 PASS  analysis: anneal() gives t_end 20 ps, x_c from xstop, NaN stress metrics for a 20 ps hold  (t_end 20, x_c 0.8 from xstop)
 PASS  analysis: clusters_q3.6_0.5_4.txt has every dumped hold step once, in order, across both jobs' files  (11 frames, 11 distinct dumped hold steps)
 PASS  analysis: clusters from the dumped c_ncb equal clusters from a recount  (largest [4, 28, 12, 15, 15, 16, 27, 9, 20, 6, 5] vs [4, 28, 12, 15, 15, 16, 27, 9, 20, 6, 5])
 PASS  analysis: main() skips an incomplete anneal and still reports the complete one  (anneal_x0_T600_r9: incomplete (no anneal_done.txt), skipped | anneal_x0_T600_r1            x_a 0.1063  x_c 0.8  x_c_from)
+PASS  analysis: main() --clusters needs --nucleated-size, and with it prints the nucleation line with n_base  (without: exit 2; with: anneal_x0_T600               nucleation: n_nucleated 0  n_runs 1  J_surv_per_m3_s nan  J_s)
 PASS  known answer: load_dat keeps the last row of a repeated step  ([1.0, 9.0, 8.0, 4.0])
 PASS  known answer: ramp() Tx_xfrac at the half-rise, 650 K for a 0.8 and a 0.6 ceiling, NaN without a rise  (650 K, 650 K, nan)
 PASS  known answer: kinetics() v_growth 200 m/s within 2%, t_nuc within one frame of the analytic time  (v 200.0 m/s, t_nuc 4.0 ps (analytic 3.55))
@@ -29,4 +31,5 @@ PASS  known answer: smooth() keeps a constant constant at the ends
 PASS  known answer: stress() |z| < 5 on pure noise, z > 10 and sdev_end ~ 2 kbar for a 2 kbar step  (noise z -0.9; step z 16.0, end 2.11 kbar)
 PASS  analysis: group_of strips the replica suffix
 PASS  analysis: MFPT fit recovers n* = 40 and tau_J = 500 ps  (n* 39.98, tau_J 500.1 ps)
+PASS  analysis: MFPT above a 100-atom glass baseline recovers n* = 140 and gives NaN for n* = 40 below it  (n_base 126: n* 139.98, tau_J 500.1 ps; below: n* nan)
 VERDICT: PASS

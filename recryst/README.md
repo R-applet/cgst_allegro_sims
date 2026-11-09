@@ -39,9 +39,32 @@ a bias in the same direction as the expected effect of C.
    default criterion; (b) the per-atom crystal-like bond count, crystal vs amorphous references, with the threshold;
    (c) the margin over `q_thr` × `q_nmin`, to show whether the optimum is a plateau or a sharp edge. It warns when
    the best value lies on the edge of the scanned grid; extend the grid then. (On the logic-test references, a
-   600 K crystal and a 12 ps glass, the optimum was at the edge, `q_thr` 0.8.)
+   600 K crystal and a fast-quenched glass, the optimum was at the edge, `q_nmin` 3.)
 3. The chosen values are recorded here and passed to the production runs
    (`EXTRA_VARS="-var q_rc .. -var q_thr .. -var q_nmin .."`) only if they differ from the defaults (3.6, 0.5, 4).
+4. For the amorphous references, `calibrate.py` also finds the largest crystalline Ge/Sb/Te cluster in every frame,
+   under the chosen and the default criterion, and prints per temperature the suggested `--nucleated-size` for
+   `recryst_summary.py --clusters`: 2 × the largest glass cluster over all compositions at that T, rounded up to a
+   multiple of 10. It is one value per temperature, so every composition is held to the same threshold.
+
+**Crystal-like order already in the glass.** The 10 K/ps glasses are not free of "crystalline" atoms. Measured on
+the first eight production glasses (x0, x1, x2p5; final 50 ps at 300 K; default criterion):
+- `xfracGST` is 0.13–0.16, against 0.015 in the 1500 K liquid of the same runs. The stricter logic-test optimum
+  (3.7, 0.7, 3) still gives 0.09–0.12.
+- These atoms form clusters: the largest holds 83–314 atoms (up to 9 clusters of ≥ 50 per frame), against 13–15
+  for the same number of crystalline atoms placed at random.
+- The ordered regions persist: about 60% of the atoms in ≥ 50-atom clusters are still crystalline 140 ps later,
+  against about 14% by chance. How they connect changes from frame to frame, so the largest cluster is not the same
+  set of atoms over time. At 300 K they do not grow: `xfracGST` creeps from 0.144 to 0.155 over 140 ps.
+- C lowers the baseline (x0 > x1 > x2p5), consistent with C frustrating crystal-like order.
+
+So a small nucleation threshold (the earlier default of 50 atoms) would mark every anneal as nucleated at t = 0,
+and an MFPT fit from n = 1 would fit the glass, not nucleation. Hence step 4, and the baseline rule for MFPT
+(Kinetics, below). Fractions and onsets measured as a rise above each run's own start (`x_a`, Tx, t_inc, t50) are
+not affected. (Measured with one-off scripts on the dumps of `meltquench/runs`, not kept; step 4 reproduces the
+cluster sizes at each calibration temperature.) **Known limit:** the calibration samples each glass for 10 ps at
+Ta, but a ns anneal ages the glass, and its ordered patches may grow before a nucleus forms. Compare each group's
+`n_base` (below) with `--nucleated-size` before trusting `t_nuc`.
 
 **Result:** _pending (needs the Part 2 amorphous samples)_.
 
@@ -115,8 +138,8 @@ running, or a chain that ran out of `MAXCHAIN`) are listed as incomplete and ski
 
 **Kinetics (`--clusters`).** Per dumped frame (`clusters_q<rc>_<thr>_<nmin>.txt`): the largest crystalline
 Ge/Sb/Te cluster and the number of such clusters of at least `--nucleus-min` atoms (default 10). From these, per run:
-- `t_nuc`, the first hold time the largest cluster reaches `--nucleated-size` atoms (default 50; keep it well above
-  n*, below);
+- `t_nuc`, the first hold time the largest cluster reaches `--nucleated-size` atoms. This option is required with
+  `--clusters`: use the value `calibrate.py` suggests for Ta and the same criterion (Calibration, step 4);
 - `v_growth`, the growth velocity (m/s): the slope of the largest cluster's equivalent-sphere radius while it holds
   10–60% of the Ge/Sb/Te atoms.
 
@@ -125,7 +148,9 @@ Per (composition, Ta) group, two nucleation rates:
   maximum-likelihood rate of an exponential waiting time), with relative error 1/√(runs that nucleated);
 - the mean-first-passage-time (MFPT) rate and critical size n* (Wedekind et al., J. Chem. Phys. 126, 134103, 2007):
   the mean over replicas of the first time the largest cluster reaches n, fitted with an error function whose
-  midpoint is n*.
+  midpoint is n*. Only sizes above `n_base`, the largest cluster any replica has in the first 20 ps of its hold
+  (the glass's own order), are fitted. n*, τ_J and J are NaN when the fitted n* is not above `n_base` (the critical
+  size is then hidden in the glass's own order) or not below the largest size every replica reached.
 
 These are the kinetics to compare across compositions. With 2 ps frames and 10 replicas they are estimates with
 roughly 30% errors, not converged rates.
@@ -163,9 +188,11 @@ sbatch --array=0-2 --export=ALL,TA=600 submit_anneal.sh         # screening: x0 
 sbatch --array=0-49 --export=ALL,TA=600,NREP=10 submit_anneal.sh # production: 10 replicas of every cell
 # anneals on one perc A100-40GB per job (continuations stay on perc; keep the 0.2 K/ps ramp on the A30s):
 sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1 --array=0-2 --export=ALL,TA=600 submit_anneal.sh
-python ../analysis/recryst_summary.py runs/*                      # add --clusters for t_nuc, v_growth and rates;
-                                                                  # anneals at one Ta: --x-crystal from calibrate.py
-python ../analysis/recryst_summary.py --clusters --q-rc .. --q-thr .. --q-nmin .. runs/anneal_*   # other criterion
+python ../analysis/recryst_summary.py runs/*                      # ramps and anneals; anneals at one Ta:
+                                                                  # --x-crystal from calibrate.py
+python ../analysis/recryst_summary.py --clusters --nucleated-size N runs/anneal_*_T600_*   # t_nuc, v_growth, rates;
+                                                                  # N from calibrate.py at Ta, same criterion
+python ../analysis/recryst_summary.py --clusters --nucleated-size N --q-rc .. --q-thr .. --q-nmin .. runs/anneal_*_T600_*
 ```
 The array index → (cell, replica) mapping is the same as in `meltquench/submit.sh`. The timestep comes from
 `common/defaults.sh` (shared with the melt-quench; override with `--export=ALL,DT=...`). Other settings, passed with
@@ -175,7 +202,8 @@ chain, default 4); `EXTRA_VARS` (extra LAMMPS `-var`
 options for either, e.g. the calibrated criterion or `-var baro aniso`).
 
 ## Validation
-**`tests/recryst_logic`: PASS** (job 12290193; `check.py` writes `RESULT.txt`). On the 1×1×1 x0 glass (461 atoms)
+**`tests/recryst_logic`: PASS** (job 12290193; `check.py` writes `RESULT.txt`; after the nucleation-threshold
+change, `calibrate.py` and `check.py` were rerun on that job's outputs, 34 checks, since no LAMMPS input changed). On the 1×1×1 x0 glass (461 atoms)
 from `tests/mq_logic`, dt 1 fs:
 - **Ramp** (10 K/ps): exit 0; `snap_350K` … `snap_900K`; T follows the programmed schedule (mean deviation +1.2 K);
   `stress.dat` has a row for every `ramp.dat` step.
@@ -193,16 +221,19 @@ from `tests/mq_logic`, dt 1 fs:
 - **Ge/Sb/Te-only crystallinity, with C present** (`in.calib` on the 512-atom x10 glass at 300 K and the minimized
   1×1×1 x5 rocksalt at 600 K): on every dumped frame LAMMPS's `xfracGST` and `xfrac` equal a recount from the dump
   over Ge/Sb/Te and over all atoms (difference 0 atoms), and the two differ; `calibrate.py` runs on these references
-  and reports `xfracGST` and a suggested `XSTOP`.
+  and reports `xfracGST`, a suggested `XSTOP`, and a suggested `--nucleated-size` equal to 2 × the largest glass
+  cluster recounted from the dump.
 - **Analysis:** `recryst_summary.py` runs on the outputs and skips an incomplete anneal by name; `hold_start.txt`
-  records the criterion; clusters from the dumped `c_ncb` equal clusters from a recount, with each overlapping
+  records the criterion; `--clusters` without `--nucleated-size` exits with an error, and with it prints the group's
+  nucleation line with `n_base`; clusters from the dumped `c_ncb` equal clusters from a recount, with each overlapping
   frame counted once. (Both copies of an overlapping frame are identical on one node, so the test cannot tell which
   file a repeated frame was taken from; the later-wins rule for `.dat` rows is a known answer below.)
 - **Known answers:** `load_dat` keeps the last row of a repeated step; the half-rise `Tx_xfrac` of a synthetic
   ramp is 650 K for both a 0.8 and a 0.6 ceiling (a fixed 0.5 threshold would give 654 K and 665 K); `v_growth`
   recovers 200 m/s for a growing sphere; `J_surv` matches the censored-exponential formula; `smooth()` keeps a
   constant constant; the stress statistic gives |z| < 5 on production-level noise
-  and z = 16 for a 2 kbar deviatoric step; the MFPT fit recovers n* = 40 and τ_J = 500 ps.
+  and z = 16 for a 2 kbar deviatoric step; the MFPT fit recovers n* = 40 and τ_J = 500 ps, recovers n* = 140 on top of a 100-atom glass baseline, and
+  gives NaN when n* = 40 lies below that baseline.
 
 **Defects this test has caught (all fixed):** LAMMPS `if` cannot compare filenames (now a numeric `resume` flag);
 Gilbreth rejects `sbatch` without a memory request (a flaw in the test's own continuation check); a single

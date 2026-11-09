@@ -8,7 +8,8 @@ Per run directory (mq.dat, gate.txt, stages.txt, rdf_300K.dat, amorphous_300K.da
   rho_a     amorphous density at 300 K (g/cc), mean over the final 50 ps
   Tg        glass transition from a bilinear fit of V/atom(T) on the quench (times from stages.txt), breakpoint
             scanned over 400-1300 K; NaN if the quench has fewer than 20 points
-  xfrac_a   crystalline fraction at 300 K (should be ~0: a non-zero value means partial crystallization on quenching)
+  xfrac_a   crystalline fraction at 300 K. Not ~0: a 10 K/ps glass reads ~0.15, persistent crystal-like patches
+            (recryst/README.md, "Crystal-like order already in the glass"); compare runs against that baseline
   CN_ij     partial coordination at 300 K: mean number of j atoms within the bond cutoff of an i atom (rdf_300K.dat)
   Z_i       total coordination of species i, summed over all partners (needs amorphous_300K.data for the counts)
   hold_ps   the 1500 K hold (gate.txt). A run that fails its MSD gate stops before the quench, so every complete run

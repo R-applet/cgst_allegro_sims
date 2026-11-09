@@ -18,13 +18,17 @@ at tscale 0.1 and dt 1 fs: the anneal hold starts at step 4000 (10 ps at 300 K +
                      LAMMPS xfracGST equals a recount over Ge/Sb/Te atoms and xfrac a recount over all atoms (from
                      the dumped positions, analysis/bondorder.py; within 2 atoms, for the dump's 6-digit rounding),
                      and the two differ on at least one reference (the denominator matters); calibrate.py reports
-                     xfracGST and a suggested XSTOP at 600 K
+                     xfracGST and a suggested XSTOP at 600 K, and a suggested --nucleated-size at 300 K equal to
+                     2 x the largest crystalline Ge/Sb/Te cluster (default criterion) recounted from the glass dump,
+                     rounded up to a multiple of 10
   analysis           recryst_summary on the outputs: ramp() gives finite Tx_H and stress metrics; anneal() reads
                      hold_start.txt (4 ps, criterion 3.6/0.5/4) and xstop from anneal_done.txt (0.8; halt_x0: 0),
                      takes x_c from xstop (no plateau in 20 ps), gives t_end 20 ps, and NaN stress metrics (20 ps < 4
                      blocks of 10 ps); clusters() writes clusters_q3.6_0.5_4.txt with every hold frame once, in step
                      order, across the two jobs' dump files, and gives the same clusters from the dumped c_ncb as
-                     from a recount; main() skips an incomplete anneal (a copy without anneal_done.txt) by name
+                     from a recount; main() skips an incomplete anneal (a copy without anneal_done.txt) by name;
+                     main() --clusters exits with an error without --nucleated-size and, with it, prints the
+                     group's nucleation line with n_base
   known answers      load_dat keeps the last row of a repeated step; ramp() on a synthetic logistic xfracGST
                      centred at 650 K gives Tx_xfrac within 3 K of 650 for both a 0.8 and a 0.6 ceiling (the
                      half-rise definition does not move with the ceiling) and NaN when xfracGST does not rise;
@@ -35,7 +39,9 @@ at tscale 0.1 and dt 1 fs: the anneal hold starts at step 4000 (10 ps at 300 K +
                      (0.46 kbar per instantaneous component, the 461-atom test cell's level scaled to 13.8k atoms):
                      |z| < 5 on pure noise; z > 10 and sdev_end within 15% of 2 kbar for a 2 kbar deviatoric step;
                      group_of maps ramp_/anneal_ names; the MFPT fit recovers n* = 40 and tau_J = 500 ps from
-                     synthetic first-passage curves (3 replicas)
+                     synthetic first-passage curves (3 replicas), recovers n* = 140 above a glass baseline of 100
+                     atoms (n_base = the largest size in the first 20 ps, counted by hand), and gives NaN when
+                     n* = 40 lies below that baseline
 Writes RESULT.txt (one PASS/FAIL line per check, then the verdict) and exits 1 on any failure; a crash in the checker
 is reported as a FAIL.
 """
@@ -51,7 +57,7 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / "analysis"))
 import recryst_summary as rs  # noqa: E402
-from bondorder import crystal_bonds, read_dump  # noqa: E402
+from bondorder import cluster_sizes, crystal_bonds, read_dump  # noqa: E402
 from runio import group_of, load_dat  # noqa: E402
 
 (HERE / "RESULT.txt").unlink(missing_ok=True)
@@ -142,6 +148,17 @@ def run_checks():
     out = (cd / "calibrate.out").read_text() if (cd / "calibrate.out").exists() else ""
     check("calib: calibrate.py reports xfracGST and a suggested XSTOP at 600 K",
           "xfracGST" in out and "suggested XSTOP at 600 K" in out, out.strip().splitlines()[0][:100] if out else "")
+    big = 0
+    for _, L, c in read_dump(cd / "amor_x10_300K.lammpstrj.gz"):
+        gst = c["type"] != 4
+        sz = cluster_sizes((crystal_bonds(c["pos"], L, 3.6, 0.5) >= 4) & gst, c["pos"], L, 3.6)
+        big = max(big, int(sz[0]) if len(sz) else 0)
+    want = int(np.ceil(2 * max(big, 1) / 10) * 10)
+    blk = out.split("criterion (3.6, 0.5, 4):")[-1] if "criterion (3.6, 0.5, 4):" in out else ""
+    got = [l for l in blk.splitlines() if "suggested --nucleated-size at 300 K:" in l][:1]
+    check("calib: calibrate.py suggests --nucleated-size at 300 K = 2 x the recounted largest glass cluster",
+          bool(got) and int(got[0].split(":")[1].split()[0]) == want,
+          f"recount largest {big} -> {want}; printed: {got[0].strip()[:80] if got else 'none'}")
 
     rr = rs.ramp(r, 1.0)
     check("analysis: ramp() gives finite Tx_H and stress metrics",
@@ -173,6 +190,13 @@ def run_checks():
     check("analysis: main() skips an incomplete anneal and still reports the complete one",
           "anneal_x0_T600_r9: incomplete (no anneal_done.txt), skipped" in out
           and any(l.startswith("anneal_x0_T600_r1 ") for l in out.splitlines()), out.strip().replace("\n", " | ")[:120])
+    summ = [sys.executable, str(HERE.parents[1] / "analysis/recryst_summary.py"), "--tscale", "0.1", "--clusters"]
+    bad = subprocess.run(summ + [str(a)], capture_output=True, text=True)
+    good = subprocess.run(summ + ["--nucleated-size", "50", str(a)], capture_output=True, text=True)
+    nl = [l for l in good.stdout.splitlines() if "nucleation:" in l]
+    check("analysis: main() --clusters needs --nucleated-size, and with it prints the nucleation line with n_base",
+          bad.returncode != 0 and "--nucleated-size" in bad.stderr and good.returncode == 0 and nl and "n_base" in nl[0],
+          f"without: exit {bad.returncode}; with: {nl[0].strip()[:90] if nl else good.stderr.strip()[-90:]}")
 
     with tempfile.TemporaryDirectory() as tmp:
         f = Path(tmp) / "x.dat"
@@ -243,6 +267,18 @@ def run_checks():
     check("analysis: MFPT fit recovers n* = 40 and tau_J = 500 ps",
           abs(res["n_star"] - n_star) < 1 and abs(res["tau_J_ps"] / tau_j - 1) < 0.02,
           f"n* {res['n_star']:.2f}, tau_J {res['tau_J_ps']:.1f} ps")
+    # the same curves on top of a glass that already holds a 100-atom cluster from t = 0
+    def tracks(ns, base):
+        tp = np.array([0.5 * tau_j * (1 + erf(z * sqrt(pi) * (n - ns))) for n in sizes2])
+        return [(times, np.maximum(base, np.array([sizes2[tp <= tt].max(initial=0) for tt in times])))] * 3
+    sizes2 = np.arange(1, 241)
+    th, tl = tracks(140.0, 100), tracks(40.0, 100)
+    hi, lo = rs.mfpt(th, 1e5), rs.mfpt(tl, 1e5)
+    base = [int(tr[0][1][times <= 20].max()) for tr in (th, tl)]   # largest size in the first 20 ps, by hand
+    check("analysis: MFPT above a 100-atom glass baseline recovers n* = 140 and gives NaN for n* = 40 below it",
+          base[0] > 100 and base[1] == 100 and hi["n_base"] == base[0] and lo["n_base"] == base[1]
+          and abs(hi["n_star"] - 140) < 1 and abs(hi["tau_J_ps"] / tau_j - 1) < 0.02 and np.isnan(lo["n_star"]),
+          f"n_base {hi['n_base']}: n* {hi['n_star']:.2f}, tau_J {hi['tau_J_ps']:.1f} ps; below: n* {lo['n_star']}")
 
 
 try:

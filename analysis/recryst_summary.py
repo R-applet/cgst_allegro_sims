@@ -36,7 +36,9 @@ Only complete runs are analysed (ramp: snap_900K.data; anneal: anneal_done.txt);
   per dumped frame, the largest crystalline Ge/Sb/Te cluster and the number of such clusters of at least
   --nucleus-min atoms -> <run>/clusters_q<rc>_<thr>_<nmin>.txt (one file per criterion, so runs under the default
   and the calibrated criterion can be compared). Per run:
-  t_nuc     first hold time the largest cluster has >= --nucleated-size atoms (default 50; keep it well above n_star)
+  t_nuc     first hold time the largest cluster has >= --nucleated-size atoms (required with --clusters; take it
+            from calibrate.py at Ta and the same criterion: the glass already holds crystal-like patches of up to a
+            few hundred atoms, recryst/README.md, so a small size would mark every run nucleated at t = 0)
   v_growth  growth velocity (m/s): slope of the largest cluster's equivalent-sphere radius while it holds 10-60% of
             the Ge/Sb/Te atoms
   Per replica group:
@@ -46,12 +48,15 @@ Only complete runs are analysed (ramp: snap_900K.data; anneal: anneal_done.txt);
   MFPT      mean-first-passage-time analysis of the largest-cluster trajectories (Wedekind et al., J. Chem. Phys.
             126, 134103, 2007): tau(n) = mean over replicas of the first hold time the largest cluster reaches n,
             fitted with tau(n) = tau_J/2 [1 + erf(Z sqrt(pi) (n - n*))] -> critical size n_star (atoms), tau_J (ps)
-            and J = 1 / (tau_J V) (m^-3 s^-1). Only sizes that every replica reached are used.
+            and J = 1 / (tau_J V) (m^-3 s^-1). Only sizes above n_base, the largest cluster any replica has in the
+            first 20 ps of its hold (the glass's own order), and that every replica reached are fitted (at least 5);
+            n_star, tau_J and J are NaN when the fitted n* is not inside that range (the critical size is then
+            hidden in the glass's own order, or was never reached).
   Both rates need many replicas: one waiting time per run, so the error is ~1/sqrt(runs) (recryst/README.md).
 Replica groups (runio.group_of: the name without _r<rep>) with two or more runs also get mean +- sample std.
 Times in ps; NaN when the event did not happen within the run.
 
-Usage: python recryst_summary.py [--tscale S] [--x-crystal X] [--clusters [--nucleus-min N] [--nucleated-size N]]
+Usage: python recryst_summary.py [--tscale S] [--x-crystal X] [--clusters --nucleated-size N [--nucleus-min N]]
        [--q-rc R --q-thr T --q-nmin N] <run_dir> ...       Directory names select the mode: ramp_* or anneal_*_T<Ta>_*.
 """
 import argparse
@@ -219,20 +224,26 @@ def survival_rate(t_nuc, t_end, volume):
             "J_surv_rel_err": 1 / sqrt(hit.sum()) if hit.any() else np.nan}
 
 
-def mfpt(tracks, volume):
-    """MFPT fit over replicas: tracks = [(hold times, largest cluster sizes)]. Returns n_star, tau_J (ps), J."""
-    nan = {"n_star": np.nan, "tau_J_ps": np.nan, "J_per_m3_s": np.nan, "n_replicas": len(tracks)}
+def mfpt(tracks, volume, t_base=20.0):
+    """MFPT fit over replicas: tracks = [(hold times, largest cluster sizes)]. Fits sizes n_base < n <= top, where
+    n_base is the largest cluster any replica has at hold time <= t_base (ps) and top the largest size every replica
+    reached. Returns n_base, n_star, tau_J (ps), J; the last three NaN with fewer than 5 sizes, a failed fit, or a
+    fitted n* outside (n_base, top)."""
+    n_base = max(int(big[t <= t_base].max(initial=0)) for t, big in tracks)
+    nan = {"n_base": n_base, "n_star": np.nan, "tau_J_ps": np.nan, "J_per_m3_s": np.nan, "n_replicas": len(tracks)}
     top = min(int(np.maximum.accumulate(big).max()) for _, big in tracks)    # every replica reached this size
-    if len(tracks) < 2 or top < 5:
+    if len(tracks) < 2 or top - n_base < 5:
         return nan
-    sizes = np.arange(1, top + 1)
+    sizes = np.arange(n_base + 1, top + 1)
     tau = np.array([np.mean([t[np.argmax(np.maximum.accumulate(big) >= n)] for t, big in tracks]) for n in sizes])
     model = np.vectorize(lambda n, tj, z, ns: 0.5 * tj * (1 + erf(z * sqrt(pi) * (n - ns))))
     try:
         (tj, z, ns), _ = curve_fit(model, sizes, tau, p0=(tau[-1], 0.05, sizes[len(sizes) // 2]), maxfev=20000)
     except RuntimeError:
         return nan
-    return {"n_star": ns, "tau_J_ps": tj, "J_per_m3_s": 1.0 / (tj * 1e-12 * volume * 1e-30),
+    if not n_base < ns < top:
+        return nan
+    return {"n_base": n_base, "n_star": ns, "tau_J_ps": tj, "J_per_m3_s": 1.0 / (tj * 1e-12 * volume * 1e-30),
             "n_replicas": len(tracks)}
 
 
@@ -247,13 +258,17 @@ def main():
     ap.add_argument("--x-crystal", type=float, help="crystal-reference xfracGST at Ta, for x_c (from calibrate.py)")
     ap.add_argument("--clusters", action="store_true")
     ap.add_argument("--nucleus-min", type=int, default=10, help="smallest cluster counted in n_clusters (atoms)")
-    ap.add_argument("--nucleated-size", type=int, default=50,
-                    help="largest-cluster size (atoms) that marks a run as nucleated, for t_nuc; keep it well above "
-                         "n_star")
+    ap.add_argument("--nucleated-size", type=int,
+                    help="largest-cluster size (atoms) that marks a run as nucleated, for t_nuc; required with "
+                         "--clusters: the 'suggested --nucleated-size' that calibrate.py prints for Ta and this "
+                         "criterion")
     ap.add_argument("--q-rc", type=float, default=3.6)
     ap.add_argument("--q-thr", type=float, default=0.5)
     ap.add_argument("--q-nmin", type=int, default=4)
     a = ap.parse_args()
+    if a.clusters and a.nucleated_size is None:
+        ap.error("--clusters needs --nucleated-size: the glass already has crystal-like clusters of up to a few "
+                 "hundred atoms, so use the value recryst/calib/calibrate.py suggests for Ta and this criterion")
     ramps = [r for r in a.runs if r.name.startswith("ramp_")]
     anneals = [r for r in a.runs if re.match(r"anneal_.+_T\d+_", r.name)]
     for r in set(a.runs) - set(ramps) - set(anneals):
@@ -283,7 +298,7 @@ def main():
     for g, runs in sorted(cls.items()):
         vol = np.mean([cl["volume"] for cl, _ in runs])
         r = survival_rate([res["t_nuc"] for _, res in runs], [res["t_end"] for _, res in runs], vol)
-        r |= mfpt([(cl["t"], cl["big"]) for cl, _ in runs], vol)
+        r |= mfpt([(cl["t"], cl["big"]) for cl, _ in runs], vol, 20 * a.tscale)
         print(f"{g:28s} nucleation: " + "  ".join(f"{k} {v:.4g}" for k, v in r.items()))
 
 
