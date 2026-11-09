@@ -7,7 +7,10 @@ at tscale 0.1 and dt 1 fs: the anneal hold starts at step 4000 (10 ps at 300 K +
                      step
   anneal_x0_T600_r1  both jobs exit 0; anneal_done.txt at step 24000; anneal.dat rows every 1000 steps from 0 to
                      24000 with no gap across the resume; stress.dat rows every 1000 steps from 4000 to 24000;
-                     restart files at 5000, 10000, 15000, 20000
+                     restart files at 5000, 10000, 15000, 20000; trajectory frames every 2000 steps (2 ps) with
+                     image flags: the two jobs' files overlap at 10000-14000 and agree there to 0.01 A in unwrapped
+                     position (x + ix Lx), and unwrapped atoms move < 5 A between consecutive frames across the
+                     resume (a lost or reset image flag would jump by a box length, ~24 A)
   halt_x0            (baro aniso) exit 0; stopped by fix halt at its first check, step 5000, with xfracGST > 0;
                      the barostat in log.anneal is aniso
   continuation       sbatch --test-only accepted the resource flags of submit_anneal.sh's continuation
@@ -95,6 +98,18 @@ def run_checks():
           np.array_equal(s["step"], np.arange(4000, 24001, 1000)), f"{len(s['step'])} rows")
     rst = sorted(int(f.name.split(".")[1]) for f in a.glob("anneal.*.restart"))
     check("anneal: restart files every 5000 steps", rst == [5000, 10000, 15000, 20000], str(rst))
+    unw = {}
+    for f in sorted(a.glob("traj.*.lammpstrj.gz"), key=lambda f: int(f.name.split(".")[1])):
+        for step, L, fr in read_dump(f):
+            u = fr["pos"] + np.stack([fr["ix"], fr["iy"], fr["iz"]], 1) * L
+            unw.setdefault(step, []).append(u)
+    steps = sorted(unw)
+    overlap = [k for k in steps if len(unw[k]) == 2]
+    same = max((np.abs(unw[k][0] - unw[k][1]).max() for k in overlap), default=np.inf)
+    jump = max(np.linalg.norm(unw[b][-1] - unw[c][-1], axis=1).max() for c, b in zip(steps, steps[1:]))
+    check("anneal: frames every 2 ps with image flags, continuous across the resume",
+          steps == list(range(4000, 24001, 2000)) and overlap == [10000, 12000, 14000] and same < 0.01 and jump < 5,
+          f"{len(steps)} steps, overlap {overlap}, overlap difference {same:.3g} A, largest step {jump:.2f} A")
 
     h = HERE / "halt_x0"
     check("halt: exit status 0", status(h / "exit_status.txt") == "0", status(h / "exit_status.txt"))

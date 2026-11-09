@@ -1,7 +1,7 @@
-best: q_rc 3.6  q_thr 0.7  q_nmin 3  (crystal min 0.855, amorphous max 0.030)
-  crystal   crys_x5_600K.lammpstrj.gz                xfracGST 0.855
-  amorphous amor_x10_300K.lammpstrj.gz               xfracGST 0.030
-current default (3.6, 0.5, 4): crystal min 0.859, amorphous max 0.088
-suggested XSTOP at 600 K: 0.73  (0.85 x the lowest crystal-reference xfracGST, 0.855; pass also --x-crystal 0.855 to recryst_summary.py)
+best: q_rc 3.7  q_thr 0.7  q_nmin 3  (crystal min 0.845, amorphous max 0.028)
+  crystal   crys_x5_600K.lammpstrj.gz                xfracGST 0.845
+  amorphous amor_x10_300K.lammpstrj.gz               xfracGST 0.028
+current default (3.6, 0.5, 4): crystal min 0.858, amorphous max 0.089
+suggested XSTOP at 600 K: 0.72  (0.85 x the lowest crystal-reference xfracGST, 0.845; pass also --x-crystal 0.845 to recryst_summary.py)
 WARNING: the best criterion is at the edge of the scanned grid (q_nmin 3); the optimum may lie outside it, so extend RC/THR/NMIN in calibrate.py and rerun
 wrote calib_scan.csv, calib.png

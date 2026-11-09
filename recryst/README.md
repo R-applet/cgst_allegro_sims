@@ -16,7 +16,8 @@ is crystal-like when the normalized Steinhardt q4 vectors of i and j have a dot 
 ten Wolde's scheme, with l = 4, which suits the octahedral rocksalt environment. LAMMPS evaluates it on the fly
 (`common/in.analysis` and the per-atom `c_ncb` dump column), and `analysis/bondorder.py` reproduces it exactly
 (max |Δncb| = 0 against LAMMPS on the smoke dumps). Crystalline clusters are computed from the dumps
-(`recryst_summary.py --clusters`); dumps every 10 ps resolve nucleation.
+(`recryst_summary.py --clusters`) from anneal dumps every 2 ps, fine enough for the first-passage times the MFPT
+analysis needs.
 
 **What is counted: Ge/Sb/Te only (`xfracGST`).** Everything in Part 3 (Tx, the halt level, incubation, clusters,
 the calibration) uses `xfracGST`, the crystalline fraction of the Ge/Sb/Te atoms; the `.dat` files also keep
@@ -95,8 +96,10 @@ one, else `--x-crystal` (the crystal-reference value at Ta, also printed by `cal
 - `anneal.dat` every 1 ps;
 - `hold_start.txt`, the time the hold started and the criterion of the dumped `c_ncb` (fresh start only);
 - `stress.dat`, the pressure tensor every 1 ps from the start of the hold;
-- the trajectory every 10 ps (one file per job);
-- restart files every 50 ps.
+- the trajectory every 2 ps (one file per job), with image flags (`ix iy iz`, continuous across resumes) so
+  unwrapped positions give diffusion over the whole hold;
+- restart files every 50 ps; `submit_anneal.sh` deletes all but the newest two before each job, and all but the
+  newest once the run is done (about 2.6 MB each; kept, they would total about 260 MB per 5 ns run).
 
 `recryst_summary.py` reports, per run and as replica mean ± sample std:
 - baseline `xfracGST` (x_a), x_c and its source;
@@ -124,7 +127,7 @@ Per (composition, Ta) group, two nucleation rates:
   the mean over replicas of the first time the largest cluster reaches n, fitted with an error function whose
   midpoint is n*.
 
-These are the kinetics to compare across compositions. With 10 ps frames and 10 replicas they are estimates with
+These are the kinetics to compare across compositions. With 2 ps frames and 10 replicas they are estimates with
 roughly 30% errors, not converged rates.
 
 **Criterion dependence.** n*, t_nuc and Tx depend on where the order parameter puts the crystal/glass boundary: a
@@ -172,25 +175,29 @@ chain, default 4); `EXTRA_VARS` (extra LAMMPS `-var`
 options for either, e.g. the calibrated criterion or `-var baro aniso`).
 
 ## Validation
-**`tests/recryst_logic`: PASS** (job 12289716; `check.py` writes `RESULT.txt`). On the 1×1×1 x0 glass (461 atoms)
+**`tests/recryst_logic`: PASS** (job 12290193; `check.py` writes `RESULT.txt`). On the 1×1×1 x0 glass (461 atoms)
 from `tests/mq_logic`, dt 1 fs:
-- **Ramp** (10 K/ps): exit 0; `snap_350K` … `snap_900K`; T follows the programmed schedule (mean deviation +2.1 K);
+- **Ramp** (10 K/ps): exit 0; `snap_350K` … `snap_900K`; T follows the programmed schedule (mean deviation +1.2 K);
   `stress.dat` has a row for every `ramp.dat` step.
 - **Anneal with resume** (tscale 0.1): both jobs exit 0; the hold ends at the programmed step 24000; `anneal.dat`
   (0–24000) and `stress.dat` (4000–24000) continue across the resume with no gap; restarts every 5000 steps;
-  `hold_start.txt` = 4 ps and `xstop` are read back by the summary.
+  trajectory frames every 2 ps, the two jobs' files overlapping at 10000–14000 and agreeing there in unwrapped
+  position (to 5e-11 Å), with no atom moving more than 3.7 Å between frames across the resume (image flags carried
+  over); `hold_start.txt` = 4 ps and `xstop` are read back by the summary.
 - **`fix halt`** (xstop 0.0, `baro aniso`): stops at its first check, step 5000; the hold ran anisotropic.
 - **Continuation:** `sbatch --test-only` accepts `submit_anneal.sh` with the inherited resource flags. The chain's
   stop-on-no-progress rule was checked separately with stubbed Slurm and LAMMPS: a failing first job stops the chain
-  at the second link; a progressing chain continues.
+  at the second link; a progressing chain continues. Restart pruning was checked the same way over a four-job
+  chain: each job starts with the newest two restart files, the finished run keeps only the newest, every job exits
+  0.
 - **Ge/Sb/Te-only crystallinity, with C present** (`in.calib` on the 512-atom x10 glass at 300 K and the minimized
   1×1×1 x5 rocksalt at 600 K): on every dumped frame LAMMPS's `xfracGST` and `xfrac` equal a recount from the dump
   over Ge/Sb/Te and over all atoms (difference 0 atoms), and the two differ; `calibrate.py` runs on these references
   and reports `xfracGST` and a suggested `XSTOP`.
 - **Analysis:** `recryst_summary.py` runs on the outputs and skips an incomplete anneal by name; `hold_start.txt`
-  records the criterion; clusters from the dumped `c_ncb` equal clusters from a recount. (The two jobs' dump files
-  happen to share no step here, so taking a repeated frame from the later file is not exercised; the same rule for
-  `.dat` rows is a known answer below.)
+  records the criterion; clusters from the dumped `c_ncb` equal clusters from a recount, with each overlapping
+  frame counted once. (Both copies of an overlapping frame are identical on one node, so the test cannot tell which
+  file a repeated frame was taken from; the later-wins rule for `.dat` rows is a known answer below.)
 - **Known answers:** `load_dat` keeps the last row of a repeated step; the half-rise `Tx_xfrac` of a synthetic
   ramp is 650 K for both a 0.8 and a 0.6 ceiling (a fixed 0.5 threshold would give 654 K and 665 K); `v_growth`
   recovers 200 m/s for a growing sphere; `J_surv` matches the censored-exponential formula; `smooth()` keeps a
@@ -212,6 +219,8 @@ Measured throughput at 13.8k atoms (`tests/RESULTS.md`, 1d): 3.35 ns/day per 2-A
   `fix halt` should cut this a lot, provided `XSTOP` is set below the crystallized `xfracGST` (see Halt level); a
   shorter `MAX_NS` with more replicas also works, since runs that do not nucleate still count (censored) in `J_surv`.
 - Calibration: 54 jobs × 20 ps, roughly 15–20 min each on one A30 (estimated from the 2-A30 throughput).
+- Disk (gzipped dumps, about 0.25 MB per 13.8k-atom frame): anneals up to 2,500 frames ≈ 0.7 GB per 5 ns run,
+  about 40 GB for the plan above; ramps about 30 MB per run. All on `/scratch` (200 TB quota).
 
 GPUs: strachan's A30 cap is 6 GPUs shared with other members, often only 2 free, so 1–3 two-GPU jobs at a time.
 perc adds 10 A100-40GB, so up to 10 one-GPU jobs. **Review checkpoint before scaling the anneals.**

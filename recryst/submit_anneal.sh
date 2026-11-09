@@ -24,7 +24,7 @@
 # Each task: exits if anneal_done.txt exists; as a continuation, stops the chain with an error if there is no newer
 # restart than its predecessor started from (chain_progress.txt: the predecessor made no progress); otherwise
 # records the newest restart, queues its own continuation (afterany, same array index) and runs, resuming from that
-# restart. At most MAXCHAIN jobs per task.
+# restart. At most MAXCHAIN jobs per task. Old restart files are deleted (see prune below).
 # The continuation inherits this job's account, partition, QoS and GPU layout, so a chain started with command-line
 # overrides (e.g. -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1) stays on those resources.
 set -euo pipefail
@@ -45,8 +45,12 @@ glass=$(((rep - 1) % 3 + 1))                # meltquench/submit.sh makes 3 glass
 run=runs/anneal_${cell}_T${TA}_r${rep}
 mkdir -p $run
 
-[ -e $run/anneal_done.txt ] && { echo "$run already done"; exit 0; }
 cd $run
+# Restart files (~2.6 MB each, one per 50 ps) are pruned: a finished run keeps only the newest (enough to extend the
+# hold later); an unfinished one keeps the newest two (the newest may be truncated if a job died while writing it).
+prune() { { ls anneal.*.restart 2>/dev/null || true; } | sort -t. -k2,2n | head -n -$1 | xargs -r rm -f; }
+[ -e anneal_done.txt ] && { prune 1; echo "$run already done"; exit 0; }
+prune 2
 latest=$(ls anneal.*.restart 2>/dev/null | sort -t. -k2,2n | tail -1 || true)
 # A continuation that finds no newer restart than the previous job started from means that job made no progress
 # (e.g. a bad input): stop the chain here instead of queueing more jobs that would fail the same way.
@@ -67,3 +71,4 @@ $ROOT/common/run_lmp.sh $SLURM_NTASKS -in $ROOT/recryst/in.anneal -log log.annea
     -var src $ROOT/meltquench/runs/${cell}_q10_r${glass}/amorphous_300K.data \
     -var max_ns $MAX_NS -var dt $DT -var resume $([ -n "$latest" ] && echo 1 || echo 0) -var rfile ${latest:-none} \
     -var xstop $XSTOP -var model $MODEL ${EXTRA_VARS:-}
+if [ -e anneal_done.txt ]; then prune 1; fi

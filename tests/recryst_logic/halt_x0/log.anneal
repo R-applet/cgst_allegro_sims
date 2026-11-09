@@ -26,8 +26,9 @@ package kokkos newton on neigh half
 #   "Barostat")
 # Outputs: anneal.dat (appended across resumes; every 1 ps; MSD columns restart from 0 at each resume), stress.dat
 #   (pressure tensor every 1 ps from the start of the hold, appended across resumes),
-#   log.anneal*, traj.lammpstrj.gz (every 10 ps; one file per job: traj.<first step>.lammpstrj.gz),
-#   anneal.<step>.restart (every 50 ps), final.data, anneal_done.txt, hold_start.txt (fresh start only: hold start
+#   log.anneal*, traj.lammpstrj.gz (every 2 ps; one file per job: traj.<first step>.lammpstrj.gz; image flags
+#   ix iy iz, carried across resumes by the restart files, so x + ix Lx etc. is continuous for diffusion),
+#   anneal.<step>.restart (every 50 ps; submit_anneal.sh deletes old ones), final.data, anneal_done.txt, hold_start.txt (fresh start only: hold start
 #   time and the crystallinity criterion of the dumped c_ncb column)
 
 units           metal
@@ -77,7 +78,7 @@ Reading data file ...
   461 atoms
   reading velocities ...
   461 velocities
-  read_data CPU = 0.050 seconds
+  read_data CPU = 0.060 seconds
 include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
@@ -237,20 +238,20 @@ Per MPI rank memory allocation (min/avg/max) = 8.205 | 8.205 | 8.205 Mbytes
    Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
          0   0              300           -397.56647      13896.218      30.143641      6.2872852     -0.093851666   -0.062637627    0              0              0              0              0.10629067     0.10629067   
       1000   1              303.15604     -2192.6917      13969.42       30.30243       6.2543388     -0.09124529    -0.093615312    0.282417       0.22928768     0.22291347     0              0.11279826     0.11279826   
-Loop time of 4.04654 on 1 procs for 1000 steps with 461 atoms
+Loop time of 4.07321 on 1 procs for 1000 steps with 461 atoms
 
-Performance: 21.352 ns/day, 1.124 hours/ns, 247.125 timesteps/s, 113.924 katom-step/s
-99.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 21.212 ns/day, 1.131 hours/ns, 245.506 timesteps/s, 113.178 katom-step/s
+99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 3.676      | 3.676      | 3.676      |   0.0 | 90.84
-Neigh   | 0.0085331  | 0.0085331  | 0.0085331  |   0.0 |  0.21
-Comm    | 0.080066   | 0.080066   | 0.080066   |   0.0 |  1.98
-Output  | 0.0025449  | 0.0025449  | 0.0025449  |   0.0 |  0.06
-Modify  | 0.20959    | 0.20959    | 0.20959    |   0.0 |  5.18
-Other   |            | 0.06983    |            |       |  1.73
+Pair    | 3.7011     | 3.7011     | 3.7011     |   0.0 | 90.86
+Neigh   | 0.0087199  | 0.0087199  | 0.0087199  |   0.0 |  0.21
+Comm    | 0.081056   | 0.081056   | 0.081056   |   0.0 |  1.99
+Output  | 0.0021402  | 0.0021402  | 0.0021402  |   0.0 |  0.05
+Modify  | 0.21018    | 0.21018    | 0.21018    |   0.0 |  5.16
+Other   |            | 0.07004    |            |       |  1.72
 
 Nlocal:            461 ave         461 max         461 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -281,20 +282,20 @@ Per MPI rank memory allocation (min/avg/max) = 8.13 | 8.13 | 8.13 Mbytes
       2000   2              376.34822      1529.9511      13993.197      30.354006      6.2437118     -0.078628949   -0.0011019885   0.31721055     0.30370125     0.32566033     0              0.095444685    0.095444685  
       3000   3              488.65671      353.95385      14006.131      30.382063      6.2379458     -0.062289209    0.0074496385   0.5273036      0.49987709     0.43562938     0              0.10845987     0.10845987   
       4000   4              577.43964      956.15797      14129.21       30.649046      6.1836074     -0.038356213    0.054412758    0.81885805     0.93656521     0.69219045     0              0.093275488    0.093275488  
-Loop time of 12.0027 on 1 procs for 3000 steps with 461 atoms
+Loop time of 12.0878 on 1 procs for 3000 steps with 461 atoms
 
-Performance: 21.595 ns/day, 1.111 hours/ns, 249.944 timesteps/s, 115.224 katom-step/s
-99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 21.443 ns/day, 1.119 hours/ns, 248.183 timesteps/s, 114.412 katom-step/s
+99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 10.886     | 10.886     | 10.886     |   0.0 | 90.70
-Neigh   | 0.033012   | 0.033012   | 0.033012   |   0.0 |  0.28
-Comm    | 0.24374    | 0.24374    | 0.24374    |   0.0 |  2.03
-Output  | 0.010815   | 0.010815   | 0.010815   |   0.0 |  0.09
-Modify  | 0.61705    | 0.61705    | 0.61705    |   0.0 |  5.14
-Other   |            | 0.2121     |            |       |  1.77
+Pair    | 10.972     | 10.972     | 10.972     |   0.0 | 90.77
+Neigh   | 0.033078   | 0.033078   | 0.033078   |   0.0 |  0.27
+Comm    | 0.24485    | 0.24485    | 0.24485    |   0.0 |  2.03
+Output  | 0.007554   | 0.007554   | 0.007554   |   0.0 |  0.06
+Modify  | 0.61885    | 0.61885    | 0.61885    |   0.0 |  5.12
+Other   |            | 0.2119     |            |       |  1.75
 
 Nlocal:            461 ave         461 max         461 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -324,9 +325,9 @@ fix             npt all npt temp 600 600 0.1 aniso 0.0 0.0 1
 fix             stress all print ${nthermo} "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)"                 ${dat_mode} stress.dat screen no title "step time_ps pxx pyy pzz pxy pxz pyz"
 fix             stress all print 1000 "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)"                 ${dat_mode} stress.dat screen no title "step time_ps pxx pyy pzz pxy pxz pyz"
 fix             stress all print 1000 "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)"                 file stress.dat screen no title "step time_ps pxx pyy pzz pxy pxz pyz"
-dump            traj all custom $(round(10*v_nps)) traj.$(step).lammpstrj.gz id type x y z c_q4[1] c_ncb
-dump            traj all custom 10000 traj.$(step).lammpstrj.gz id type x y z c_q4[1] c_ncb
-dump            traj all custom 10000 traj.4000.lammpstrj.gz id type x y z c_q4[1] c_ncb
+dump            traj all custom $(round(2*v_nps)) traj.$(step).lammpstrj.gz id type x y z ix iy iz c_q4[1] c_ncb
+dump            traj all custom 2000 traj.$(step).lammpstrj.gz id type x y z ix iy iz c_q4[1] c_ncb
+dump            traj all custom 2000 traj.4000.lammpstrj.gz id type x y z ix iy iz c_q4[1] c_ncb
 dump_modify     traj sort id element Ge Sb Te C
 restart         $(round(50*v_tscale*v_nps)) anneal.*.restart
 restart         5000 anneal.*.restart
@@ -341,21 +342,21 @@ Per MPI rank memory allocation (min/avg/max) = 8.13 | 8.13 | 8.13 Mbytes
    Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
       4000   4              577.43964      956.15797      14129.21       30.649046      6.1836074     -0.038356213    0.054412758    0.81885805     0.93656521     0.69219045     0              0.093275488    0.093275488  
 Fix halt condition for fix-id stop met on step 5000 with value 0.12147505422993492
-      5000   5              579.93669      1710.5662      14124.134      30.638035      6.1858297     -0.037971935    0.069538899    1.2186309      1.4877238      0.93623591     0              0.12147505     0.12147505   
-Loop time of 4.01666 on 1 procs for 1000 steps with 461 atoms
+      5000   5              579.93669      1710.5662      14124.134      30.638035      6.1858297     -0.037971936    0.069538898    1.2186309      1.4877238      0.93623591     0              0.12147505     0.12147505   
+Loop time of 4.04039 on 1 procs for 1000 steps with 461 atoms
 
-Performance: 21.510 ns/day, 1.116 hours/ns, 248.963 timesteps/s, 114.772 katom-step/s
-99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 21.384 ns/day, 1.122 hours/ns, 247.501 timesteps/s, 114.098 katom-step/s
+99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 3.6363     | 3.6363     | 3.6363     |   0.0 | 90.53
-Neigh   | 0.012014   | 0.012014   | 0.012014   |   0.0 |  0.30
-Comm    | 0.082292   | 0.082292   | 0.082292   |   0.0 |  2.05
-Output  | 0.0041377  | 0.0041377  | 0.0041377  |   0.0 |  0.10
-Modify  | 0.20958    | 0.20958    | 0.20958    |   0.0 |  5.22
-Other   |            | 0.07229    |            |       |  1.80
+Pair    | 3.6616     | 3.6616     | 3.6616     |   0.0 | 90.62
+Neigh   | 0.012063   | 0.012063   | 0.012063   |   0.0 |  0.30
+Comm    | 0.082713   | 0.082713   | 0.082713   |   0.0 |  2.05
+Output  | 0.0038199  | 0.0038199  | 0.0038199  |   0.0 |  0.09
+Modify  | 0.20858    | 0.20858    | 0.20858    |   0.0 |  5.16
+Other   |            | 0.07163    |            |       |  1.77
 
 Nlocal:            461 ave         461 max         461 min
 Histogram: 1 0 0 0 0 0 0 0 0 0

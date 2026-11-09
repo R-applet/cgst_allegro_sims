@@ -18,8 +18,9 @@
 #   "Barostat")
 # Outputs: anneal.dat (appended across resumes; every 1 ps; MSD columns restart from 0 at each resume), stress.dat
 #   (pressure tensor every 1 ps from the start of the hold, appended across resumes),
-#   log.anneal*, traj.lammpstrj.gz (every 10 ps; one file per job: traj.<first step>.lammpstrj.gz),
-#   anneal.<step>.restart (every 50 ps), final.data, anneal_done.txt, hold_start.txt (fresh start only: hold start
+#   log.anneal*, traj.lammpstrj.gz (every 2 ps; one file per job: traj.<first step>.lammpstrj.gz; image flags
+#   ix iy iz, carried across resumes by the restart files, so x + ix Lx etc. is continuous for diffusion),
+#   anneal.<step>.restart (every 50 ps; submit_anneal.sh deletes old ones), final.data, anneal_done.txt, hold_start.txt (fresh start only: hold start
 #   time and the crystallinity criterion of the dumped c_ncb column)
 
 units           metal
@@ -71,7 +72,7 @@ fix             npt all npt temp ${Ta} ${Ta} ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
 # deviatoric-stress check for the isotropic barostat (recryst_summary.py sdev_*; criterion in recryst/README.md)
 fix             stress all print ${nthermo} "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)" &
                 ${dat_mode} stress.dat screen no title "step time_ps pxx pyy pzz pxy pxz pyz"
-dump            traj all custom $(round(10*v_nps)) traj.$(step).lammpstrj.gz id type x y z c_q4[1] c_ncb
+dump            traj all custom $(round(2*v_nps)) traj.$(step).lammpstrj.gz id type x y z ix iy iz c_q4[1] c_ncb
 dump_modify     traj sort id element Ge Sb Te C
 restart         $(round(50*v_tscale*v_nps)) anneal.*.restart
 fix             stop all halt ${nps} v_xfracGST > ${xstop} error continue

@@ -26,8 +26,9 @@ package kokkos newton on neigh half
 #   "Barostat")
 # Outputs: anneal.dat (appended across resumes; every 1 ps; MSD columns restart from 0 at each resume), stress.dat
 #   (pressure tensor every 1 ps from the start of the hold, appended across resumes),
-#   log.anneal*, traj.lammpstrj.gz (every 10 ps; one file per job: traj.<first step>.lammpstrj.gz),
-#   anneal.<step>.restart (every 50 ps), final.data, anneal_done.txt, hold_start.txt (fresh start only: hold start
+#   log.anneal*, traj.lammpstrj.gz (every 2 ps; one file per job: traj.<first step>.lammpstrj.gz; image flags
+#   ix iy iz, carried across resumes by the restart files, so x + ix Lx etc. is continuous for diffusion),
+#   anneal.<step>.restart (every 50 ps; submit_anneal.sh deletes old ones), final.data, anneal_done.txt, hold_start.txt (fresh start only: hold start
 #   time and the crystallinity criterion of the dumped c_ncb column)
 
 units           metal
@@ -72,11 +73,11 @@ read_restart    anneal.10000.restart
 Reading restart file ...
   restart file = 30 Mar 2026, LAMMPS = 30 Mar 2026
   restoring atom style atomic/kk from restart
-  orthogonal box = (-0.056614458 -0.056614458 -0.056614458) to (24.176614 24.176614 24.176614)
+  orthogonal box = (-0.01981964 -0.01981964 -0.01981964) to (24.13982 24.13982 24.13982)
   1 by 1 by 1 MPI processor grid
   pair style allegro stores no restart info
   461 atoms
-  read_restart CPU = 0.031 seconds
+  read_restart CPU = 0.028 seconds
 include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
@@ -202,9 +203,9 @@ Resetting global fix info from restart file:
 fix             stress all print ${nthermo} "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)"                 ${dat_mode} stress.dat screen no title "step time_ps pxx pyy pzz pxy pxz pyz"
 fix             stress all print 1000 "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)"                 ${dat_mode} stress.dat screen no title "step time_ps pxx pyy pzz pxy pxz pyz"
 fix             stress all print 1000 "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)"                 append stress.dat screen no title "step time_ps pxx pyy pzz pxy pxz pyz"
-dump            traj all custom $(round(10*v_nps)) traj.$(step).lammpstrj.gz id type x y z c_q4[1] c_ncb
-dump            traj all custom 10000 traj.$(step).lammpstrj.gz id type x y z c_q4[1] c_ncb
-dump            traj all custom 10000 traj.10000.lammpstrj.gz id type x y z c_q4[1] c_ncb
+dump            traj all custom $(round(2*v_nps)) traj.$(step).lammpstrj.gz id type x y z ix iy iz c_q4[1] c_ncb
+dump            traj all custom 2000 traj.$(step).lammpstrj.gz id type x y z ix iy iz c_q4[1] c_ncb
+dump            traj all custom 2000 traj.10000.lammpstrj.gz id type x y z ix iy iz c_q4[1] c_ncb
 dump_modify     traj sort id element Ge Sb Te C
 restart         $(round(50*v_tscale*v_nps)) anneal.*.restart
 restart         5000 anneal.*.restart
@@ -261,51 +262,51 @@ WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
 Per MPI rank memory allocation (min/avg/max) = 8.199 | 8.199 | 8.199 Mbytes
    Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
-     10000   10             604.74675     -1652.6417      14230.949      30.869737      6.1394001     -0.042273962    0.0038840588   2.886656       3.2631479      2.5468773      0              0.086767896    0.086767896  
-     11000   11             594.91996     -49.730367      14165.384      30.727513      6.1678166     -0.045115648    0.030663223    3.2121916      3.5818054      2.5638448      0              0.13232104     0.13232104   
-     12000   12             581.46975      469.03134      14113.924      30.615888      6.1903045     -0.048700798    0.035259716    3.4187187      4.3940092      3.0447178      0              0.13015184     0.13015184   
-     13000   13             585.48767     -2725.7724      14209.846      30.823961      6.1485176     -0.040372289   -0.017296833    3.7571468      4.6833693      3.2313519      0              0.084598698    0.084598698  
-     14000   14             625.43179      1098.6174      14057.861      30.494275      6.2149916     -0.043936722    0.057641334    3.6688223      4.6728053      3.3321701      0              0.12581345     0.12581345   
-     15000   15             581.30911      9.5235956      14166.29       30.729479      6.167422      -0.043387077    0.031772689    4.4349794      5.4384522      3.5998205      0              0.086767896    0.086767896  
-     16000   16             608.56248     -468.26741      14145.533      30.684453      6.1764721     -0.045206476    0.024317633    4.4313288      5.3637232      3.6818628      0              0.10845987     0.10845987   
-     17000   17             615.65517      1403.0904      14019.985      30.412116      6.2317817     -0.0507855      0.055254665    4.8653832      5.3575613      3.6813967      0              0.14099783     0.14099783   
-     18000   18             588.81111      4449.8366      13988.574      30.343977      6.2457753     -0.04393344     0.11628771     5.167529       6.1921564      3.8495231      0              0.10845987     0.10845987   
-     19000   19             634.53672      842.85263      14069.626      30.519796      6.2097947     -0.050229896    0.047667959    5.4521685      6.4327186      3.9025452      0              0.13015184     0.13015184   
-     20000   20             570.41252      2061.4233      14199.516      30.801552      6.1529907     -0.043890884    0.069311268    6.0235707      6.3375036      4.0922664      0              0.097613883    0.097613883  
-     21000   21             614.42821      2210.0445      14083.989      30.550951      6.203462      -0.045171916    0.076218906    6.6934089      7.2969472      4.3259638      0              0.093275488    0.093275488  
-     22000   22             651.66456     -3268.8119      14244.121      30.898311      6.1337226     -0.045241689   -0.024229874    7.107837       7.5607143      4.6406715      0              0.10629067     0.10629067   
-     23000   23             604.9292      -65.752301      14207.396      30.818647      6.1495778     -0.044053001    0.032705841    7.0658947      8.1517111      4.8322568      0              0.164859       0.164859     
-     24000   24             620.54996      601.43758      14223.348      30.85325       6.1426807     -0.0444884      0.047131916    7.5741634      8.5208912      5.1191472      0              0.11930586     0.11930586   
-Loop time of 55.9496 on 1 procs for 14000 steps with 461 atoms
+     10000   10             586.31477      790.56855      14101.696      30.589361      6.1956725     -0.048008685    0.042707884    2.9890299      3.0602944      2.4538789      0              0.11496746     0.11496746   
+     11000   11             619.00414     -503.56275      14218.903      30.843607      6.1446013     -0.043099309    0.027045574    3.2251908      3.6335781      2.7366644      0              0.10195228     0.10195228   
+     12000   12             628.73982     -126.89628      14229.226      30.866001      6.1401433     -0.039955322    0.038694723    3.8439554      4.1808574      3.152842       0              0.093275488    0.093275488  
+     13000   13             624.89252     -544.7633       14183.111      30.765967      6.1601076     -0.040857599    0.029280009    4.5285972      4.4190726      3.5050056      0              0.093275488    0.093275488  
+     14000   14             585.03051     -808.37659      14229.98       30.867635      6.1398182     -0.037846517    0.02203634     4.717294       4.8733514      3.7323971      0              0.093275488    0.093275488  
+     15000   15             591.79397     -1352.0998      14161.564      30.719229      6.1694799     -0.046369867    0.0040351758   5.0181985      4.7628101      3.6081012      0              0.14099783     0.14099783   
+     16000   16             558.38578      1083.3178      14149.847      30.693811      6.174589      -0.042974368    0.049799829    5.1652123      5.3258987      3.873364       0              0.09978308     0.09978308   
+     17000   17             615.31895     -1995.388       14232.78       30.873709      6.1386103     -0.045396009   -0.004483158    5.8143089      5.4695991      4.3233894      0              0.091106291    0.091106291  
+     18000   18             613.98465     -322.51428      14185.254      30.770617      6.1591767     -0.039828633    0.033168905    5.6051094      5.7014704      4.6369568      0              0.097613883    0.097613883  
+     19000   19             612.46666      2305.175       14086.429      30.556245      6.2023872     -0.038178174    0.084781252    6.4264857      6.0566371      5.2281612      0              0.10412148     0.10412148   
+     20000   20             612.00543      1454.617       14038.899      30.453144      6.2233858     -0.048122942    0.058461794    6.5238131      6.0202482      5.1445425      0              0.09978308     0.09978308   
+     21000   21             637.89206     -2015.2482      14207.141      30.818094      6.1496882     -0.044167424   -0.00065584832  7.0389242      6.4423132      5.4550553      0              0.10412148     0.10412148   
+     22000   22             644.97974     -794.41584      14283.623      30.983999      6.1167594     -0.038798518    0.029027847    8.0514766      7.1339148      5.9352522      0              0.034707158    0.034707158  
+     23000   23             600.06243      2387.0786      14114.753      30.617685      6.1899411     -0.044590062    0.07842305     7.7196426      6.9280713      5.9812742      0              0.065075922    0.065075922  
+     24000   24             585.51756     -993.07819      14214.467      30.833985      6.1465188     -0.040078181    0.01632988     8.1228022      6.8699926      5.9583798      0              0.052060738    0.052060738  
+Loop time of 56.7174 on 1 procs for 14000 steps with 461 atoms
 
-Performance: 21.619 ns/day, 1.110 hours/ns, 250.225 timesteps/s, 115.354 katom-step/s
-99.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 21.327 ns/day, 1.125 hours/ns, 246.838 timesteps/s, 113.792 katom-step/s
+99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 51.019     | 51.019     | 51.019     |   0.0 | 91.19
-Neigh   | 0.16071    | 0.16071    | 0.16071    |   0.0 |  0.29
-Comm    | 1.1432     | 1.1432     | 1.1432     |   0.0 |  2.04
-Output  | 0.040465   | 0.040465   | 0.040465   |   0.0 |  0.07
-Modify  | 2.5916     | 2.5916     | 2.5916     |   0.0 |  4.63
-Other   |            | 0.9948     |            |       |  1.78
+Pair    | 51.842     | 51.842     | 51.842     |   0.0 | 91.40
+Neigh   | 0.16623    | 0.16623    | 0.16623    |   0.0 |  0.29
+Comm    | 1.1317     | 1.1317     | 1.1317     |   0.0 |  2.00
+Output  | 0.052788   | 0.052788   | 0.052788   |   0.0 |  0.09
+Modify  | 2.5336     | 2.5336     | 2.5336     |   0.0 |  4.47
+Other   |            | 0.9912     |            |       |  1.75
 
 Nlocal:            461 ave         461 max         461 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1470 ave        1470 max        1470 min
+Nghost:           1486 ave        1486 max        1486 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        21566 ave       21566 max       21566 min
+FullNghs:        21524 ave       21524 max       21524 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 21566
-Ave neighs/atom = 46.780911
-Neighbor list builds = 254
+Total # of neighbors = 21524
+Ave neighs/atom = 46.689805
+Neighbor list builds = 260
 Dangerous builds = 0
 write_data      final.data
 System init for write_data ...
 print           "step $(step) time_ps $(time) xfracGST $(v_xfracGST) (stop at xfracGST > ${xstop} or step ${n_end})"                 file anneal_done.txt
-step 24000 time_ps 24 xfracGST 0.11930585683297199873 (stop at xfracGST > 0.8 or step 24000)
-Total wall time: 0:00:56
+step 24000 time_ps 24 xfracGST 0.052060737527115000245 (stop at xfracGST > 0.8 or step 24000)
+Total wall time: 0:00:57
