@@ -7,8 +7,8 @@ the others in vacancy count as well as C content; see `structures/build_supercel
 | Part | Directory | Status |
 |---|---|---|
 | 1. Environment, model, Slurm tests | `env/`, `models/`, `common/`, `tests/` | done (`tests/RESULTS.md`); glass as dense as the crystal, inherited from the DFT reference (1g, 1k) |
-| 2. Melt-quench | `meltquench/` | inputs and analysis drafted, logic test passing; in review; no production runs |
-| 3. Recrystallization (Tx ramp, isothermal anneal) | `recryst/` | inputs drafted, logic test passing; calibration needs Part 2 |
+| 2. Melt-quench | `meltquench/` | production runs done: 15 glasses at 10 K/ps (5 compositions × 3) and x0, x10 at 1 K/ps, all past the MSD gate; results not yet written up |
+| 3. Recrystallization (Tx ramp, isothermal anneal) | `recryst/` | criterion calibrated (3.8 Å, 0.6, 4); 1 K/ps and 0.2 K/ps ramps running; results in `recryst/RESULTS.md` |
 
 ## Layout
 - `structures/`: the original 512-site cells (untouched) and `build_supercells.py`. The builder writes cleaned NxNxN cells to
@@ -22,6 +22,7 @@ the others in vacancy count as well as C content; see `structures/build_supercel
   `recryst_logic/`) and the melt-quench analysis checks (`mq_analysis/`, `dft_glass/`), reported in
   `meltquench/README.md` and `recryst/README.md`. Each writes a `RESULT.txt`; `tests/collect.sh` prints them all.
 - `meltquench/`, `recryst/`: the Part 2 and Part 3 inputs, submit scripts and READMEs (protocol, outputs, running).
+  `recryst/scripts/` wraps the Part 3 steps after calibration; `recryst/RESULTS.md` records the Part 3 results.
 - `analysis/`: post-processing with `env/`: `mq_summary.py` and `mq_structure.py` (Part 2), `recryst_summary.py`
   (Part 3), and the shared helpers `runio.py` (run-output readers) and `bondorder.py` (Q4 crystallinity, matching
   `common/in.analysis`). `latent_features.py` (exploratory, `tests/latent_feasibility/`) runs in the container.

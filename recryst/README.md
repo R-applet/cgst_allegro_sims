@@ -39,7 +39,10 @@ a bias in the same direction as the expected effect of C.
    default criterion; (b) the per-atom crystal-like bond count, crystal vs amorphous references, with the threshold;
    (c) the margin over `q_thr` × `q_nmin`, to show whether the optimum is a plateau or a sharp edge. It warns when
    the best value lies on the edge of the scanned grid; extend the grid then. (On the logic-test references, a
-   600 K crystal and a fast-quenched glass, the optimum was at the edge, `q_nmin` 3.)
+   600 K crystal and a fast-quenched glass, the optimum was at the edge, `q_nmin` 3.) When the best criterion is not
+   meaningfully better than a nearby one, `--choose q_rc q_thr q_nmin` (on the grid; checked before the scan) reports
+   everything above and the plot for that criterion instead, after the scan's own best line
+   (`sbatch --export=ALL,CALIB_ARGS="--choose 3.8 0.6 4" submit_calibrate.sh`).
 3. The chosen values are recorded here and passed to the production runs
    (`EXTRA_VARS="-var q_rc .. -var q_thr .. -var q_nmin .."`) only if they differ from the defaults (3.6, 0.5, 4).
 4. For the amorphous references, `calibrate.py` also finds the largest crystalline Ge/Sb/Te cluster in every frame,
@@ -66,7 +69,29 @@ cluster sizes at each calibration temperature.) **Known limit:** the calibration
 Ta, but a ns anneal ages the glass, and its ordered patches may grow before a nucleus forms. Compare each group's
 `n_base` (below) with `--nucleated-size` before trusting `t_nuc`.
 
-**Result:** _pending (needs the Part 2 amorphous samples)_.
+**Result: `q_rc` 3.8 Å, `q_thr` 0.6, `q_nmin` 4** (calibration jobs 12295527 and 12308622; `calib/calibrate.out`
+from `--choose 3.8 0.6 4`, job 12309345). Pass it to every Part 3 run as
+`EXTRA_VARS="-var q_rc 3.8 -var q_thr 0.6 -var q_nmin 4"` and to the analysis as `--q-rc 3.8 --q-thr 0.6 --q-nmin 4`.
+- The best margin rises with `q_rc` and flattens: 0.682 / 0.702 / 0.711 / 0.712 / 0.705 at 3.6 / 3.7 / 3.8 / 3.9 /
+  4.0 Å, with `q_thr` 0.6 and `q_nmin` 4 best at every `q_rc` from 3.5 Å. The strict optimum, 3.9 Å, beats 3.8 Å by
+  0.0009, which is noise. 3.8 Å was kept: it stays further from the second-neighbour shell (about 4.2 Å), and the
+  1 K/ps and 0.2 K/ps ramps had already been submitted with it.
+- Against the default (3.6, 0.5, 4), the lowest crystal reference barely moves (0.805 vs 0.812, x5 at 700 K) and the
+  glasses drop from at most 0.151 to at most 0.094. The gain is all on the glass side.
+- In `calib.png` (b), crystal atoms mostly have 5–7 crystal-like bonds and glass atoms 0–2; the cut at 4 falls
+  between them. In (c), the neighbouring `q_thr`/`q_nmin` cells give 0.65–0.69, so the choice is not sensitive.
+
+| T (K) | `XSTOP` | `--x-crystal` x0 / x1 / x2p5 / x5 | glass `xfracGST` max | `--nucleated-size` |
+|---|---|---|---|---|
+| 300 | 0.78 | 0.947 / 0.963 / 0.949 / 0.922 | 0.094 | 190 |
+| 500 | 0.75 | 0.950 / 0.960 / 0.934 / 0.877 | 0.086 | 230 |
+| 550 | 0.73 | 0.951 / 0.956 / 0.923 / 0.862 | 0.090 | 250 |
+| 600 | 0.72 | 0.950 / 0.951 / 0.916 / 0.842 | 0.076 | 260 |
+| 650 | 0.70 | 0.948 / 0.947 / 0.904 / 0.822 | 0.064 | 210 |
+| 700 | 0.68 | 0.947 / 0.941 / 0.898 / 0.805 | 0.051 | 130 |
+
+x10 has no crystal reference: its runs take x_c from their plateau, else `XSTOP`. The largest glass cluster at each temperature under
+this criterion is 63–130 atoms (300–700 K), against 103–269 under the default.
 
 ## 2. Heating ramp, Tx (`in.ramp`, `submit_ramp.sh`)
 | Stage | T (K) | Duration |
@@ -199,6 +224,8 @@ seed) gives z = −0.9 for pure noise and z = 16 for a 2 kbar deviatoric step; f
 statistic gave |z| ≤ 1.3 and 11–21. Keep `baro` the same within one continuation chain.
 
 ## Running
+The steps after calibration, with their checks and the final criterion built in, are wrapped in `scripts/`
+(`scripts/README.md` lists them in order). The underlying commands:
 ```
 cd recryst
 sbatch --array=0-14 submit_ramp.sh                              # 1 K/ps, 5 cells x 3 replicas

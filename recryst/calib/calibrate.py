@@ -90,7 +90,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--crystal", nargs="+", required=True)
     ap.add_argument("--amorphous", nargs="+", required=True)
+    ap.add_argument("--choose", nargs=3, metavar=("Q_RC", "Q_THR", "Q_NMIN"),
+                    help="report XSTOP, --x-crystal, --nucleated-size and the plot for this grid criterion instead of "
+                         "the best one (e.g. when the best is not meaningfully better than a nearby choice)")
     a = ap.parse_args()
+    want = None
+    if a.choose:                                    # checked before the scan, which takes ~0.5 h on the full set
+        want = (float(a.choose[0]), float(a.choose[1]), int(a.choose[2]))
+        if want[0] not in RC or want[1] not in THR or want[2] not in NMIN:
+            ap.error(f"--choose {want} is not on the scanned grid (RC {RC}, THR {THR}, NMIN {NMIN})")
     refs = {Path(f).name: ("crystal", fractions(f, RC)) for f in a.crystal}
     refs |= {Path(f).name: ("amorphous", fractions(f, RC)) for f in a.amorphous}
     rows, best = [], None
@@ -110,13 +118,20 @@ def main():
         w.writerows(rows)
     print(f"best: q_rc {best['rc']}  q_thr {best['thr']}  q_nmin {best['nmin']}  "
           f"(crystal min {best['crystal_min']:.3f}, amorphous max {best['amorphous_max']:.3f})")
+    scanned = (("q_rc", "rc", RC), ("q_thr", "thr", THR), ("q_nmin", "nmin", NMIN))
+    edges = [f"{name} {best[key]}" for name, key, grid in scanned if best[key] in (grid[0], grid[-1])]
+    if want:
+        use = next(r for r in rows if (r["rc"], r["thr"], r["nmin"]) == want)
+        print(f"chosen (--choose): q_rc {use['rc']}  q_thr {use['thr']}  q_nmin {use['nmin']}  "
+              f"(crystal min {use['crystal_min']:.3f}, amorphous max {use['amorphous_max']:.3f}; margin "
+              f"{use['margin']:.4f} vs best {best['margin']:.4f}); everything below is for this criterion")
+    else:
+        use = best
     for k, (kind, _) in refs.items():
-        print(f"  {kind:9s} {k:40s} xfracGST {best[k]:.3f}")
+        print(f"  {kind:9s} {k:40s} xfracGST {use[k]:.3f}")
     default = next(r for r in rows if (r["rc"], r["thr"], r["nmin"]) == (3.6, 0.5, 4))
     print(f"current default (3.6, 0.5, 4): crystal min {default['crystal_min']:.3f}, "
           f"amorphous max {default['amorphous_max']:.3f}")
-    scanned = (("q_rc", "rc", RC), ("q_thr", "thr", THR), ("q_nmin", "nmin", NMIN))
-    edges = [f"{name} {best[key]}" for name, key, grid in scanned if best[key] in (grid[0], grid[-1])]
     # fix halt level for the anneals: below what a fully crystallized sample reads at that temperature, for every
     # composition (one XSTOP per Ta). The normalization end point --x-crystal is per composition: the lowest crystal
     # reference (x5) would overstate X for the compositions whose crystal reads higher (x0 ~0.95 vs x5 ~0.84 at 600 K).
@@ -124,7 +139,7 @@ def main():
     for k, (kind, _) in refs.items():
         m = re.search(r"crys_(.+)_(\d+)K", k)
         if kind == "crystal" and m:
-            by_T.setdefault(int(m[2]), {})[m[1]] = best[k]
+            by_T.setdefault(int(m[2]), {})[m[1]] = use[k]
     amor_cells = sorted({m[1] for k in refs if (m := re.search(r"amor_(.+)_\d+K", k))})
     for T, xs in sorted(by_T.items()):
         low = min(xs, key=xs.get)
@@ -138,9 +153,9 @@ def main():
     if edges:
         print("WARNING: the best criterion is at the edge of the scanned grid (" + ", ".join(edges) + "); the optimum "
               "may lie outside it, so extend RC/THR/NMIN in calibrate.py and rerun")
-    crits = list(dict.fromkeys([(best["rc"], best["thr"], best["nmin"]), (3.6, 0.5, 4)]))
+    crits = list(dict.fromkeys([(use["rc"], use["thr"], use["nmin"]), (3.6, 0.5, 4)]))
     nucleation_thresholds(a.amorphous, crits)
-    plot(refs, rows, best, default)
+    plot(refs, rows, use, default)
     print("wrote calib_scan.csv, calib.png")
 
 
