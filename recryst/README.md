@@ -33,7 +33,7 @@ a bias in the same direction as the expected effect of C.
    - the amorphous samples of every composition.
 2. `calib/calibrate.py` (`sbatch submit_calibrate.sh` from `calib/`, in the `cgst-ana` env) scans `q_rc` 3.4–4.0 Å, `q_thr` 0.3–0.8 and `q_nmin` 3–7. It picks the criterion that
    maximizes (lowest crystal fraction in any crystal reference − highest crystal fraction in any amorphous reference).
-   It prints the suggested anneal `XSTOP` and `--x-crystal` for each reference temperature, including the anneal
+   It prints the suggested anneal `XSTOP` (one per temperature) and `--x-crystal` (per composition) for each reference temperature, including the anneal
    temperatures 550/600/650 K, and writes `calib_scan.csv` and
    `calib.png`: (a) each reference's crystalline fraction under the chosen and the
    default criterion; (b) the per-atom crystal-like bond count, crystal vs amorphous references, with the threshold;
@@ -112,8 +112,11 @@ criterion, and a crystal grown in an anneal (grain boundaries, defects) reads le
 fire. `XSTOP` (default 0.8, on `xfracGST`) should be set below what a crystallized sample reads at Ta: `calibrate.py`
 prints a suggestion per reference temperature (0.85 × the lowest crystal-reference `xfracGST`). The normalized
 fraction X = (xfracGST − x_a)/(x_c − x_a) uses x_c, the fully crystalline value: the run's own plateau if it reached
-one, else `--x-crystal` (the crystal-reference value at Ta, also printed by `calibrate.py`), else the run's `XSTOP`;
-`x_c_from` says which.
+one, else `--x-crystal` (the composition's own crystal-reference value at Ta, printed per composition by
+`calibrate.py`), else the run's `XSTOP`; `x_c_from` says which. `--x-crystal` takes one value per call, so run
+`recryst_summary.py` once per composition. Using the lowest reference (x5) for all would overstate X for x0, whose
+crystal reads about 0.95 against x5's 0.84 at 600 K. x10 has no crystal reference (its rocksalt disorders), so it
+falls back to its plateau or `XSTOP`.
 
 **Outputs.**
 - `anneal.dat` every 1 ps;
@@ -188,8 +191,8 @@ sbatch --array=0-2 --export=ALL,TA=600 submit_anneal.sh         # screening: x0 
 sbatch --array=0-49 --export=ALL,TA=600,NREP=10 submit_anneal.sh # production: 10 replicas of every cell
 # anneals on one perc A100-40GB per job (continuations stay on perc; keep the 0.2 K/ps ramp on the A30s):
 sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1 --array=0-2 --export=ALL,TA=600 submit_anneal.sh
-python ../analysis/recryst_summary.py runs/*                      # ramps and anneals; anneals at one Ta:
-                                                                  # --x-crystal from calibrate.py
+python ../analysis/recryst_summary.py runs/*                      # ramps and anneals; anneals at one Ta, one
+                                                                  # composition: --x-crystal from calibrate.py
 python ../analysis/recryst_summary.py --clusters --nucleated-size N runs/anneal_*_T600_*   # t_nuc, v_growth, rates;
                                                                   # N from calibrate.py at Ta, same criterion
 python ../analysis/recryst_summary.py --clusters --nucleated-size N --q-rc .. --q-thr .. --q-nmin .. runs/anneal_*_T600_*

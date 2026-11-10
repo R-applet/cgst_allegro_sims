@@ -11,8 +11,8 @@ calib.png: (a) each reference's crystalline fraction under the chosen criterion 
 q_rc and q_thr, with the q_nmin threshold; (c) the margin over q_thr x q_nmin at the chosen q_rc.
 Warns when the best value of any parameter lies on the edge of its grid (the optimum may be outside it). Prints, per
 crystal-reference temperature (300, 500, 550, 600, 650, 700 K: the anneal temperatures are sampled directly), the
-suggested anneal halt level XSTOP (0.85 x the lowest crystal-reference xfracGST) and the --x-crystal value for
-recryst_summary.py.
+suggested anneal halt level XSTOP (0.85 x the lowest crystal-reference xfracGST, one value for every composition)
+and the --x-crystal value for recryst_summary.py per composition (its own crystal reference; none for x10).
 Nucleation threshold: the glass already holds crystal-like patches of up to a few hundred Ge/Sb/Te atoms
 (recryst/README.md, "Crystal-like order already in the glass"), so a fixed small "nucleated" size would mark every anneal as nucleated at t = 0. For the
 amorphous references the largest crystalline Ge/Sb/Te cluster (bondorder.cluster_sizes) is found in every frame,
@@ -117,15 +117,24 @@ def main():
           f"amorphous max {default['amorphous_max']:.3f}")
     scanned = (("q_rc", "rc", RC), ("q_thr", "thr", THR), ("q_nmin", "nmin", NMIN))
     edges = [f"{name} {best[key]}" for name, key, grid in scanned if best[key] in (grid[0], grid[-1])]
-    # fix halt level for the anneals: below what a fully crystallized sample reads at that temperature
+    # fix halt level for the anneals: below what a fully crystallized sample reads at that temperature, for every
+    # composition (one XSTOP per Ta). The normalization end point --x-crystal is per composition: the lowest crystal
+    # reference (x5) would overstate X for the compositions whose crystal reads higher (x0 ~0.95 vs x5 ~0.84 at 600 K).
     by_T = {}
     for k, (kind, _) in refs.items():
-        m = re.search(r"_(\d+)K", k)
+        m = re.search(r"crys_(.+)_(\d+)K", k)
         if kind == "crystal" and m:
-            by_T.setdefault(int(m[1]), []).append(best[k])
+            by_T.setdefault(int(m[2]), {})[m[1]] = best[k]
+    amor_cells = sorted({m[1] for k in refs if (m := re.search(r"amor_(.+)_\d+K", k))})
     for T, xs in sorted(by_T.items()):
-        print(f"suggested XSTOP at {T} K: {0.85 * min(xs):.2f}  (0.85 x the lowest crystal-reference xfracGST, "
-              f"{min(xs):.3f}; pass also --x-crystal {min(xs):.3f} to recryst_summary.py)")
+        low = min(xs, key=xs.get)
+        print(f"suggested XSTOP at {T} K: {0.85 * xs[low]:.2f}  (0.85 x the lowest crystal-reference xfracGST, "
+              f"{xs[low]:.3f}, {low})")
+        none = [c for c in amor_cells if c not in xs]
+        print(f"  --x-crystal at {T} K for recryst_summary.py, per composition (one call per composition): "
+              + ", ".join(f"{c} {x:.3f}" for c, x in xs.items())
+              + (f"; no crystal reference for {', '.join(none)} (x_c from the run's plateau, else XSTOP)"
+                 if none else ""))
     if edges:
         print("WARNING: the best criterion is at the edge of the scanned grid (" + ", ".join(edges) + "); the optimum "
               "may lie outside it, so extend RC/THR/NMIN in calibrate.py and rerun")

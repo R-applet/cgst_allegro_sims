@@ -17,7 +17,7 @@ anneal runs (anneal.dat; hold start from hold_start.txt and xstop from anneal_do
   x_a       baseline, mean xfracGST of the first 20 ps of the hold
   x_c       the fully crystalline value X is normalized to, from (first that applies): the run's own plateau (mean of
             the last 100 ps, if the 5 ps-averaged xfracGST rose by less than 0.02 over the last 200 ps); --x-crystal
-            (the calibrated crystal reference at Ta, recryst/README.md); the run's xstop. x_c_from names the source.
+            (the calibrated crystal reference at Ta for the run's composition; one call per composition, recryst/README.md); the run's xstop. x_c_from names the source.
   t_inc     first hold time where X = (xfracGST - x_a) / (x_c - x_a) (5 ps average) exceeds 0.05
   t50       first hold time where X exceeds 0.5
   n_JMAK, k_JMAK  descriptors of the curve shape only: the fit X = 1 - exp(-k (t - t_inc)^n) on 0.05 < X < 0.95.
