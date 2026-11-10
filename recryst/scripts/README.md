@@ -12,6 +12,7 @@ In order:
 | Script | When | What |
 |---|---|---|
 | `analyze_ramps.sh` | 1 K/ps ramps done | criterion check, `ramp_summary_h1.txt`, per-composition Tx from per-run rows (`ramp_tx.txt`), prints the `submit_screen.sh` line when all 3 x0 ramps crystallized |
+| `analyze_ramp_rate.sh` | 0.2 K/ps ramp done | x0 r1 at 0.2 vs 1 K/ps: Tx shift against the 1 K/ps replica std, rough two-point Kissinger Ea |
 | `submit_screen.sh` | after the ramps | x0 r1-r3 at each of 550/600/650 K below x0 Tx − max(25 K, 2 std); needs `TX_X0`, `TX_X0_STD` |
 | `analyze_screen.sh summary` / `verdict` | screening done | checks, one perc cluster job; then TOO HOT / TOO COLD / USABLE per Ta and the hottest usable Ta (a suggestion) |
 | `submit_production.sh` | after the review | all compositions × 10 at one Ta; needs `REVIEWED=1` and `ramp_tx.txt`; reuses the matching screening runs as x0 r1-r3 |
