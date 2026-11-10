@@ -158,6 +158,19 @@ Per (composition, Ta) group, two nucleation rates:
 These are the kinetics to compare across compositions. With 2 ps frames and 10 replicas they are estimates with
 roughly 30% errors, not converged rates.
 
+**Comparing rates (`analysis/rate_compare.py`).** Reads the `--clusters` output of each composition (one file per
+composition) and, from each run's `t_nuc` and `t_end`, prints:
+- per composition pair, the rate ratio with an approximate 95% interval and an equal-rate test (binomial, given the
+  events and exposure × volume of each), with p also Bonferroni-corrected over the pairs;
+- per composition, one permutation test of equal rates across the three source glasses (replica r comes from glass
+  ((r − 1) mod 3) + 1). If it rejects, the rates depend on the glass and more melt-quench samples are needed.
+
+It has been checked on synthetic data only: a true 4× ratio came out 3.5× with the interval containing 4. With equal
+rates, about 6% of pairwise tests and 4.5% of glass tests fell below p = 0.05. A glass test that treated each glass's
+exposure as fixed gave 12%, because with 3–4 runs per glass the exposure depends on when the runs nucleate, hence the
+permutation test. The glass test is weak: with 10 runs, a glass that nucleates 6× slower is detected about 36% of
+the time, so p > 0.05 does not show that the glasses agree.
+
 **Criterion dependence.** n*, t_nuc and Tx depend on where the order parameter puts the crystal/glass boundary: a
 strict criterion undercounts the interface atoms of a small embryo. Run the kinetics under both the default and
 the calibrated criterion (`--q-rc --q-thr --q-nmin`; each writes its own `clusters_q…` file) and report both. When
@@ -196,6 +209,7 @@ python ../analysis/recryst_summary.py runs/*                      # ramps and an
 python ../analysis/recryst_summary.py --clusters --nucleated-size N runs/anneal_*_T600_*   # t_nuc, v_growth, rates;
                                                                   # N from calibrate.py at Ta, same criterion
 python ../analysis/recryst_summary.py --clusters --nucleated-size N --q-rc .. --q-thr .. --q-nmin .. runs/anneal_*_T600_*
+python ../analysis/rate_compare.py prod_*_clusters.txt           # one --clusters output per composition
 ```
 The array index → (cell, replica) mapping is the same as in `meltquench/submit.sh`. The timestep comes from
 `common/defaults.sh` (shared with the melt-quench; override with `--export=ALL,DT=...`). Other settings, passed with
