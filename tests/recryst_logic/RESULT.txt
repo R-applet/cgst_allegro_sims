@@ -32,4 +32,7 @@ PASS  known answer: stress() |z| < 5 on pure noise, z > 10 and sdev_end ~ 2 kbar
 PASS  analysis: group_of strips the replica suffix
 PASS  analysis: MFPT fit recovers n* = 40 and tau_J = 500 ps  (n* 39.98, tau_J 500.1 ps)
 PASS  analysis: MFPT above a 100-atom glass baseline recovers n* = 140 and gives NaN for n* = 40 below it  (n_base 126: n* 139.98, tau_J 500.1 ps; below: n* nan)
+PASS  rate_compare: parses recryst_summary rows and the nucleation line; volume recovered from J_surv  (4 runs, n 3, E 5750 ps, V 4.001e+05 (true 400000))
+PASS  rate_compare: pairwise ratio 4 for equal events at 1/4 the exposure, exact binomial p, Bonferroni x 10  (a (10 events) vs b (10 events): ratio 4 (95% ~1.66-9.61), p = 0.00259, Bonferroni p = 0.0259)
+PASS  rate_compare: glass test p = 1 for identical glasses, ~2/120 when one glass's 3 runs never nucleate  (p 1 and 0.0169)
 VERDICT: PASS

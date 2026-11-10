@@ -41,7 +41,11 @@ at tscale 0.1 and dt 1 fs: the anneal hold starts at step 4000 (10 ps at 300 K +
                      group_of maps ramp_/anneal_ names; the MFPT fit recovers n* = 40 and tau_J = 500 ps from
                      synthetic first-passage curves (3 replicas), recovers n* = 140 above a glass baseline of 100
                      atoms (n_base = the largest size in the first 20 ps, counted by hand), and gives NaN when
-                     n* = 40 lies below that baseline
+                     n* = 40 lies below that baseline; rate_compare.py parses recryst_summary's run rows and
+                     nucleation line (cell volume back from J_surv within 0.1%), gives a rate ratio of exactly 4 with
+                     the exact binomial p and Bonferroni x 10 for equal events at 1/4 the exposure, and its glass
+                     permutation test gives p = 1 for identical glasses and 2/120 +- 0.005 when the 3 runs of one
+                     3-run glass never nucleate (only 2 of the C(10,3) = 120 placements are as extreme)
 Writes RESULT.txt (one PASS/FAIL line per check, then the verdict) and exits 1 on any failure; a crash in the checker
 is reported as a FAIL.
 """
@@ -56,6 +60,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / "analysis"))
+import rate_compare as rc  # noqa: E402
 import recryst_summary as rs  # noqa: E402
 from bondorder import cluster_sizes, crystal_bonds, read_dump  # noqa: E402
 from runio import group_of, load_dat  # noqa: E402
@@ -279,6 +284,45 @@ def run_checks():
           base[0] > 100 and base[1] == 100 and hi["n_base"] == base[0] and lo["n_base"] == base[1]
           and abs(hi["n_star"] - 140) < 1 and abs(hi["tau_J_ps"] / tau_j - 1) < 0.02 and np.isnan(lo["n_star"]),
           f"n_base {hi['n_base']}: n* {hi['n_star']:.2f}, tau_J {hi['tau_J_ps']:.1f} ps; below: n* {lo['n_star']}")
+
+    # rate_compare.py known answers (its false-positive rates and power are simulation results, recryst/README.md)
+    from scipy.stats import binomtest
+    # parsing: recryst_summary's own row and nucleation-line formats, J from rs.survival_rate
+    V = 4.0e5
+    tn = [100.0, 250.0, np.nan, 400.0]
+    te = [100.0, 250.0, 5000.0, 400.0]
+    J = rs.survival_rate(tn, te, V)["J_surv_per_m3_s"]
+    txt = "".join(f"{f'anneal_x0_T600_r{i + 1}':28s} " + "  ".join(f"{k} {rs.fmt(v)}" for k, v in
+                  {"t_nuc": a, "v_growth": np.nan, "x_c_from": "xstop", "t_end": b}.items()) + "\n"
+                  for i, (a, b) in enumerate(zip(tn, te)))
+    txt += f"{'anneal_x0_T600':28s} nucleation: " + "  ".join(
+        f"{k} {v:.4g}" for k, v in {"n_nucleated": 3, "n_runs": 4, "J_surv_per_m3_s": J}.items()) + "\n"
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "x0.txt").write_text(txt)
+        runs, vol = rc.parse([Path(tmp) / "x0.txt"])
+    n, E = rc.stats(list(runs.values()))
+    Vb = n / (float(vol["anneal_x0_T600"]["J_surv_per_m3_s"]) * E * 1e-12) * 1e30
+    check("rate_compare: parses recryst_summary rows and the nucleation line; volume recovered from J_surv",
+          len(runs) == 4 and np.isnan(runs["anneal_x0_T600_r3"][0]) and (n, E) == (3, 5750.0)
+          and abs(Vb / V - 1) < 1e-3, f"{len(runs)} runs, n {n}, E {E:g} ps, V {Vb:.4g} (true {V:g})")
+    # pairwise: same events, 4x the exposure -> ratio exactly 4 and the exact binomial p; Bonferroni = p x pairs
+    out = []
+    rc.print = lambda *s: out.append(" ".join(map(str, s)))
+    try:
+        rc.compare("comp", ("a", 10, 1.0e4), ("b", 10, 4.0e4), m=10)
+    finally:
+        del rc.print
+    p = binomtest(10, 20, 0.2).pvalue
+    check("rate_compare: pairwise ratio 4 for equal events at 1/4 the exposure, exact binomial p, Bonferroni x 10",
+          "ratio 4 " in out[0] and f"p = {p:.3g}," in out[0] and f"Bonferroni p = {min(1, 10 * p):.3g}" in out[0],
+          out[0].split(": ", 1)[1])
+    # glass permutation test: labels as replicas r1-r10 map to glasses (r - 1) mod 3
+    lab = [r % 3 for r in range(10)]
+    same = [(100.0 * (r // 3 + 1), 0.0) for r in range(9)] + [(200.0, 0.0)]   # every glass: n / E = 1 / 200 ps
+    split = [(np.nan, 5000.0) if g == 2 else (100.0, 0.0) for g in lab]  # glass 3 (3 runs) never nucleates
+    p_same, p_split = rc.glass_test(same, lab), rc.glass_test(split, lab)
+    check("rate_compare: glass test p = 1 for identical glasses, ~2/120 when one glass's 3 runs never nucleate",
+          p_same == 1.0 and abs(p_split - 2 / 120) < 0.005, f"p {p_same:.3g} and {p_split:.3g}")
 
 
 try:

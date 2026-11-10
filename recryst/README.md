@@ -220,7 +220,7 @@ options for either, e.g. the calibrated criterion or `-var baro aniso`).
 
 ## Validation
 **`tests/recryst_logic`: PASS** (job 12290193; `check.py` writes `RESULT.txt`; after the nucleation-threshold
-change, `calibrate.py` and `check.py` were rerun on that job's outputs, 34 checks, since no LAMMPS input changed). On the 1×1×1 x0 glass (461 atoms)
+change, `calibrate.py` and `check.py` were rerun on that job's outputs, since no LAMMPS input changed; 37 checks since the `rate_compare.py` known answers). On the 1×1×1 x0 glass (461 atoms)
 from `tests/mq_logic`, dt 1 fs:
 - **Ramp** (10 K/ps): exit 0; `snap_350K` … `snap_900K`; T follows the programmed schedule (mean deviation +1.2 K);
   `stress.dat` has a row for every `ramp.dat` step.
@@ -250,7 +250,10 @@ from `tests/mq_logic`, dt 1 fs:
   recovers 200 m/s for a growing sphere; `J_surv` matches the censored-exponential formula; `smooth()` keeps a
   constant constant; the stress statistic gives |z| < 5 on production-level noise
   and z = 16 for a 2 kbar deviatoric step; the MFPT fit recovers n* = 40 and τ_J = 500 ps, recovers n* = 140 on top of a 100-atom glass baseline, and
-  gives NaN when n* = 40 lies below that baseline.
+  gives NaN when n* = 40 lies below that baseline. `rate_compare.py`: it parses `recryst_summary.py`'s run rows and
+  nucleation line and recovers the cell volume from `J_surv`; equal events at a quarter of the exposure give a rate
+  ratio of exactly 4 with the exact binomial p and its Bonferroni correction; the glass permutation test gives p = 1
+  for identical glasses and about 2/120 (the exact permutation count) when one glass's 3 runs never nucleate.
 
 **Defects this test has caught (all fixed):** LAMMPS `if` cannot compare filenames (now a numeric `resume` flag);
 Gilbreth rejects `sbatch` without a memory request (a flaw in the test's own continuation check); a single
