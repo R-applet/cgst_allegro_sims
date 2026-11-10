@@ -16,7 +16,7 @@
 # (550-650 K are the planned anneal temperatures, so XSTOP and --x-crystal come from references at Ta.)
 # x10 rocksalt is excluded: it disorders within ps at 600 K (tests/RESULTS.md, 1a), so it is not a crystal reference.
 #   sbatch --array=0-53 submit.sh     (after the 10 K/ps melt-quench runs exist); then
-#   python calibrate.py --crystal crys_*.lammpstrj.gz --amorphous amor_*.lammpstrj.gz
+#   sbatch submit_calibrate.sh        (calibrate.py in the cgst-ana env; writes calibrate.out)
 set -euo pipefail
 cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ../..)

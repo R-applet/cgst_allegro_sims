@@ -31,7 +31,7 @@ a bias in the same direction as the expected effect of C.
 1. `calib/submit.sh` samples 20 ps of each reference state at 300/500/550/600/650/700 K (54 short jobs):
    - rocksalt crystals x0, x1, x2p5, x5 (x10 rocksalt is unstable and is excluded);
    - the amorphous samples of every composition.
-2. `calib/calibrate.py` scans `q_rc` 3.4–3.8 Å, `q_thr` 0.3–0.8 and `q_nmin` 3–7. It picks the criterion that
+2. `calib/calibrate.py` (`sbatch submit_calibrate.sh` from `calib/`, in the `cgst-ana` env) scans `q_rc` 3.4–4.0 Å, `q_thr` 0.3–0.8 and `q_nmin` 3–7. It picks the criterion that
    maximizes (lowest crystal fraction in any crystal reference − highest crystal fraction in any amorphous reference).
    It prints the suggested anneal `XSTOP` and `--x-crystal` for each reference temperature, including the anneal
    temperatures 550/600/650 K, and writes `calib_scan.csv` and

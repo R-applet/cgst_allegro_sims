@@ -33,7 +33,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "analysis"))
 from bondorder import bond_dots, cluster_sizes, crystal_bonds, read_dump  # noqa: E402
 
-RC = [3.4, 3.5, 3.6, 3.7, 3.8]
+RC = [3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0]
 THR = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 NMIN = [3, 4, 5, 6, 7]
 
