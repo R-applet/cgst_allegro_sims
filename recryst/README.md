@@ -191,7 +191,10 @@ would build deviatoric stress that persists after growth, and could slow its own
 tensor. `recryst_summary.py` averages the components over 10 ps blocks (so thermal noise does not add a positive
 bias) and compares the deviatoric stress of the last blocks with the first: `sdev_base`, `sdev_end`, and `sdev_z`,
 their difference in standard errors. If `sdev_z` > 5 in a run that crystallized, rerun that (composition, Ta) with
-`EXTRA_VARS="-var baro aniso"` and compare t50. On synthetic production-level noise, `tests/recryst_logic` (one
+`EXTRA_VARS="-var baro aniso"` and `TAG=aniso`, and compare t50. `TAG` gives the reruns their own directories
+(`runs/anneal_<cell>_aniso_T<Ta>_r<rep>`, so the finished iso runs are not mistaken for done) with the same seeds and
+glasses, and the summary treats them as their own replica group. Rerun the whole replica set of that composition, so
+both barostats have the same number of runs. On synthetic production-level noise, `tests/recryst_logic` (one
 seed) gives z = −0.9 for pure noise and z = 16 for a 2 kbar deviatoric step; five seeds tried while choosing the
 statistic gave |z| ≤ 1.3 and 11–21. Keep `baro` the same within one continuation chain.
 
@@ -204,6 +207,8 @@ sbatch --array=0-2 --export=ALL,TA=600 submit_anneal.sh         # screening: x0 
 sbatch --array=0-49 --export=ALL,TA=600,NREP=10 submit_anneal.sh # production: 10 replicas of every cell
 # anneals on one perc A100-40GB per job (continuations stay on perc; keep the 0.2 K/ps ramp on the A30s):
 sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1 --array=0-2 --export=ALL,TA=600 submit_anneal.sh
+# anisotropic rerun of x1's 10 replicas (Barostat), into runs/anneal_x1_aniso_T600_r*:
+EXTRA_VARS="-var baro aniso" sbatch --array=10-19 --export=ALL,TA=600,NREP=10,TAG=aniso submit_anneal.sh
 python ../analysis/recryst_summary.py runs/*                      # ramps and anneals; anneals at one Ta, one
                                                                   # composition: --x-crystal from calibrate.py
 python ../analysis/recryst_summary.py --clusters --nucleated-size N runs/anneal_*_T600_*   # t_nuc, v_growth, rates;
@@ -234,7 +239,11 @@ from `tests/mq_logic`, dt 1 fs:
   stop-on-no-progress rule was checked separately with stubbed Slurm and LAMMPS: a failing first job stops the chain
   at the second link; a progressing chain continues. Restart pruning was checked the same way over a four-job
   chain: each job starts with the newest two restart files, the finished run keeps only the newest, every job exits
-  0.
+  0. `TAG` was checked the same way: `submit_anneal.sh` and `submit_ramp.sh` give a tagged task its own directory
+  (`anneal_x0_aniso_T600_r1`, `ramp_x1_aniso_h1_r1`) with the untagged task's seed and glass and the `EXTRA_VARS`
+  options; the tagged run starts although the untagged one is done, the untagged run still reports done, a tagged
+  continuation finds its own directory, and the continuation inherits `TAG` and `EXTRA_VARS`. Without `TAG` the
+  directory names are unchanged. `sbatch --test-only` accepts tagged submissions of both scripts.
 - **Ge/Sb/Te-only crystallinity, with C present** (`in.calib` on the 512-atom x10 glass at 300 K and the minimized
   1×1×1 x5 rocksalt at 600 K): on every dumped frame LAMMPS's `xfracGST` and `xfrac` equal a recount from the dump
   over Ge/Sb/Te and over all atoms (difference 0 atoms), and the two differ; `calibrate.py` runs on these references

@@ -15,9 +15,10 @@
 #   0.2 K/ps rate check, x0 r1:       sbatch --array=0 --export=ALL,HRATE=0.2 submit_ramp.sh
 #     (3,010 ps: ~21.6 h on these 2 A30s; on one A100 it would exceed the 24 h limit, and there is no restart)
 # Array index i -> cell CELLS[i / 3], replica i % 3 + 1 (same mapping as meltquench/submit.sh).
-# Run directory: runs/ramp_<cell>_h<HRATE>_r<rep>/
+# Run directory: runs/ramp_<cell>_h<HRATE>_r<rep>/, or runs/ramp_<cell>_<TAG>_h<HRATE>_r<rep>/ with TAG set.
 # Settings (--export=ALL,NAME=value): HRATE (K/ps, default 1); EXTRA_VARS (extra LAMMPS -var options, e.g. the
-# calibrated q_rc/q_thr/q_nmin or -var baro aniso); DT and MODEL come from common/defaults.sh.
+# calibrated q_rc/q_thr/q_nmin or -var baro aniso); TAG (optional run-name label for a variant of the same runs, e.g.
+# TAG=aniso, same seeds and glasses); DT and MODEL come from common/defaults.sh.
 set -euo pipefail
 cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ..)
@@ -27,7 +28,7 @@ CELLS=(x0 x1 x2p5 x5 x10)
 i=$SLURM_ARRAY_TASK_ID
 cell=${CELLS[$((i / 3))]}
 rep=$((i % 3 + 1))
-run=runs/ramp_${cell}_h${HRATE}_r${rep}
+run=runs/ramp_${cell}${TAG:+_$TAG}_h${HRATE}_r${rep}
 mkdir -p $run && cd $run
 $ROOT/common/run_lmp.sh $SLURM_NTASKS -in $ROOT/recryst/in.ramp -log log.ramp \
     -var root $ROOT -var cell $cell -var rep $rep -var seed $((20011 * (i + 1))) -var hrate $HRATE -var dt $DT \

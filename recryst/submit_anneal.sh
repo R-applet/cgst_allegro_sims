@@ -16,10 +16,12 @@
 # Array index i -> cell CELLS[i / NREP], replica rep = i % NREP + 1 (with NREP 3, the mapping of
 # meltquench/submit.sh). Replica rep starts from melt-quench glass ((rep - 1) % 3) + 1 with its own velocity seed, so
 # beyond 3 replicas the glasses are reused: such replicas share the glass structure and differ in their dynamics.
-# Run directory: runs/anneal_<cell>_T<TA>_r<rep>/
+# Run directory: runs/anneal_<cell>_T<TA>_r<rep>/, or runs/anneal_<cell>_<TAG>_T<TA>_r<rep>/ with TAG set.
 # Settings (--export=ALL,NAME=value): TA (K, required); NREP (replicas per cell, default 3); MAX_NS (hold length,
 # default 5); XSTOP (fix halt level on xfracGST, default 0.8; set from the calibration, recryst/README.md); MAXCHAIN
-# (jobs per chain, default 4); EXTRA_VARS (extra LAMMPS -var options, e.g. -var baro aniso); DT and MODEL come from
+# (jobs per chain, default 4); EXTRA_VARS (extra LAMMPS -var options, e.g. -var baro aniso); TAG (optional run-name
+# label for a variant of the same runs, e.g. TAG=aniso with EXTRA_VARS="-var baro aniso": same seeds and glasses, its
+# own directories and replica group; before _T so the analysis name patterns still match); DT and MODEL come from
 # common/defaults.sh.
 # Each task: exits if anneal_done.txt exists; as a continuation, stops the chain with an error if there is no newer
 # restart than its predecessor started from (chain_progress.txt: the predecessor made no progress); otherwise
@@ -42,7 +44,7 @@ i=$SLURM_ARRAY_TASK_ID
 cell=${CELLS[$((i / NREP))]}
 rep=$((i % NREP + 1))
 glass=$(((rep - 1) % 3 + 1))                # meltquench/submit.sh makes 3 glasses per cell
-run=runs/anneal_${cell}_T${TA}_r${rep}
+run=runs/anneal_${cell}${TAG:+_$TAG}_T${TA}_r${rep}
 mkdir -p $run
 
 cd $run
