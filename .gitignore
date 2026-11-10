@@ -23,3 +23,5 @@ env/create.log
 skills/
 # python bytecode
 __pycache__/
+# latent feasibility features (8.8 MB; regenerate with analysis/latent_features.py, see its README)
+tests/latent_feasibility/features.npz
