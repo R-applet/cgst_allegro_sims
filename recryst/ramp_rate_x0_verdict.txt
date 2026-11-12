@@ -1,0 +1,6 @@
+Tx_xfrac: 0.2 K/ps 570.9, 1 K/ps nan -- not both finite
+Tx_H: 0.2 K/ps 726.2 K, 1 K/ps 874.7 K, shift -148.5 K = 0.7 x the 1 K/ps replica std (222.9 K, 3 runs) -> within 2 replica std: not resolved
+Tx_rho: 0.2 K/ps 876.8 K, 1 K/ps 882.7 K, shift -5.9 K = 0.5 x the 1 K/ps replica std (11.6 K, 3 runs) -> within 2 replica std: not resolved
+x_peak: 0.2 K/ps 0.669, 1 K/ps 0.156 (slower heating may reach a higher crystalline ceiling)
+sdev_z: 0.2 K/ps 90.9, 1 K/ps -2.7 (> 5 in a crystallized run: barostat stress)
+Kissinger: needs Tx_xfrac finite at both rates and lower at 0.2 K/ps; not computed

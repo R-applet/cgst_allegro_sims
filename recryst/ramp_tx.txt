@@ -1,0 +1,5 @@
+ramp_x0_h1     crystallized 0 of 3: no Tx (did not crystallize by 900 K)
+ramp_x10_h1    crystallized 0 of 3: no Tx (did not crystallize by 900 K)
+ramp_x1_h1     crystallized 0 of 3: no Tx (did not crystallize by 900 K)
+ramp_x2p5_h1   crystallized 0 of 3: no Tx (did not crystallize by 900 K)
+ramp_x5_h1     crystallized 0 of 3: no Tx (did not crystallize by 900 K)

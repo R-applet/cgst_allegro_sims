@@ -1,7 +1,7 @@
 # Part 3 results: crystallization of GST + x% C
 
-**Status (2026-11-10):** calibration done; 1 K/ps and 0.2 K/ps heating ramps running; screening and production
-anneals not started. Sections marked _pending_ name the script that fills them (`scripts/`, run order in
+**Status (2026-11-12):** calibration done; heating ramps done (no crystallization at 1 K/ps; x0 Tx 571 K at
+0.2 K/ps); screening and production anneals not started. Sections marked _pending_ name the script that fills them (`scripts/`, run order in
 `scripts/README.md`). Methods are in `README.md`; this file records what came out.
 
 **Read every number here with three caveats:**
@@ -31,27 +31,45 @@ references, 20 ps each, 300–700 K) and 12308622 (scan to 4.0 Å); `calib/calib
 - The glasses read 0.04–0.09, falling with temperature; their largest crystal-like cluster at 550–650 K
   is 103–130 atoms (124–172 under the default).
 
-## 2. Crystallization temperature Tx vs C (1 K/ps): _pending_
-`scripts/analyze_ramps.sh` → `ramp_tx.txt` (jobs 12308688, 3 replicas per composition).
+## 2. Heating ramps at 1 K/ps: no crystallization
+`scripts/analyze_ramps.sh` → `ramp_summary_h1.txt`, `ramp_tx.txt` (job 12308688; 3 replicas per composition, 300 →
+900 K). **None of the 15 ramps crystallizes:** the largest rise of `xfracGST` above its start is 0.115 (x0), against
+the 0.2 that `recryst_summary.py` requires, so `Tx_xfrac` is undefined for every composition.
 
-| x (at.% C) | Crystallized | Tx_xfrac (K) | Tx_H (K) | Δρ at Tx (g/cc) | max sdev_z |
+| x (at.% C) | Crystallized | `xfracGST` at 300 K | Peak `xfracGST` | At 900 K | max `sdev_z` |
 |---|---|---|---|---|---|
-| 0 | | | | | |
-| 1 | | | | | |
-| 2.5 | | | | | |
-| 5 | | | | | |
-| 10 | | | | | |
+| 0 | 0 of 3 | 0.099 ± 0.005 | 0.174 ± 0.036 | 0.010 | −2.7 |
+| 1 | 0 of 3 | 0.087 ± 0.005 | 0.125 ± 0.012 | 0.011 | −1.6 |
+| 2.5 | 0 of 3 | 0.079 ± 0.003 | 0.106 ± 0.004 | 0.010 | −2.4 |
+| 5 | 0 of 3 | 0.072 ± 0.007 | 0.093 ± 0.008 | 0.013 | −2.2 |
+| 10 | 0 of 3 | 0.083 ± 0.006 | 0.095 ± 0.006 | 0.022 | −4.2 |
 
-To record: the trend with C (expected to rise); whether x5/x10 crystallize by 900 K; agreement of Tx_H with
-Tx_xfrac; sign of Δρ (expected negative here, see dense glass); any composition with `sdev_z` > 5.
+- **C suppresses the transient order.** The peak rises above the start by about 0.075 for x0 and only 0.01–0.04 for
+  the C-containing glasses.
+- **x0 nucleates but does not crystallize.** In x0 r2 the largest crystal-like Ge/Sb/Te cluster grows from 134 atoms
+  (594 K) past the nucleus size (~250) by 623 K, to 1386 atoms (11% of Ge/Sb/Te) at 774 K, then shrinks and is gone
+  by 890 K: at 1 K/ps it cannot grow through the cell before the rising temperature dissolves it.
+- **All samples end liquid-like** (`xfracGST` 0.01–0.02 at 900 K). `Tx_H` and `Tx_rho` mostly fall at 780–900 K,
+  where the glass softens and its transient order melts; without crystallization they do not mark a Tx.
+- No barostat stress (every `sdev_z` < 0).
 
-## 3. Heating-rate check (x0 r1, 0.2 vs 1 K/ps): _pending_
-`scripts/analyze_ramp_rate.sh` (job 12308689). Tx shift against the 1 K/ps replica spread; two-point Kissinger Ea
-(order of magnitude only).
+## 3. Heating-rate check: x0 at 0.2 K/ps crystallizes
+`scripts/analyze_ramp_rate.sh` → `ramp_rate_x0.txt`, `ramp_rate_x0_verdict.txt` (job 12308689, x0 r1, 3010 ps).
+- **Tx_xfrac = 571 K.** `xfracGST` peaks at 0.67 (the x0 crystal reads ~0.95) and stays crystalline to 900 K (0.58).
+  Density drops by 0.008 g/cc across crystallization, the sign this model's dense glass predicts.
+- `Tx_H` (726 K) and `Tx_rho` (877 K) disagree with Tx_xfrac; the crystalline fraction is the reliable marker.
+- **Large barostat stress:** `sdev_z` = 91 (deviatoric stress 0.5 → 5.0 kbar), far above the threshold of 5. An
+  anisotropic rerun of this ramp does not fit one A100's 24 h limit, so the barostat question moves to the screening
+  anneals (section 4).
+- No rate shift or Kissinger estimate: the 1 K/ps reference has no Tx. Slowing the heating 5× turns no
+  crystallization into crystallization at 571 K, so Tx in this model depends strongly on rate.
 
 ## 4. Screening: choice of the anneal temperature: _pending_
-`scripts/submit_screen.sh` (only Ta below x0 Tx − max(25 K, 2 std)), then `scripts/analyze_screen.sh`: TOO HOT /
-TOO COLD / USABLE per Ta, x0 r1–r3. The production Ta is chosen at the review checkpoint and recorded here with the
+`scripts/submit_screen.sh`, then `scripts/analyze_screen.sh`: TOO HOT / TOO COLD / USABLE per Ta, x0 r1–r3.
+**Guard input: `TX_X0=900`, `TX_X0_STD=0`.** The guard keeps an anneal from crystallizing during its 10 K/ps heating
+to Ta, so it needs a Tx measured at a rate no faster than that heating. At 1 K/ps nothing crystallizes below 900 K,
+so 550, 600 and 650 K all pass. The 0.2 K/ps Tx (571 K) belongs to a rate 50× slower than the anneal heating and
+would wrongly exclude all three. The production Ta is chosen at the review checkpoint and recorded here with the
 reason.
 
 ## 5. Isothermal kinetics vs C at one Ta: _pending_
