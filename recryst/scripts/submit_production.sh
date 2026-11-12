@@ -64,5 +64,5 @@ echo "${cmd[*]}  (EXTRA_VARS=$EXTRA_VARS)"
 [ $DRY = 1 ] || "${cmd[@]}"
 
 # Analysis: scripts/analyze_production.sh (per-composition --x-crystal at TA from calibrate.out; --nucleated-size
-# 250 / 260 / 210 at 550 / 600 / 650 K, to confirm against job 12309345's calibrate.out).
+# 250 / 260 / 210 at 550 / 600 / 650 K, checked against calib/calibrate.out for commit 5cfeee0).
 # More replicas for two close compositions: NREP=20 remaps indices (x0 -> --array=10-19); submit only the new ones.

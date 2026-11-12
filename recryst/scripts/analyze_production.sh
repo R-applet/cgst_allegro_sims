@@ -16,7 +16,7 @@ TA=${TA:?set TA}; STAGE=${1:?summary or compare}; DRY=0; [ "${2:-}" = "--dry-run
 CELLS="x0 x1 x2p5 x5 x10"
 Q="--q-rc 3.8 --q-thr 0.6 --q-nmin 4"
 # calibrate.out at 3.8/0.6/4 (--choose run, job 12309345): per-composition crystal reference (x10: none -> the run's
-# plateau, else XSTOP) and --nucleated-size (2 x the largest glass cluster at TA). CONFIRM against calibrate.out.
+# plateau, else XSTOP) and --nucleated-size (2 x the largest glass cluster at TA); checked for commit 5cfeee0.
 case $TA in
     550) declare -A XC=( [x0]=0.951 [x1]=0.956 [x2p5]=0.923 [x5]=0.862 ); NUC=250 ;;
     600) declare -A XC=( [x0]=0.950 [x1]=0.951 [x2p5]=0.916 [x5]=0.842 ); NUC=260 ;;

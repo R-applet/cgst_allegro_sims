@@ -1,6 +1,6 @@
 #!/bin/bash
-# Tested on fake run trees only (2026-11-10), not yet on real outputs. Run from anywhere; paths resolve
-# from this file's location.
+# Tested on fake run trees (2026-11-10); run on the real ramps 2026-11-11 (RESULTS.md sections 2-3).
+# Run from anywhere; paths resolve from this file's location.
 # ramp analysis (recryst/README.md section 2), for after jobs 12308688 (1 K/ps, 15 runs) and 12308689
 # (0.2 K/ps, x0 r1). Final criterion 3.8/0.6/4 (README section 1 "Result"), which the ramps were submitted with, so
 # Tx_xfrac from ramp.dat needs no recount. recryst_summary.py on ramps reads only ramp.dat and stress.dat (no dumps),

@@ -124,8 +124,11 @@ this criterion is 63–130 atoms (300–700 K), against 103–269 under the defa
 **Choosing Ta, and how many replicas.** Nucleation in a 13.8k-atom cell is a rare, single event: each run gives one
 waiting time, close to exponentially distributed, so a rate from n runs has a relative error of about 1/√n (58% for
 3 runs). Composition effects smaller than a factor of two in the rate would be invisible with 3 replicas. Hence:
-1. **Screening:** x0 at 550/600/650 K (below the x0 Tx from step 2), 3 replicas each, to find the Ta where x0
-   nucleates inside 5 ns but not within the heating.
+1. **Screening:** x0 at 550/600/650 K, 3 replicas each, to find the Ta where x0 nucleates inside 5 ns but not within
+   the heating. Each Ta must lie below a Tx measured at a heating rate no faster than the anneal's 10 K/ps; the 1 K/ps
+   ramps do not crystallize below 900 K, so all three qualify (`RESULTS.md` sections 2–4). Screening runs as iso/aniso
+   pairs (`scripts/submit_screen.sh` with and without `BARO=aniso`): the 0.2 K/ps x0 crystal built 5 kbar of
+   deviatoric stress (`sdev_z` 91), so the barostat is settled here, before production commits to one.
 2. **Production:** every composition at that one Ta with `NREP=10` (`sbatch --array=0-49 --export=ALL,TA=..,NREP=10
    submit_anneal.sh`), about 30% error per rate; 20 replicas for the compositions being compared most closely.
    Replica r starts from melt-quench glass ((r − 1) mod 3) + 1 with its own velocities: beyond 3 replicas the
@@ -230,7 +233,8 @@ The steps after calibration, with their checks and the final criterion built in,
 cd recryst
 sbatch --array=0-14 submit_ramp.sh                              # 1 K/ps, 5 cells x 3 replicas
 sbatch --array=0 --export=ALL,HRATE=0.2 submit_ramp.sh          # 0.2 K/ps, x0 r1
-sbatch --array=0-2 --export=ALL,TA=600 submit_anneal.sh         # screening: x0 replicas at 600 K
+sbatch --array=0-2 --export=ALL,TA=600 submit_anneal.sh         # screening: x0 replicas at 600 K (scripts/submit_screen.sh
+                                                                  # wraps this with its checks, BARO=aniso for the pairs)
 sbatch --array=0-49 --export=ALL,TA=600,NREP=10 submit_anneal.sh # production: 10 replicas of every cell
 # anneals on one perc A100-40GB per job (continuations stay on perc; keep the 0.2 K/ps ramp on the A30s):
 sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1 --array=0-2 --export=ALL,TA=600 submit_anneal.sh

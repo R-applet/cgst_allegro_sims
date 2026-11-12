@@ -1,6 +1,6 @@
 #!/bin/bash
-# Tested on fake run trees only (2026-11-10), not yet on real outputs. Run from anywhere; paths resolve
-# from this file's location.
+# Tested on fake run trees (2026-11-10); run on the real ramps 2026-11-11 (RESULTS.md sections 2-3).
+# Run from anywhere; paths resolve from this file's location.
 # Heating-rate check (recryst/README.md section 2): x0 r1 at 0.2 K/ps (runs/ramp_x0_h0.2_r1) against the same glass and
 # seed index at 1 K/ps (runs/ramp_x0_h1_r1), with the 1 K/ps replica spread (ramp_x0_h1_r1-3) as the yardstick.
 # Slower heating gives crystallization more time, so Tx should drop. Only the direction and size of the shift compare

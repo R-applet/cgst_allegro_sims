@@ -69,7 +69,11 @@ the 0.2 that `recryst_summary.py` requires, so `Tx_xfrac` is undefined for every
 **Guard input: `TX_X0=900`, `TX_X0_STD=0`.** The guard keeps an anneal from crystallizing during its 10 K/ps heating
 to Ta, so it needs a Tx measured at a rate no faster than that heating. At 1 K/ps nothing crystallizes below 900 K,
 so 550, 600 and 650 K all pass. The 0.2 K/ps Tx (571 K) belongs to a rate 50× slower than the anneal heating and
-would wrongly exclude all three. The production Ta is chosen at the review checkpoint and recorded here with the
+would wrongly exclude all three.
+**Iso/aniso pairs:** each Ta runs twice, isotropic and anisotropic (`BARO=aniso`, runs `anneal_x0_aniso_T<Ta>_r*`),
+because the 0.2 K/ps x0 crystal built 5 kbar of deviatoric stress (section 3). Record per Ta both verdicts and the
+iso-vs-aniso rate ratio (`rate_compare.py` on `screen_T<Ta>_clusters.txt` and `screen_aniso_T<Ta>_clusters.txt`), and
+which barostat production uses, with the reason. The production Ta is chosen at the review checkpoint and recorded here with the
 reason.
 
 ## 5. Isothermal kinetics vs C at one Ta: _pending_
