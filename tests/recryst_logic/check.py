@@ -33,7 +33,9 @@ at tscale 0.1 and dt 1 fs: the anneal hold starts at step 4000 (10 ps at 300 K +
                      centred at 650 K gives Tx_xfrac within 3 K of 650 for both a 0.8 and a 0.6 ceiling (the
                      half-rise definition does not move with the ceiling) and NaN when xfracGST does not rise;
                      kinetics() on a sphere growing at 2 A/ps (200 m/s) gives v_growth within 2% and t_nuc within one
-                     frame of the analytic time; survival_rate() gives J = 2 / (1400 ps x 1e5 A^3) for nucleation at
+                     frame of the analytic time; the same sphere counted in a periodic cell gives 200 m/s within 3%
+                     with the 10-60% window while a 10-90% window reads below 95%; single_grain is 1 without a
+                     second nucleus, 0 with one, NaN without a fit window; survival_rate() gives J = 2 / (1400 ps x 1e5 A^3) for nucleation at
                      100 and 300 ps and one run censored at 1000 ps; smooth() keeps a constant constant at the ends;
                      stress() on 300 ps of production-like noise
                      (0.46 kbar per instantaneous component, the 461-atom test cell's level scaled to 13.8k atoms):
@@ -234,6 +236,26 @@ def run_checks():
     check("known answer: kinetics() v_growth 200 m/s within 2%, t_nuc within one frame of the analytic time",
           abs(kin["v_growth"] / 200 - 1) < 0.02 and 0 <= kin["t_nuc"] - t50 <= 0.5,
           f"v {kin['v_growth']:.1f} m/s, t_nuc {kin['t_nuc']} ps (analytic {t50:.2f})")
+    # the same sphere counted in a periodic cube (10000 atoms x 30 A^3, L = 66.9 A): past pi/6 of the cell it meets
+    # its own images, so its size grows slower than r^3, but only slightly up to 60% of the cell: the 10-60% window
+    # recovers 200 m/s, while a 10-90% window reads clearly low (why V_WINDOW stops at 60%).
+    L = (3e5) ** (1 / 3)
+    g1 = (np.arange(48) + 0.5) / 48 * L - L / 2                           # cell-centred grid, minimum image
+    d = np.sqrt(g1[:, None, None] ** 2 + g1[None, :, None] ** 2 + g1[None, None, :] ** 2).ravel()
+    tp = np.arange(0.0, 25.0, 0.5)                   # to r = 50 A, past 90% of the cell
+    bigp = np.array([int((d < 2.0 * tt).mean() * 10000) for tt in tp])
+    cl = {"t": tp, "big": bigp, "volume": 3e5, "n_gst": 10000}
+    vnew = rs.kinetics(cl, 50)["v_growth"]
+    saved, rs.V_WINDOW = rs.V_WINDOW, (0.10, 0.90)
+    vold = rs.kinetics(cl, 50)["v_growth"]
+    rs.V_WINDOW = saved
+    check("known answer: v_growth in a periodic cell, 200 m/s within 3% with the 10-60% window; 10-90% reads low",
+          abs(vnew / 200 - 1) < 0.03 and vold / 200 < 0.95, f"10-60%: {vnew:.1f} m/s, 10-90%: {vold:.1f} m/s")
+    one = rs.kinetics(cl | {"big2": np.zeros_like(bigp)}, 50)["single_grain"]
+    two = rs.kinetics(cl | {"big2": np.full_like(bigp, 60)}, 50)["single_grain"]
+    none = rs.kinetics(cl | {"big": np.minimum(bigp, 500)}, 50)["single_grain"]
+    check("known answer: single_grain 1 with no second nucleus, 0 with a second >= nucleated size, NaN without window",
+          one == 1.0 and two == 0.0 and np.isnan(none), f"{one}, {two}, {none}")
     sr = rs.survival_rate([100.0, 300.0, np.nan], [1000.0, 1000.0, 1000.0], 1e5)
     J = 2 / (1400e-12 * 1e5 * 1e-30)
     check("known answer: survival_rate() J = 2 / (1400 ps x 1e5 A^3), 2 of 3 nucleated",

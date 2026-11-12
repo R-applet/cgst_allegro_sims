@@ -25,9 +25,11 @@ R=anneal_x0${TAGP}                          # run-name stem of this set; outputs
 Q="--q-rc 3.8 --q-thr 0.6 --q-nmin 4"
 # calibrate.out at 3.8/0.6/4: x0's own crystal reference, --nucleated-size, XSTOP, and the x0 glass xfracGST at Ta.
 # Checked against calib/calibrate.out (--choose 3.8 0.6 4, commit 5cfeee0).
-declare -A XC=( [550]=0.951 [600]=0.950 [650]=0.948 ) NUC=( [550]=250 [600]=260 [650]=210 )
-declare -A XSTOP=( [550]=0.73 [600]=0.72 [650]=0.70 ) GLASS=( [550]=0.090 [600]=0.076 [650]=0.064 )
-TAS=$(for T in 550 600 650; do compgen -G "runs/${R}_T${T}_r*" > /dev/null && echo $T; done)
+declare -A XC=( [500]=0.950 [550]=0.951 [600]=0.950 [650]=0.948 [700]=0.947 )
+declare -A NUC=( [500]=230 [550]=250 [600]=260 [650]=210 [700]=130 )
+declare -A XSTOP=( [500]=0.75 [550]=0.73 [600]=0.72 [650]=0.70 [700]=0.68 )
+declare -A GLASS=( [500]=0.086 [550]=0.090 [600]=0.076 [650]=0.064 [700]=0.048 )
+TAS=$(for T in 500 550 600 650 700; do compgen -G "runs/${R}_T${T}_r*" > /dev/null && echo $T; done)
 [ -n "$TAS" ] || die "no screening runs (runs/${R}_T<Ta>_r*)"
 
 if [ $STAGE = summary ]; then

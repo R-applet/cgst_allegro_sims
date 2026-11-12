@@ -64,33 +64,27 @@ the 0.2 that `recryst_summary.py` requires, so `Tx_xfrac` is undefined for every
 - No rate shift or Kissinger estimate: the 1 K/ps reference has no Tx. Slowing the heating 5× turns no
   crystallization into crystallization at 571 K, so Tx in this model depends strongly on rate.
 
-## 4. Screening: choice of the anneal temperature: _pending_
+## 4. Phase A: x0 over the temperature grid, and the barostat: _pending_
 `scripts/submit_screen.sh`, then `scripts/analyze_screen.sh`: TOO HOT / TOO COLD / USABLE per Ta, x0 r1–r3.
 **Guard input: `TX_X0=900`, `TX_X0_STD=0`.** The guard keeps an anneal from crystallizing during its 10 K/ps heating
 to Ta, so it needs a Tx measured at a rate no faster than that heating. At 1 K/ps nothing crystallizes below 900 K,
-so 550, 600 and 650 K all pass. The 0.2 K/ps Tx (571 K) belongs to a rate 50× slower than the anneal heating and
-would wrongly exclude all three.
-**Iso/aniso pairs:** each Ta runs twice, isotropic and anisotropic (`BARO=aniso`, runs `anneal_x0_aniso_T<Ta>_r*`),
-because the 0.2 K/ps x0 crystal built 5 kbar of deviatoric stress (section 3). Record per Ta both verdicts and the
-iso-vs-aniso rate ratio (`rate_compare.py` on `screen_T<Ta>_clusters.txt` and `screen_aniso_T<Ta>_clusters.txt`), and
-which barostat production uses, with the reason. The production Ta is chosen at the review checkpoint and recorded here with the
-reason.
+so the whole calibrated grid, 500–700 K, passes. The 0.2 K/ps Tx (571 K) belongs to a rate 50× slower than the
+anneal heating and would wrongly exclude all five.
+**Phase A (x0, 500–700 K, 3 replicas):** iso/aniso pairs at 600 and 650 K first (`BARO=aniso`, runs
+`anneal_x0_aniso_T<Ta>_r*`), because the 0.2 K/ps x0 crystal built 5 kbar of deviatoric stress (section 3); then 500,
+550 and 700 K with the chosen barostat. Record per Ta the verdicts, x0 `v_growth` per run, the iso-vs-aniso
+comparison at 600 and 650 K (`rate_compare.py` on `screen_T<Ta>_clusters.txt` and `screen_aniso_T<Ta>_clusters.txt`,
+t50 and `v_growth`), and which barostat the rest of the grid uses, with the reason.
 
-## 5. Isothermal kinetics vs C at one Ta: _pending_
-`scripts/submit_production.sh`, then `scripts/analyze_production.sh` and `analysis/rate_compare.py`; 10 replicas per
-composition.
+## 5. Growth velocity vs Ta per composition (homogeneous): _pending_
+Phase B (`recryst/README.md`, "Temperature grid"): every composition over the Ta where nucleation happens, 3 replicas
+each, reusing the Phase A x0 runs; one row per run (composition, Ta, replica, barostat, nucleated, t_nuc,
+`v_growth`, `single_grain`, t50) and the figures: `v_growth` vs Ta per composition (replicas as points, median, n per
+point), its distribution per composition and Ta, and the fraction of runs that nucleated vs Ta.
 
-| x (at.% C) | Nucleated (of 10) | J_surv (m⁻³ s⁻¹) | t50 (ps) | v_growth (m/s) | n_base / N |
-|---|---|---|---|---|---|
-| 0 | | | | | |
-| 1 | | | | | |
-| 2.5 | | | | | |
-| 5 | | | | | |
-| 10 | | | | | |
-
-To record: rate ratios between compositions with their ~95% intervals (Bonferroni over pairs); the glass-to-glass
-test per composition (low power: p > 0.05 does not show the glasses agree); MFPT n* and τ_J where defined; any
-composition whose `n_base` exceeds half of `--nucleated-size` (glass aging).
+To record: where each composition's v(Ta) peaks, or that it rises or falls across the whole homogeneous window; how C
+shifts and scales it; runs with `single_grain` = 0; any (composition, Ta) whose `n_base` exceeds half of
+`--nucleated-size` (glass aging). Nucleation rates (`rate_compare.py`) are by-products with ~58% error at 3 runs.
 
 ## 6. Barostat check: _pending, only if triggered_
 `scripts/submit_aniso.sh` / `scripts/analyze_ramp_aniso.sh` for any crystallized set with `sdev_z` > 5. Record

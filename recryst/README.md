@@ -34,7 +34,7 @@ a bias in the same direction as the expected effect of C.
 2. `calib/calibrate.py` (`sbatch submit_calibrate.sh` from `calib/`, in the `cgst-ana` env) scans `q_rc` 3.4–4.0 Å, `q_thr` 0.3–0.8 and `q_nmin` 3–7. It picks the criterion that
    maximizes (lowest crystal fraction in any crystal reference − highest crystal fraction in any amorphous reference).
    It prints the suggested anneal `XSTOP` (one per temperature) and `--x-crystal` (per composition) for each reference temperature, including the anneal
-   temperatures 550/600/650 K, and writes `calib_scan.csv` and
+   grid 500–700 K, and writes `calib_scan.csv` and
    `calib.png`: (a) each reference's crystalline fraction under the chosen and the
    default criterion; (b) the per-atom crystal-like bond count, crystal vs amorphous references, with the threshold;
    (c) the margin over `q_thr` × `q_nmin`, to show whether the optimum is a plateau or a sharp edge. It warns when
@@ -121,19 +121,26 @@ this criterion is 63–130 atoms (300–700 K), against 103–269 under the defa
 | heat | 300 → Ta | (Ta−300)/10 ps |
 | hold | Ta | up to 5 ns; `fix halt` once xfracGST > `XSTOP` (default 0.8) |
 
-**Choosing Ta, and how many replicas.** Nucleation in a 13.8k-atom cell is a rare, single event: each run gives one
-waiting time, close to exponentially distributed, so a rate from n runs has a relative error of about 1/√n (58% for
-3 runs). Composition effects smaller than a factor of two in the rate would be invisible with 3 replicas. Hence:
-1. **Screening:** x0 at 550/600/650 K, 3 replicas each, to find the Ta where x0 nucleates inside 5 ns but not within
-   the heating. Each Ta must lie below a Tx measured at a heating rate no faster than the anneal's 10 K/ps; the 1 K/ps
-   ramps do not crystallize below 900 K, so all three qualify (`RESULTS.md` sections 2–4). Screening runs as iso/aniso
-   pairs (`scripts/submit_screen.sh` with and without `BARO=aniso`): the 0.2 K/ps x0 crystal built 5 kbar of
-   deviatoric stress (`sdev_z` 91), so the barostat is settled here, before production commits to one.
-2. **Production:** every composition at that one Ta with `NREP=10` (`sbatch --array=0-49 --export=ALL,TA=..,NREP=10
-   submit_anneal.sh`), about 30% error per rate; 20 replicas for the compositions being compared most closely.
-   Replica r starts from melt-quench glass ((r − 1) mod 3) + 1 with its own velocities: beyond 3 replicas the
-   glasses are reused, so replicas of one glass share its structure (pre-existing subcritical order) and differ only
-   in their dynamics. If the rates turn out to differ between glasses, more melt-quench samples are needed.
+**Temperature grid and replicas.** The goal is the growth velocity `v_growth` as a function of Ta for each
+composition, homogeneous recrystallization (nuclei form during the anneal): v(Ta) should peak, falling at low Ta
+(slow atoms) and toward the melting point (small driving force). So the anneals run on a grid of temperatures
+rather than at one Ta. The grid is the calibrated range, 500–700 K in 50 K steps: each Ta has its `XSTOP`,
+per-composition `--x-crystal` and `--nucleated-size` from `calib/calibrate.out`. Every Ta must lie below a Tx
+measured at a heating rate no faster than the anneal's 10 K/ps; the 1 K/ps ramps do not crystallize below 900 K, so
+all five qualify (`RESULTS.md` sections 2–4). Homogeneous runs give `v_growth` only where a nucleus forms within the
+5 ns hold; a missing point means "no nucleus", not v = 0. Seeded (heterogeneous) slabs, planned separately, cover
+the Ta outside that window.
+1. **Phase A, x0** (`scripts/submit_screen.sh`, `scripts/analyze_screen.sh`): 3 replicas per Ta. First iso/aniso
+   pairs at 600 and 650 K (`TAS="600 650"`, with and without `BARO=aniso`): the 0.2 K/ps x0 crystal built 5 kbar of
+   deviatoric stress (`sdev_z` 91), so the barostat is settled before the rest of the grid. Then 500, 550 and 700 K
+   with the chosen barostat. This also shows where x0 nucleates within 5 ns.
+2. **Phase B, all compositions** over the Ta where Phase A (and the C cells' own runs) nucleate, 3 replicas each,
+   reusing the Phase A x0 runs; per-run `v_growth` and its distribution per composition and Ta are the result.
+   Start with 3 replicas and add more where the spread hides a trend.
+
+Replicas: replica r starts from melt-quench glass ((r − 1) mod 3) + 1 with its own velocities, so 3 replicas use the
+3 glasses once each. Nucleation itself is a rare event (one waiting time per run, rate error about 1/√n, 58% for 3
+runs); rates from these runs are by-products with that error, not the target.
 
 **Halt level and the crystalline end point.** A perfect x0 crystal reads ≈ 0.93 at 600 K under the default
 criterion, and a crystal grown in an anneal (grain boundaries, defects) reads less, so a halt at 0.9 would rarely
@@ -172,7 +179,12 @@ Ge/Sb/Te cluster and the number of such clusters of at least `--nucleus-min` ato
 - `t_nuc`, the first hold time the largest cluster reaches `--nucleated-size` atoms. This option is required with
   `--clusters`: use the value `calibrate.py` suggests for Ta and the same criterion (Calibration, step 4);
 - `v_growth`, the growth velocity (m/s): the slope of the largest cluster's equivalent-sphere radius while it holds
-  10–60% of the Ge/Sb/Te atoms.
+  10–60% of the Ge/Sb/Te atoms. A sphere meets its own periodic image at π/6 ≈ 52% of the cell, but counted
+  exactly in a periodic cell its slope stays within 0.5% of the true one up to 60% (−1.5% at 70%, −5% at 80%;
+  `tests/recryst_logic`), so 60% is the cap. A faceted grain's equivalent radius is not its facet distance, so
+  homogeneous and seeded (planar-front) velocities are compared by trend, not one-to-one;
+- `single_grain`: 1 if no second cluster reaches `--nucleated-size` during that window, 0 if one does (the radius
+  then mixes grains; at low Ta, where many nuclei form, check this before trusting v_growth).
 
 Per (composition, Ta) group, two nucleation rates:
 - `J_surv`, from the `t_nuc` of all replicas, runs that never nucleated counting as censored at their end (the
@@ -256,7 +268,7 @@ options for either, e.g. the calibrated criterion or `-var baro aniso`).
 
 ## Validation
 **`tests/recryst_logic`: PASS** (job 12290193; `check.py` writes `RESULT.txt`; after the nucleation-threshold
-change, `calibrate.py` and `check.py` were rerun on that job's outputs, since no LAMMPS input changed; 37 checks since the `rate_compare.py` known answers). On the 1×1×1 x0 glass (461 atoms)
+change, `calibrate.py` and `check.py` were rerun on that job's outputs, since no LAMMPS input changed; 37 checks since the `rate_compare.py` known answers, 39 since the periodic-cell `v_growth` and `single_grain` checks). On the 1×1×1 x0 glass (461 atoms)
 from `tests/mq_logic`, dt 1 fs:
 - **Ramp** (10 K/ps): exit 0; `snap_350K` … `snap_900K`; T follows the programmed schedule (mean deviation +1.2 K);
   `stress.dat` has a row for every `ramp.dat` step.
@@ -287,7 +299,9 @@ from `tests/mq_logic`, dt 1 fs:
   file a repeated frame was taken from; the later-wins rule for `.dat` rows is a known answer below.)
 - **Known answers:** `load_dat` keeps the last row of a repeated step; the half-rise `Tx_xfrac` of a synthetic
   ramp is 650 K for both a 0.8 and a 0.6 ceiling (a fixed 0.5 threshold would give 654 K and 665 K); `v_growth`
-  recovers 200 m/s for a growing sphere; `J_surv` matches the censored-exponential formula; `smooth()` keeps a
+  recovers 200 m/s for a growing sphere, also counted exactly in a periodic cell (199 m/s with the 10–60% window,
+  180 m/s if it ran to 90%); `single_grain` is 1, 0 or NaN as a second nucleus is absent, present or there is no
+  window; `J_surv` matches the censored-exponential formula; `smooth()` keeps a
   constant constant; the stress statistic gives |z| < 5 on production-level noise
   and z = 16 for a 2 kbar deviatoric step; the MFPT fit recovers n* = 40 and τ_J = 500 ps, recovers n* = 140 on top of a 100-atom glass baseline, and
   gives NaN when n* = 40 lies below that baseline. `rate_compare.py`: it parses `recryst_summary.py`'s run rows and

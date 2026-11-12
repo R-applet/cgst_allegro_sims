@@ -40,7 +40,9 @@ Only complete runs are analysed (ramp: snap_900K.data; anneal: anneal_done.txt);
             from calibrate.py at Ta and the same criterion: the glass already holds crystal-like patches of up to a
             few hundred atoms, recryst/README.md, so a small size would mark every run nucleated at t = 0)
   v_growth  growth velocity (m/s): slope of the largest cluster's equivalent-sphere radius while it holds 10-60% of
-            the Ge/Sb/Te atoms
+            the Ge/Sb/Te atoms (periodic images bias it by < 0.5% up to 60%, -5% by 80%)
+  single_grain  1 if no second cluster reaches --nucleated-size during that window, 0 if one does (the radius then
+            mixes grains), NaN without a window
   Per replica group:
   survival  n_nucleated of n_runs, J_surv = n_nucleated / (total observed hold time x V), runs that never nucleated
             counting as censored at t_end (maximum likelihood for an exponential waiting time), relative error
@@ -173,10 +175,11 @@ def anneal(run, tscale, x_crystal=None):
 def clusters(run, rc, thr, nmin, nuc_min, reuse=True):
     """Per dumped frame of the hold (all traj.<first step>.lammpstrj.gz files; a step in two files, from a job
     killed after its last restart and its resumed successor, is taken from the later file): hold time, largest
-    crystalline Ge/Sb/Te cluster, number of such clusters >= nuc_min atoms, xfracGST. The per-atom bond count is the
+    crystalline Ge/Sb/Te cluster, number of such clusters >= nuc_min atoms, xfracGST, second-largest cluster (for the
+    single-grain flag of kinetics()). The per-atom bond count is the
     dumped c_ncb when the run's criterion (hold_start.txt) has the same q_rc and q_thr and reuse is set, else it is
-    recomputed. Writes clusters_q<rc>_<thr>_<nmin>.txt; returns {'t', 'big'} arrays, the mean cell volume (A^3) and
-    the number of Ge/Sb/Te atoms."""
+    recomputed. Writes clusters_q<rc>_<thr>_<nmin>.txt; returns {'t', 'big', 'big2'} arrays, the mean cell volume
+    (A^3) and the number of Ge/Sb/Te atoms."""
     d = load_dat(run / "anneal.dat")
     dt = d["time_ps"][-1] / d["step"][-1]
     info = hold_info(run)
@@ -192,24 +195,34 @@ def clusters(run, rc, thr, nmin, nuc_min, reuse=True):
             mask = (ncb >= nmin) & gst
             s = cluster_sizes(mask, c["pos"], L, rc)
             frames[step] = (step * dt - t0, int(s[0]) if len(s) else 0, int((s >= nuc_min).sum()),
-                            mask.sum() / gst.sum(), float(np.prod(L)), int(gst.sum()))
+                            mask.sum() / gst.sum(), float(np.prod(L)), int(gst.sum()), int(s[1]) if len(s) > 1 else 0)
     rows = [frames[k] for k in sorted(frames)]
-    lines = [f"hold_time_ps largest_cluster n_clusters_ge{nuc_min} xfracGST"]
-    lines += [f"{t:.2f} {big} {nn} {x:.4f}" for t, big, nn, x, _, _ in rows]
+    lines = [f"hold_time_ps largest_cluster n_clusters_ge{nuc_min} xfracGST second_cluster"]
+    lines += [f"{t:.2f} {big} {nn} {x:.4f} {b2}" for t, big, nn, x, _, _, b2 in rows]
     (run / f"clusters_q{rc:g}_{thr:g}_{nmin}.txt").write_text("\n".join(lines) + "\n")
     return {"t": np.array([r[0] for r in rows]), "big": np.array([r[1] for r in rows]),
-            "volume": float(np.mean([r[4] for r in rows])), "n_gst": rows[0][5]}
+            "big2": np.array([r[6] for r in rows]), "volume": float(np.mean([r[4] for r in rows])), "n_gst": rows[0][5]}
+
+
+V_WINDOW = (0.10, 0.60)   # v_growth fit window, fraction of Ge/Sb/Te in the largest cluster (see kinetics())
 
 
 def kinetics(cl, nucleated):
-    """From one run's clusters() output: t_nuc, the first hold time the largest cluster has >= nucleated atoms, and
-    v_growth (m/s), the slope of its equivalent-sphere radius r = (3 N V / (4 pi N_GST))^(1/3) while it holds 10-60%
-    of the Ge/Sb/Te atoms (least squares; NaN with fewer than 3 frames there)."""
+    """From one run's clusters() output: t_nuc, the first hold time the largest cluster has >= nucleated atoms;
+    v_growth (m/s), the slope of its equivalent-sphere radius r = (3 N V / (4 pi N_GST))^(1/3) while it holds
+    V_WINDOW (10-60%) of the Ge/Sb/Te atoms (least squares; NaN with fewer than 3 frames there); and single_grain,
+    1 if no second cluster reaches `nucleated` atoms in that window, 0 if one does (then the radius mixes grains),
+    NaN without a window. A sphere meets its own periodic image at pi/6 = 52% of the cell, but the overlap stays
+    small: counted exactly in a periodic cell, the slope is within 0.5% of the true one up to 60%, -1.5% at 70%,
+    -5% at 80% (tests/recryst_logic, check.py). So 60% is the cap."""
     t, big, n = cl["t"], cl["big"], cl["n_gst"]
+    big2 = cl.get("big2", np.zeros_like(big))
     r = (3 * big * cl["volume"] / (4 * pi * n)) ** (1 / 3)
-    g = (big >= 0.1 * n) & (big <= 0.6 * n)
+    g = (big >= V_WINDOW[0] * n) & (big <= V_WINDOW[1] * n)
+    ok = g.sum() >= 3
     return {"t_nuc": first_cross(t, big, nucleated - 0.5),
-            "v_growth": np.polyfit(t[g], r[g], 1)[0] * 100.0 if g.sum() >= 3 else np.nan}    # A/ps -> m/s
+            "v_growth": np.polyfit(t[g], r[g], 1)[0] * 100.0 if ok else np.nan,     # A/ps -> m/s
+            "single_grain": float(big2[g].max() < nucleated) if ok else np.nan}
 
 
 def survival_rate(t_nuc, t_end, volume):

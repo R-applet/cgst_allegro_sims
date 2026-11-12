@@ -2,7 +2,8 @@
 # Tested on fake run trees only (2026-11-10), not yet on real outputs. Run from anywhere; paths resolve
 # from this file's location.
 # x0 screening anneals (recryst/README.md, section 3, "Choosing Ta", step 1):
-# x0 at 550/600/650 K, 3 replicas each (array 0-2 -> x0 r1-r3, glasses q10_r1-r3), up to 5 ns, fix halt at XSTOP.
+# x0 at 500/550/600/650/700 K (the calibrated range; TAS="600 650" for a subset), 3 replicas each (array 0-2 ->
+# x0 r1-r3, glasses q10_r1-r3), up to 5 ns, fix halt at XSTOP.
 # Final calibration (recryst/README.md, section 1 "Result"): q_rc 3.8, q_thr 0.6, q_nmin 4.
 #
 # Usage, after the 1 K/ps ramp analysis (ramp_summary_h1.txt, group ramp_x0_h1):
@@ -28,11 +29,15 @@ unset TAG                                   # an inherited TAG would rename the 
 # Criterion, used in-run by fix halt and the dumped c_ncb. sbatch --export=ALL carries EXTRA_VARS into the job, and
 # each continuation inherits it the same way, so the criterion stays fixed along a chain.
 export EXTRA_VARS="-var q_rc 3.8 -var q_thr 0.6 -var q_nmin 4${TAGP:+ -var baro aniso}"
-declare -A XSTOP=( [550]=0.73 [600]=0.72 [650]=0.70 )   # 0.85 x the lowest crystal-reference xfracGST at TA (x5)
+declare -A XSTOP=( [500]=0.75 [550]=0.73 [600]=0.72 [650]=0.70 [700]=0.68 )   # 0.85 x lowest crystal ref at TA (x5)
+TAS=${TAS:-500 550 600 650 700}
+for TA in $TAS; do
+    [ -n "${XSTOP[$TA]:-}" ] || { echo "TA $TA is not calibrated (500-700 K in 50 K steps)" >&2; exit 1; }
+done
 
 limit=$(awk -v tx=$TX_X0 -v sd=$TX_X0_STD 'BEGIN { m = 2 * sd; if (m < 25) m = 25; printf "%.1f", tx - m }')
 echo "x0 Tx $TX_X0 +- $TX_X0_STD K -> screening TA must be below $limit K"
-for TA in 550 600 650; do
+for TA in $TAS; do
     if awk -v t=$TA -v l=$limit 'BEGIN { exit !(t >= l) }'; then
         echo "TA $TA: SKIP, not below $limit K (would risk crystallizing during the heating)"; continue
     fi
