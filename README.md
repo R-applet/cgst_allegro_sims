@@ -7,7 +7,7 @@ the others in vacancy count as well as C content; see `structures/build_supercel
 | Part | Directory | Status |
 |---|---|---|
 | 1. Environment, model, Slurm tests | `env/`, `models/`, `common/`, `tests/` | done (`tests/RESULTS.md`); glass as dense as the crystal, inherited from the DFT reference (1g, 1k) |
-| 2. Melt-quench | `meltquench/` | production runs done: 15 glasses at 10 K/ps (5 compositions × 3) and x0, x10 at 1 K/ps, all past the MSD gate; results not yet written up |
+| 2. Melt-quench | `meltquench/` | production runs done: 15 glasses at 10 K/ps (5 compositions × 3) and x0, x10 at 1 K/ps, all past the MSD gate; results in `meltquench/README.md` |
 | 3. Recrystallization (Tx ramp, isothermal anneal) | `recryst/` | criterion calibrated (3.8 Å, 0.6, 4); 1 K/ps and 0.2 K/ps ramps running; results in `recryst/RESULTS.md` |
 
 ## Layout
