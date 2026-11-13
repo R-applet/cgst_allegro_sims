@@ -8,7 +8,7 @@
 # runs exist is skipped: Phase B reuses Phase A's x0 runs, and nothing is submitted twice.
 # Refuses a Ta that is not a calibration temperature (CALIB_TS: NUC, XC and GLASS exist only there) or not below
 # TX_GUARD - 25 K (params: a Tx at a heating rate comparable to the anneal's 10 K/ps heat).
-# Resources: one perc A100-40GB per run by default; RES="-A strachan -p a30 --gpus-per-node=2 --ntasks-per-node=2"
+# Resources: NGPU perc A100-40GBs per run (params; 1 if unset) by default; RES="-A strachan -p a30 --gpus-per-node=2 --ntasks-per-node=2"
 # for the A30s. Every submission is a separate go-ahead (RUNBOOK.md): run --dry-run first.
 set -euo pipefail
 tas=${TAS:-}                                # a TAS set here overrides recryst/params/<MODEL_ID>.sh
@@ -16,7 +16,7 @@ source "$(dirname "$(realpath "$0")")/common.sh"
 TAS=${tas:-$TAS}
 DRY=0; [ "${1:-}" = "--dry-run" ] && DRY=1
 CELLS=${CELLS:-${CELLS_ALL[*]}}
-RES=${RES:--A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1}
+RES=${RES:--A perc -p a100-40gb --gpus-per-node=${NGPU:-1} --ntasks-per-node=${NGPU:-1}}
 for c in $CELLS; do [ -n "${CI[$c]:-}" ] || die "unknown cell $c (one of ${CELLS_ALL[*]})"; done
 for TA in $TAS; do
     case " $CALIB_TS " in *" $TA "*) ;; *) die "TA $TA is not a calibration temperature ($CALIB_TS)" ;; esac

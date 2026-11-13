@@ -108,7 +108,7 @@ latter through `recryst/params/<MODEL_ID>.sh`, so no criterion or per-T value is
 |---|---|---|
 | fresh velocities | 300 | 10 ps |
 | heat | 300 → Ta | (Ta−300)/10 ps |
-| hold | Ta | up to `MAX_NS` (5 ns); `fix halt` once xfracGST > `XSTOP` (params) |
+| hold | Ta | up to `MAX_NS` (params: 5 ns for run5_ep301, 2 ns for nozbl_paw); `fix halt` once xfracGST > `XSTOP` (params) |
 
 **Temperature grid and replicas.** The goal is the growth velocity `v_growth` as a function of Ta for each
 composition, homogeneous recrystallization (nuclei form during the anneal): v(Ta) should peak, falling at low Ta
@@ -162,7 +162,7 @@ rocksalt disorders), which `--x-end` sidesteps.
 - the trajectory every 2 ps (one file per job), with image flags (`ix iy iz`, continuous across resumes) so
   unwrapped positions give diffusion over the whole hold;
 - restart files every 50 ps; `submit_anneal.sh` deletes all but the newest two before each job, and all but the
-  newest once the run is done (about 2.6 MB each; kept, they would total about 260 MB per 5 ns run).
+  newest once the run is done (about 2.6 MB each at 333; kept, they would total about 260 MB per 5 ns run).
 
 `recryst_summary.py` reports, per run and as replica mean ± sample std:
 - baseline `xfracGST` (x_a), x_c and its source;
@@ -222,8 +222,8 @@ own `clusters_q…` file); its `--nucleated-size` must come from `calibrate.py` 
 the criterion matches the run's own (`hold_start.txt`), the dumped `c_ncb` is used instead of recomputing q4. For Tx,
 the `.dat` value uses the run's criterion only; `Tx_H` is criterion-free and is the cross-check.
 
-**Continuation.** A 5 ns hold of a 13k-atom cell takes about 1.5 days on 2 A30s (3.35 ns/day), which is longer than
-one wall-time window. Each array task queues its own `afterany` continuation (at most `MAXCHAIN`, default 4). The
+**Continuation.** A hold can be longer than one wall-time window (run5_ep301: 5 ns of a 13k-atom cell, about 1.5 days on
+2 A30s; nozbl_paw: 2 ns at 444 on 2 A100s, about 19 h, within one). Each array task queues its own `afterany` continuation (at most `MAXCHAIN`, default 4). The
 continuation resumes from the newest restart file and appends to `anneal.dat` and `stress.dat`, or exits at once if
 `anneal_done.txt` exists. It inherits the job's account, partition, QoS and GPU layout, so a chain started on the
 perc A100s stays there. A continuation that finds no newer restart than its predecessor started from stops the chain
@@ -316,16 +316,19 @@ A synthetic pre-test also showed the first stress statistic could not separate a
 3.8), so it was replaced by the end-versus-start comparison.
 
 ## Budget
-Measured throughput at 13.8k atoms (`tests/RESULTS.md`, 1d; recheck for a new model, RUNBOOK B): 3.35 ns/day per
-2-A30 job, about 3.0 ns/day per 1-A100 job.
-- Calibration: 54 jobs × 20 ps, roughly 15–20 min each on one A30.
-- Ramp: one 0.2 K/ps ramp to 900 K, 3,010 ps ≈ 18–22 h on 2 A30s.
-- Anneals: a 5 ns hold that never halts is ≈ 40 h on one A100. The full grid (5 compositions × 5 Ta × 3 replicas)
-  is 75 runs, ≈ 3,000 GPU-hours if nothing halts, about 2 weeks on 10 perc GPUs; `fix halt` cuts this sharply where
-  runs crystallize (run5_ep301's Phase A runs halted at 0.44–2.5 ns), and Phase A decides where Phase B is worth
-  running.
-- Disk (gzipped dumps, about 0.25 MB per 13.8k-atom frame): up to 2,500 frames ≈ 0.7 GB per 5 ns run, ≈ 50 GB for
-  the grid. All on `/scratch` (200 TB quota).
+Measured throughput (`tests/scaling`): run5_ep301 at 333 (13.8k atoms; `tests/RESULTS.md` 1d), 3.35 ns/day per 2-A30
+job, about 3.0 per 1-A100 job. nozbl_paw (`tests/scaling/submit_size.sh`, x10): 3.12 ns/day at 333 on 1 A100 (the same
+as run5_ep301); at 444 (32.8k atoms) 1.34 ns/day on 1 A100 (34.3 of 41 GB GPU memory) and 2.59 on 2 (1.93×, 23.3 GB
+each), hence `NGPU` = 2 per 444 run.
+- Calibration: 54 jobs × 20 ps (references at the melt-quench `SIZE`), minutes each.
+- Ramp: 0.2 K/ps to 900 K is 3,010 ps: ≈ 22 h on 2 A30s at 333; **at 444 ≈ 28 h on 2 A100s, past the 24 h limit, and
+  `in.ramp` has no restart** — needs 4 GPUs, a shorter ramp or a restart before it can run (open, RUNBOOK recryst step 2).
+- Anneals (nozbl_paw, 444, `MAX_NS` 2, 2 A100s): a hold that never halts is ≈ 19 h, one job. The full grid (5
+  compositions × 5 Ta × 3 replicas) is 75 runs ≈ 2,900 GPU-hours if nothing halts, about 12 days on 10 perc GPUs (5
+  runs at a time); `fix halt` cuts this where runs crystallize, and Phase A decides where Phase B is worth running.
+  Nucleation exposure per run (volume × time) is 2.37 × 2 ns ≈ 4.7 ns of a 333 cell, about run5_ep301's 5 ns.
+- Disk (gzipped dumps, about 0.25 MB per 13.8k-atom frame, ≈ 0.6 MB at 444): up to 1,000 frames ≈ 0.6 GB per 2 ns run,
+  ≈ 45 GB for the grid. All on `/scratch` (200 TB quota).
 
 GPUs: strachan's A30 cap is 6 GPUs shared with other members, often only 2 free, so 1–3 two-GPU jobs at a time.
-perc adds 10 A100-40GB, so up to 10 one-GPU jobs. **Every submission is a separate go-ahead.**
+perc adds 10 A100-40GB, so 5 two-GPU jobs. **Every submission is a separate go-ahead.**

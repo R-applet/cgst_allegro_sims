@@ -5,6 +5,9 @@
 SIZE=444            # supercell, structures/<SIZE>/ (4x4x4, 29.5k-32.8k atoms, 96.5 A box). Chosen 2026-11-13 for
                     #   nucleation statistics and a longer v_growth window; cost ~2.4x per run vs 333
                     #   (measured: tests/scaling/submit_size.sh)
+NGPU=2              # GPUs (= MPI ranks) per run, enforced by the submit scripts. At 444 one A100-40GB holds the x10
+                    #   cell with 6 GB to spare (34.3 of 41 GB, 600 K solid); 2 GPUs: 23.3 GB each, 2.59 ns/day = 1.93x
+                    #   one GPU's 1.34 (tests/scaling/submit_size.sh, jobs 12358493-94). Decided 2026-11-13.
 TMELT=1500          # K. PROVISIONAL. Needs >= ~300 K above the pilot's highest Tm_app, MSD gate passed, and no close
                     #   contacts (mq_summary.py rmin_*; this model has no ZBL repulsion).
 HOLD_PS=100         # ps at TMELT. PROVISIONAL (MSD gate >= 100 A^2 in the pilot).

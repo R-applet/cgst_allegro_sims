@@ -29,6 +29,9 @@ hr=${HRATE:-}
 source $ROOT/common/defaults.sh             # DT (same as the melt-quench), MODEL_ID, MODEL (per node type)
 source $ROOT/recryst/params/$MODEL_ID.sh         # HRATE, TMAX, QRATE (which glasses), Q_VARS (calibrated criterion)
 HRATE=${hr:-$HRATE}
+[ -z "${NGPU:-}" ] || [ "$SLURM_NTASKS" = "$NGPU" ] || {
+    echo "this job has $SLURM_NTASKS ranks, params NGPU=$NGPU: submit with --gpus-per-node=$NGPU --ntasks-per-node=$NGPU" >&2
+    exit 1; }
 : "${Q_VARS:?no calibrated criterion: run recryst/calib (submit.sh, then submit_calibrate.sh) for $MODEL_ID first}"
 CELLS=(x0 x1 x2p5 x5 x10)
 i=$SLURM_ARRAY_TASK_ID

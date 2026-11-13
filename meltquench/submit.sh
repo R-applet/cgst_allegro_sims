@@ -14,7 +14,7 @@
 #   all cells x 3 replicas:            sbatch --array=0-14 submit.sh
 #   1 K/ps sensitivity (x0, x10, r1):  sbatch --array=0,12 --export=ALL,QRATE=1 submit.sh
 #   longer melt hold for every run (after an MSD-gate ERROR): --export=ALL,HOLD_PS=150
-# SIZE, QRATE, HOLD_PS and TMELT come from meltquench/params/<MODEL_ID>.sh; QRATE and HOLD_PS set in the environment override it.
+# SIZE, NGPU (checked against the job's ranks), QRATE, HOLD_PS and TMELT come from meltquench/params/<MODEL_ID>.sh; QRATE and HOLD_PS set in the environment override it.
 # Array index i -> cell CELLS[i / 3], replica r = i % 3 + 1.
 # Run directory: runs/<MODEL_ID>/<cell>_q<QRATE>_r<r>/ (MODEL_ID: common/model.sh).
 # Velocity seed = 10007*(i+1) + QRATE, so every run has a different seed.
@@ -25,6 +25,9 @@ q=${QRATE:-}; h=${HOLD_PS:-}
 source $ROOT/common/defaults.sh             # DT, MODEL_ID, MODEL (per node type)
 source $ROOT/meltquench/params/$MODEL_ID.sh # SIZE, TMELT, QRATE, HOLD_PS (keep HOLD_PS the same for every run compared)
 QRATE=${q:-$QRATE}; HOLD_PS=${h:-$HOLD_PS}
+[ -z "${NGPU:-}" ] || [ "$SLURM_NTASKS" = "$NGPU" ] || {
+    echo "this job has $SLURM_NTASKS ranks, params NGPU=$NGPU: submit with --gpus-per-node=$NGPU --ntasks-per-node=$NGPU" >&2
+    exit 1; }
 [ -e $ROOT/structures/$SIZE/x0.data ] || { echo "no structures/$SIZE/: python structures/build_supercells.py --nrep ${SIZE:0:1}" >&2; exit 1; }
 CELLS=(x0 x1 x2p5 x5 x10)
 i=$SLURM_ARRAY_TASK_ID

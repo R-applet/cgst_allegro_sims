@@ -70,7 +70,7 @@ which no GPU job has run yet: run them before the first production job of each s
 1. **Superheating pilot (sets `TMELT`, `HOLD_PS`).** At the params' `SIZE` (444 for nozbl_paw; build the cells with
    `python structures/build_supercells.py --nrep 4`). x0 r1 and x10 r1, which are also production runs (same seeds):
    ```
-   cd meltquench && sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1 --array=0,12 submit.sh
+   cd meltquench && sbatch -A perc -p a100-40gb --gpus-per-node=2 --ntasks-per-node=2 --array=0,12 submit.sh
    python ../analysis/mq_summary.py --out results/nozbl_paw runs/nozbl_paw/*_q10_r1        # env/cgst-ana
    ```
    **Pass:** the MSD gate passes (`gate.txt`); `TMELT` (a multiple of 100) is at least ~300 K above the higher
@@ -80,9 +80,10 @@ which no GPU job has run yet: run them before the first production job of each s
    `runs/<MODEL_ID>/{x0,x10}_q10_r1` and rerun the pilot.
 2. **Production:** the remaining 13 runs with the pilot's settings.
    ```
-   cd meltquench && sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1 --array=1-11,13-14 submit.sh
+   cd meltquench && sbatch -A perc -p a100-40gb --gpus-per-node=2 --ntasks-per-node=2 --array=1-11,13-14 submit.sh
    ```
-   (or on the A30s: `sbatch --array=1-11,13-14 submit.sh`). **Pass:** all 15 pass the MSD gate with one `HOLD_PS`.
+   (`NGPU` = 2 in params: the submit script refuses another rank count; ~5 h per run at 444 on 2 A100s; on 2
+   A30s `sbatch --array=1-11,13-14 submit.sh`, ~2× slower). **Pass:** all 15 pass the MSD gate with one `HOLD_PS`.
 3. **Analysis:** `mq_summary.py` on the login node, `mq_structure.py` as an sbatch job, both `--out
    results/<MODEL_ID> runs/<MODEL_ID>/*_q*_r*`. Record density, Tm_app, Tg, `xfracGST`, `rmin_*` and the structure per
    composition in `meltquench/results/<MODEL_ID>/RESULTS.md`, compared with run5_ep301. Optional 1 K/ps sensitivity
@@ -95,7 +96,9 @@ Needs the melt-quench glasses of the same potential and `recryst/params/<MODEL_I
    is not clearly better than a neighbour, rerun with `--export=ALL,CALIB_ARGS="--choose RC THR NMIN"`.
    `calib_params.sh` is regenerated each time. **Pass:** a crystal/glass margin comparable to run5_ep301's 0.71, no
    edge-of-grid warning, and `calib_params.sh` covering every temperature you will anneal at.
-2. **Ramp (sets `TX_GUARD` and centres the grid).** `cd recryst && sbatch --array=0 submit_ramp.sh` (x0 r1 at
+2. **Ramp (sets `TX_GUARD` and centres the grid).** **Open for nozbl_paw:** at 444 a 0.2 K/ps ramp to 900 K is ≈ 28 h on
+   2 A100s, past the 24 h limit, and `in.ramp` has no restart; decide 4 GPUs (if the 4-GPU benchmark scales), a
+   faster `HRATE`, a lower `TMAX`, or a ramp restart before submitting. `cd recryst && sbatch --array=0 submit_ramp.sh` (x0 r1 at
    `HRATE` 0.2 K/ps to `TMAX`; on the A30s, since it exceeds 24 h on one A100). `TMAX` must stay below the
    superheated melting point from the melt-quench. Then `bash scripts/analyze_ramps.sh`. **Read:** whether and where x0
    crystallizes (Tx_xfrac). Set `TX_GUARD` to a Tx measured at a heating rate comparable to the anneals' 10 K/ps
