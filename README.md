@@ -11,9 +11,11 @@ the others in vacancy count as well as C content; see `structures/build_supercel
 | 3. Recrystallization (Tx ramp, isothermal anneal) | `recryst/` | criterion calibrated (3.8 Å, 0.6, 4); ramps done: no crystallization at 1 K/ps, x0 Tx 571 K at 0.2 K/ps; next: isothermal anneals over 500–700 K for v_growth(Ta); results in `recryst/RESULTS.md` |
 
 ## Layout
-- `structures/`: the original 512-site cells (untouched) and `build_supercells.py`. The builder writes cleaned NxNxN cells to
-  `111/`, `222/` and `333/` (production uses 333, 12.4k–13.8k atoms). It also fixes the 0.5 Å boundary gap in
-  gst/c1/c2_5 and the missing masses in gst/c10; see its docstring.
+- `structures/`: the original 512-site cells (untouched), `build_supercells.py`, and the cleaned single rocksalt cell
+  of each composition, named by atom count: `x0_461.data`, `x1_466.data`, `x2p5_473.data`, `x5_486.data`,
+  `x10_512.data` (written by `build_supercells.py --nrep 1`). The builder writes cleaned NxNxN cells to `111/`,
+  `222/` and `333/` (production uses 333, 12.4k–13.8k atoms; these directories are not tracked). It also fixes
+  the 0.5 Å boundary gap in gst/c1/c2_5 and the missing masses in gst/c10; see its docstring.
 - `models/`: the compiled potential, its provenance and hashes, and a recompile script.
 - `common/`: shared LAMMPS includes (`in.potential`, `in.analysis`, `in.rdf`), `run_lmp.sh` (container launcher,
   one MPI rank per GPU) and `defaults.sh` (production timestep `DT` and per-node compiled model `MODEL`; sourced

@@ -23,8 +23,11 @@ The 3x3x3 replica repeats the C/vacancy arrangement every 24 A. That periodicity
 1500 K melt (see meltquench/README.md, MSD gate); do not use these cells directly as a crystal model.
 
 Usage:  python build_supercells.py [--nrep N]   (default N=3; writes structures/NNN/<tag>.data, prints checks)
-        N=1 and N=2 give the cleaned single cell and 2x2x2 cell used by tests/.
+        N=1 and N=2 give the cleaned single cell and 2x2x2 cell used by tests/. N=1 also writes
+        structures/<tag>_<natoms>.data (x0_461, x1_466, x2p5_473, x5_486, x10_512): the cleaned single cells,
+        tracked in git as the reference crystal structures (NNN/ directories are not tracked).
 """
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -86,6 +89,8 @@ def main(NREP):
             f.write("\nAtoms  # atomic\n\n")
             for i, (t, p) in enumerate(zip(big_types, big_pos), start=1):
                 f.write(f"{i} {t} {p[0]:.6f} {p[1]:.6f} {p[2]:.6f}\n")
+        if NREP == 1:                                   # tracked reference copy, named by atom count
+            shutil.copyfile(outdir / f"{tag}.data", HERE / f"{tag}_{n}.data")
         print(f"{tag:6s} {len(types):5d} {n:6d} {counts[1]:5d} {counts[2]:5d} {counts[3]:5d} {counts[4]:4d} "
               f"{100 * counts[4] / n:6.2f} {L:7.3f} {dmin:7.3f}")
 
