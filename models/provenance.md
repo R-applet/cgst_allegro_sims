@@ -7,7 +7,7 @@ checkpoint copies are not tracked by git; their hashes are here.
 | MODEL_ID | Type | Short range | Training data | Checkpoint (sha256) | Compiled files | Status |
 |---|---|---|---|---|---|---|
 | `run5_ep301` | Allegro (nequip/allegro with per-pair ZBL, `zbl_updated`) | per-pair ZBL | `CGST/cgst_train_paw.xyz` | `run5_ep301.ckpt` (`b6ae59f2…96b1`) | `.pt2`, `.G`, `.N` | archived, tag `run5_ep301-final` |
-| `nozbl_paw` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `CGST/cgst_train_paw.xyz` | `nozbl_paw.ckpt` (`ed645c56…bfcc`) | `.G`, `.N` (A30 file not yet built) | in progress (default `MODEL_ID`) |
+| `nozbl_paw` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `CGST/cgst_train_paw.xyz` | `nozbl_paw.ckpt` (`ed645c56…bfcc`) | `.G`, `.N` (validated; A30 file not yet built) | in progress (default `MODEL_ID`) |
 | (second potential) | — | — | — | — | — | to be provided |
 
 ## nozbl_paw
@@ -29,11 +29,16 @@ print the hash):
 
 | file | compiled on | used on | sha256 | validated |
 |---|---|---|---|---|
-| `nozbl_paw.G.nequip.pt2` | a100-40gb gilbreth-g008, 2026-11-13 (job 12358491) | a100-40gb g-nodes | `f76aeea05254960c98abd3f4c27dbecc15b628627c0258ff360e24dcfc4e037d` | not yet (`model_check`, `model_select`; RUNBOOK B) |
-| `nozbl_paw.N.nequip.pt2` | a100-40gb gilbreth-n006, 2026-11-13 (job 12358492) | a100-40gb n-nodes | `a9933e81fcce76eccefb0223bf316df89d58021e254d5678d84a5c7e955dcf5f` | not yet (`model_check`, `model_select`; RUNBOOK B) |
+| `nozbl_paw.G.nequip.pt2` | a100-40gb gilbreth-g008, 2026-11-13 (job 12358491) | a100-40gb g-nodes | `f76aeea05254960c98abd3f4c27dbecc15b628627c0258ff360e24dcfc4e037d` | `tests/model_check` (job 12358679, g000): vs checkpoint max \|ΔE\| 0.0000 meV/atom, max \|ΔF\| 3.5e-11 eV/Å, max \|ΔP\| 0.005 bar; `tests/model_select` (job 12358680, g000): selected and \|ΔE\| = 0 |
+| `nozbl_paw.N.nequip.pt2` | a100-40gb gilbreth-n006, 2026-11-13 (job 12358492) | a100-40gb n-nodes | `a9933e81fcce76eccefb0223bf316df89d58021e254d5678d84a5c7e955dcf5f` | `tests/model_select` (job 12358681, n011): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
 | `nozbl_paw.nequip.pt2` | — | a30 b- and d-nodes | — | not built (A30 queue; RUNBOOK A2) |
 
-Running and finishing in LAMMPS is not validation: the energies must still match the checkpoint (`model_check`).
+Both A100 files are the same model: identical energies (max |ΔE| = 0) on the 13 model_check frames. They differ in
+bytes, as AOTInductor output depends on the build machine (as for run5_ep301).
+
+First accuracy look (`tests/model_check`, the same 13 DFT test frames, 144–768 atoms, 0–77 C): checkpoint energy vs
+DFT, RMS 5.4 meV/atom (mean |error| 4.7, max 10.4), against 6.3 (5.5, 9.7) for run5_ep301. `stress_parity`, `am_eos`
+and the other tests in `RUNBOOK.md` B give the fuller picture; their results go to `tests/results/nozbl_paw/`.
 
 ## run5_ep301
 
