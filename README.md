@@ -33,11 +33,10 @@ To add a study, create the directory with this layout and a section in `RUNBOOK.
 potential, follow `RUNBOOK.md` A–B, then give each study a `params/<MODEL_ID>.sh`.
 
 ## Layout
-- `structures/`: the original 512-site cells (untouched), `build_supercells.py`, and the cleaned single rocksalt cell
-  of each composition, named by atom count: `x0_461.data`, `x1_466.data`, `x2p5_473.data`, `x5_486.data`,
-  `x10_512.data` (written by `build_supercells.py --nrep 1`). The builder writes cleaned NxNxN cells to `111/`,
-  `222/` and `333/` (production uses 333, 12.4k–13.8k atoms; these directories are not tracked). It also fixes
-  the 0.5 Å boundary gap in gst/c1/c2_5 and the missing masses in gst/c10; see its docstring.
+- `structures/`: the cleaned single rocksalt cell of each composition, named by atom count (`x0_461.data`,
+  `x1_466.data`, `x2p5_473.data`, `x5_486.data`, `x10_512.data`), the source of every supercell; `build_supercells.py`
+  writes NxNxN cells to `NNN/` (not tracked; 4×4×4 chosen for the melt-quench and recrystallization from nozbl_paw on, 3×3×3
+  for run5_ep301); the original ASE-written inputs are in `original/`. See `structures/README.md`.
 - `models/`: the model registry (`provenance.md`: every potential, its checkpoint and hashes), the compiled files, one
   per node type and model (`<MODEL_ID>[.G|.N].nequip.pt2`), local checkpoint copies (neither tracked), and
   `compile_model.sh`.

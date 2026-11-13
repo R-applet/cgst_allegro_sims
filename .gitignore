@@ -11,6 +11,7 @@ slurm-*.out
 structures/111/
 structures/222/
 structures/333/
+structures/444/
 # data files under tests/: LAMMPS outputs, plus model_check/frame_*.data written by model_check.py prepare.
 # Together with *.npy (reference forces), 1b inputs are not tracked; rerun `model_check.py prepare` to regenerate.
 tests/**/*.data
