@@ -3,6 +3,8 @@
 # params/<MODEL_ID>.sh and replace every value from that model's own pilot measurements (RUNBOOK.md); nothing here
 # carries over between models. The calibrated criterion and per-T tables are generated, not set here:
 # recryst/calib/<MODEL_ID>/calib_params.sh (recryst/calib/make_params.py), sourced at the end when it exists.
+# Every job sources this file when it starts, including each continuation of an anneal chain: do not change the
+# criterion or BARO while runs are in flight (XSTOP and MAX_NS are passed along the chain explicitly).
 
 # Part 2, melt-quench (meltquench/in.meltquench)
 TMELT=1500          # K. Superheated melting on a 10 K/ps heat: Tm_app 1129 K (x0) to 984 K (x10)

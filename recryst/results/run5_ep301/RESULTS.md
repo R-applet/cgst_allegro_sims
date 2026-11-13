@@ -1,8 +1,11 @@
 # Part 3 results: crystallization of GST + x% C
 
-**Status (2026-11-12):** calibration done; heating ramps done (no crystallization at 1 K/ps; x0 Tx 571 K at
-0.2 K/ps); screening and production anneals not started. Sections marked _pending_ name the script that fills them (`scripts/`, run order in
-`scripts/README.md`). Methods are in `README.md`; this file records what came out.
+**Final status (2026-11-13; tag `run5_ep301-final`):** calibration done; heating ramps done (no crystallization at
+1 K/ps; x0 Tx 571 K at 0.2 K/ps); Phase A done at 600 and 650 K (iso and aniso). Stopped there: the potential is being
+retrained, and Part 3 restarts from Part 1 with the new model (`RUNBOOK.md`). Sections 5 and 6 were not run with
+run5_ep301. Methods: `recryst/README.md`. The scripts named below (`submit_screen.sh`, `analyze_screen.sh`,
+`analyze_ramp_rate.sh`, `submit_aniso.sh`) were replaced after this tag by `scripts/submit_grid.sh` and
+`analyze_grid.sh`; paths `runs/...` and `calib/...` are now `runs/run5_ep301/...` and `calib/run5_ep301/...`.
 
 **Read every number here with three caveats:**
 - **Dense glass.** The model's glass is as dense as its crystal, a property of its DFT reference (`tests/RESULTS.md`
@@ -17,7 +20,8 @@
 ## 1. Crystallinity criterion: done
 **`q_rc` 3.8 Å, `q_thr` 0.6, `q_nmin` 4**, on the Ge/Sb/Te atoms (`xfracGST`). Calibration jobs 12295527 (54
 references, 20 ps each, 300–700 K) and 12308622 (scan to 4.0 Å); `calib/calibrate.out` from `--choose 3.8 0.6 4`
-(job 12309345). Full table: `README.md` section 1, "Result".
+(job 12309345); also `calib/run5_ep301/calib_params.sh`. Per-T values below (`XSTOP` here is calibrate.py's
+suggestion; the runs from Phase A on used 0.65, section 4).
 
 | | Lowest crystal reference | Highest glass | Margin |
 |---|---|---|---|
@@ -30,6 +34,18 @@ references, 20 ps each, 300–700 K) and 12308622 (scan to 4.0 Å); `calib/calib
   and has no reference). Hence a per-composition `--x-crystal` and one `XSTOP` per temperature set by x5.
 - The glasses read 0.04–0.09, falling with temperature; their largest crystal-like cluster at 550–650 K
   is 103–130 atoms (124–172 under the default).
+
+| T (K) | `XSTOP` | `--x-crystal` x0 / x1 / x2p5 / x5 | glass `xfracGST` max | `--nucleated-size` |
+|---|---|---|---|---|
+| 300 | 0.78 | 0.947 / 0.963 / 0.949 / 0.922 | 0.094 | 190 |
+| 500 | 0.75 | 0.950 / 0.960 / 0.934 / 0.877 | 0.086 | 230 |
+| 550 | 0.73 | 0.951 / 0.956 / 0.923 / 0.862 | 0.090 | 250 |
+| 600 | 0.72 | 0.950 / 0.951 / 0.916 / 0.842 | 0.076 | 260 |
+| 650 | 0.70 | 0.948 / 0.947 / 0.904 / 0.822 | 0.064 | 210 |
+| 700 | 0.68 | 0.947 / 0.941 / 0.898 / 0.805 | 0.051 | 130 |
+
+x10 has no crystal reference: its runs take x_c from their plateau, else `XSTOP`. The largest glass cluster at each temperature under
+this criterion is 63–130 atoms (300–700 K), against 103–269 under the default.
 
 ## 2. Heating ramps at 1 K/ps: no crystallization
 `scripts/analyze_ramps.sh` → `ramp_summary_h1.txt`, `ramp_tx.txt` (job 12308688; 3 replicas per composition, 300 →
@@ -64,36 +80,36 @@ the 0.2 that `recryst_summary.py` requires, so `Tx_xfrac` is undefined for every
 - No rate shift or Kissinger estimate: the 1 K/ps reference has no Tx. Slowing the heating 5× turns no
   crystallization into crystallization at 571 K, so Tx in this model depends strongly on rate.
 
-## 4. Phase A: x0 over the temperature grid, and the barostat: _pending_
-`scripts/submit_screen.sh`, then `scripts/analyze_screen.sh`: TOO HOT / TOO COLD / USABLE per Ta, x0 r1–r3.
-**Guard input: `TX_X0=900`, `TX_X0_STD=0`.** The guard keeps an anneal from crystallizing during its 10 K/ps heating
-to Ta, so it needs a Tx measured at a rate no faster than that heating. At 1 K/ps nothing crystallizes below 900 K,
-so the whole calibrated grid, 500–700 K, passes. The 0.2 K/ps Tx (571 K) belongs to a rate 50× slower than the
-anneal heating and would wrongly exclude all five.
-**Phase A (x0, 500–700 K, 3 replicas):** iso/aniso pairs at 600 and 650 K first (`BARO=aniso`, runs
-`anneal_x0_aniso_T<Ta>_r*`), because the 0.2 K/ps x0 crystal built 5 kbar of deviatoric stress (section 3); then 500,
-550 and 700 K with the chosen barostat. Grown x0 crystals plateau at `xfracGST` ≈ 0.71 at 600 K, below the first
-halt levels (0.72/0.70), so later runs halt at `XSTOP` = 0.65 and t_inc/t50 use one end point, `--x-end 0.65`
-(`README.md`, "Halt level"). Record per Ta the verdicts, x0 `v_growth` per run, the iso-vs-aniso
-comparison at 600 and 650 K (`rate_compare.py` on `screen_T<Ta>_clusters.txt` and `screen_aniso_T<Ta>_clusters.txt`,
-t50 and `v_growth`), and which barostat the rest of the grid uses, with the reason.
+## 4. Phase A: x0 at 600 and 650 K, iso and aniso: done
+`scripts/submit_screen.sh` (TX_X0 900: at 1 K/ps nothing crystallizes below 900 K, so the whole grid passes the guard;
+the 0.2 K/ps Tx of 571 K is from a rate 50× slower than the anneal heating and is not a guard), then
+`scripts/analyze_screen.sh` (`screen_T<Ta>*.txt`, `screen_aniso_T<Ta>*.txt`, `screen_verdict*.txt`). All 12 runs
+crystallized and halted, 0.44–2.5 ns into the hold. Grown crystals plateau at `xfracGST` ≈ 0.71 at 600 K, below the
+first halt levels (0.72/0.70) and far below the perfect crystal's 0.95. So `XSTOP` became 0.65 and t_inc/t50 use one
+end point, `--x-end 0.65` (commit 04997bc).
 
-## 5. Growth velocity vs Ta per composition (homogeneous): _pending_
-Phase B (`recryst/README.md`, "Temperature grid"): every composition over the Ta where nucleation happens, 3 replicas
-each, reusing the Phase A x0 runs; one row per run (composition, Ta, replica, barostat, nucleated, t_nuc,
-`v_growth`, `single_grain`, t50) and the figures: `v_growth` vs Ta per composition (replicas as points, median, n per
-point), its distribution per composition and Ta, and the fraction of runs that nucleated vs Ta.
+| Ta | barostat | verdict | t_nuc (ps) | t_inc (ps) | t50 (ps) | v_growth (m/s) | sdev_z |
+|---|---|---|---|---|---|---|---|
+| 600 | iso | USABLE, 3 of 3; n_base 160 / 260 | 94, 54, 80 | 63, 52, 59 | 270, 251, 288 | 4.0, 3.5, 3.8 | 16.8, 5.2, 20.3 |
+| 600 | aniso | USABLE, 3 of 3; n_base 164 / 260 | 62, 60, 72 | 66, 62, 63 | 278, 244, 273 | 3.2, 5.6, 4.1 | 3.7, 11.9, 7.6 |
+| 650 | iso | USABLE, 3 of 3; n_base 120 / 210 | 75, 61, 81 | 121, 125, 121 | 283, 283, 273 | 8.0, 9.1, 12.1 | 15.8, 8.8, 5.2 |
+| 650 | aniso | USABLE, 3 of 3; n_base 98 / 210 | 69, 91, 79 | 121, 120, 132 | 302, 285, 279 | 7.4, 10.0, 8.5 | 4.8, 1.9, 2.6 |
 
-To record: where each composition's v(Ta) peaks, or that it rises or falls across the whole homogeneous window; how C
-shifts and scales it; runs with `single_grain` = 0; any (composition, Ta) whose `n_base` exceeds half of
-`--nucleated-size` (glass aging). Nucleation rates (`rate_compare.py`) are by-products with ~58% error at 3 runs.
-
-## 6. Barostat check: _pending, only if triggered_
-`scripts/submit_aniso.sh` / `scripts/analyze_ramp_aniso.sh` for any crystallized set with `sdev_z` > 5. Record
-whether the anisotropic box removes the stress and shifts Tx or t50.
+(replicas r1, r2, r3.)
+- **v_growth about doubles from 600 to 650 K** (≈ 4 → ≈ 9 m/s), with iso and aniso inside each other's spread; t50
+  ≈ 250–300 ps at both Ta, so the faster growth at 650 K is offset by a longer incubation (t_inc ≈ 120 vs 60 ps).
+- **Barostat:** iso and aniso give the same kinetics, but every iso run ends with `sdev_z` 5–20 (stress the cubic box
+  cannot relax); aniso is lower (2–12) and fully relieved at 650 K. Decision (2026-11-13): aniso for everything after
+  (`params/run5_ep301.sh` BARO).
+- **Second grains:** every run shows a short-lived second cluster of `--nucleated-size` during the v_growth window
+  (`single_grain` 0 under the old all-or-nothing flag; median second cluster 9–90 atoms). Hence `single_grain` is now
+  the fraction of window frames without one.
+- n_base / N is 0.47–0.63: the glass's own ordered patches reach about half the nucleation threshold at Ta.
+- 500 K aniso was started and cancelled (2 partial runs, `runs/run5_ep301/anneal_x0_aniso_T500_r1-2`); 550 and 700 K
+  were not run.
 
 ## Provenance
 Branch `part3`. Criterion and scripts: commits 02b8bf1 (grid to 4.0 Å), f72fd2b (per-composition `--x-crystal`),
 aeade34 and 39d3592 (`rate_compare.py` and its checks), 9f2ddaa (`TAG`), 44ad074 and ba1d107 (`scripts/`). Model
 run5_ep301 (`models/provenance.md`); dt 2 fs; 12.4k–13.8k-atom 3×3×3 cells; glasses from Part 2 at 10 K/ps
-(`meltquench/runs/<cell>_q10_r<1-3>`).
+(`meltquench/runs/run5_ep301/<cell>_q10_r<1-3>`). Phase A: commits e77f3d0, 04997bc, 350ddc9.

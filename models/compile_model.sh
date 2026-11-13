@@ -9,7 +9,8 @@
 #SBATCH -t 01:00:00
 #SBATCH --job-name=cgst-compile
 # Compile the checkpoint of the current model (common/model.sh: MODEL_ID, CKPT) for pair_allegro on this node.
-# Only needed for a non-sm_80 GPU; the copy in models/ already serves A30 and A100.
+# Run once per node type for every new MODEL_ID (RUNBOOK.md, Part 0): AOT host code runs only on the CPU type it was
+# compiled on (common/defaults.sh).
 # Usage: sbatch -p <partition> compile_model.sh <output.nequip.pt2>   (from models/; output models/$MODEL_ID[.G|.N].nequip.pt2)
 #
 # nequip-compile must run from the training folder: it loads a sample frame through the checkpoint's relative

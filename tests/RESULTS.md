@@ -1,10 +1,13 @@
-# Part 1 test results
+# Part 1 test results: run5_ep301
+
+These are run5_ep301's results (tag `run5_ep301-final`). A new model writes its own `tests/RESULTS_<MODEL_ID>.md`
+(`RUNBOOK.md`, Part 1); the tests now take the model from `common/model.sh` and `common/defaults.sh`.
 
 Each test directory has a batch script, run from inside that directory with `sbatch`: `submit.sh`, except
 `scaling/submit_all.sh` (plain bash, submits the jobs itself), `env_probe/probe.sh`, and the CPU-only Python checks
 `dft_glass/check.py` (1k) and `mq_analysis/check.py`, run with `env/cgst-ana`. These are Part 1 tests; `mq_logic/`,
 `mq_analysis/` and `recryst_logic/` test the Part 2/3 inputs and analysis and are reported in those parts' READMEs.
-LAMMPS runs go through `common/run_lmp.sh` with `models/run5_ep301.nequip.pt2` and `lammps_debug.sif`. Exceptions:
+LAMMPS runs went through `common/run_lmp.sh` with `models/run5_ep301.nequip.pt2` and `lammps_debug.sif`. Exceptions:
 1f also runs `lammps_stable.sif` (via `SIF`), the compile check runs a recompiled model, and Python steps (1b
 `prepare`, `models/compile_model.sh`) use `apptainer exec` directly.
 
