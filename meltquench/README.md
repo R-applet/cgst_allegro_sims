@@ -99,6 +99,9 @@ replica mean ± sample std of:
 - `_cclusters.dat`: the fraction of C atoms in C–C clusters of each size.
 
 ## Results (production, 2026-11-10)
+Written up with figures in `report/`: `part2_results.md`, `part2_report.pdf` (LaTeX source alongside) and
+`part2_slides.pptx`, all rebuilt from `results/` and `runs/` by the scripts there.
+
 17 runs, all past the MSD gate with `hold_ps` = 100: 3 replicas at 10 K/ps for each composition, and one at 1 K/ps
 for x0 and x10. `python analysis/mq_summary.py --out meltquench/results meltquench/runs/*_q*_r*` (output in
 `meltquench/results/`). Mean ± sample std over the 3 replicas at 10 K/ps:
