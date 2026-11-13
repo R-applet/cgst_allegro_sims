@@ -2,7 +2,8 @@
 
 Per cell (x0, x10):
   log       log.smoke_<cell> ends with "Total wall time", contains no "ERROR" and no "Lost atoms"
-  dat       smoke_<cell>.dat: >= 2 data rows, every row has 13 finite columns, PE finite
+  dat       smoke_<cell>.dat: >= 2 data rows, every row as many finite columns as the header names (14 since
+            xfracGST was added to common/in.analysis), including xfracGST
   msdC      x0 (no C): msdC column is exactly 0; x10: msdC > 0 at the end
   rdf       rdf_<cell>.dat: exactly one block of 300 rows x 24 columns, all finite, total g(r) not all zero
   dump      smoke_<cell>.lammpstrj.gz readable, last frame has c_q4[1] and c_ncb columns
@@ -24,8 +25,11 @@ def check(cell):
         errs.append("log: run did not finish")
     if "ERROR" in log or "Lost atoms" in log:
         errs.append("log: ERROR or Lost atoms")
+    head = (D / f"smoke_{cell}.dat").read_text().split("\n", 1)[0].split()
     dat = np.loadtxt(D / f"smoke_{cell}.dat", skiprows=1, ndmin=2)
-    if dat.shape[0] < 2 or dat.shape[1] != 13 or not np.isfinite(dat).all():
+    if "xfracGST" not in head:
+        errs.append(f"dat: no xfracGST column in the header ({len(head)} columns)")
+    if dat.shape[0] < 2 or dat.shape[1] != len(head) or not np.isfinite(dat).all():
         errs.append(f"dat: shape {dat.shape} or non-finite values")
     elif cell == "x0" and np.any(dat[:, 11] != 0):
         errs.append("dat: msdC non-zero without C")

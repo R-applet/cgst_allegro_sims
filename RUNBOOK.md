@@ -96,10 +96,10 @@ Needs the melt-quench glasses of the same potential and `recryst/params/<MODEL_I
    is not clearly better than a neighbour, rerun with `--export=ALL,CALIB_ARGS="--choose RC THR NMIN"`.
    `calib_params.sh` is regenerated each time. **Pass:** a crystal/glass margin comparable to run5_ep301's 0.71, no
    edge-of-grid warning, and `calib_params.sh` covering every temperature you will anneal at.
-2. **Ramp (sets `TX_GUARD` and centres the grid).** **Open for nozbl_paw:** at 444 a 0.2 K/ps ramp to 900 K is ≈ 28 h on
-   2 A100s, past the 24 h limit, and `in.ramp` has no restart; decide 4 GPUs (if the 4-GPU benchmark scales), a
-   faster `HRATE`, a lower `TMAX`, or a ramp restart before submitting. `cd recryst && sbatch --array=0 submit_ramp.sh` (x0 r1 at
-   `HRATE` 0.2 K/ps to `TMAX`; on the A30s, since it exceeds 24 h on one A100). `TMAX` must stay below the
+2. **Ramp (sets `TX_GUARD` and centres the grid).**
+   `cd recryst && sbatch -A perc -p a100-40gb --gpus-per-node=2 --ntasks-per-node=2 --array=0 submit_ramp.sh` (x0 r1 at
+   `HRATE` 0.2 K/ps to `TMAX`; ≈ 28 h at 444, so it chains two jobs from `ramp.<T>K.restart`, written every 50 K).
+   Needs the `ramp_resume` case of `tests/recryst_logic` to pass first. `TMAX` must stay below the
    superheated melting point from the melt-quench. Then `bash scripts/analyze_ramps.sh`. **Read:** whether and where x0
    crystallizes (Tx_xfrac). Set `TX_GUARD` to a Tx measured at a heating rate comparable to the anneals' 10 K/ps
    heat, or to `TMAX` if none exists (run5_ep301: 900). The slow-ramp Tx is not the guard. If nothing crystallizes by

@@ -90,8 +90,11 @@ latter through `recryst/params/<MODEL_ID>.sh`, so no criterion or per-T value is
   and compositions where needed. The ramp locates where crystallization is fast, to centre the anneal grid; it is not
   the Ta guard (`TX_GUARD`, below). MD rates are about 10¹⁰ times faster than DSC, so only the **trend of Tx with C
   content** compares with experiment.
-- 0.2 K/ps to 900 K takes 3,010 ps: about 18–22 h on 2 A30s, but 23–25 h on one A100-40GB, past the 24 h limit, and
-  `in.ramp` has no restart. Run it on the A30s.
+- 0.2 K/ps to 900 K takes 3,010 ps (≈ 28 h at 444 on 2 A100s), longer than one job, so `in.ramp` writes
+  `ramp.<T>K.restart` at every 50 K boundary and `submit_ramp.sh` chains jobs like `submit_anneal.sh` (resume from the
+  newest restart, `MAXCHAIN` default 3, stop on no progress). A killed job loses at most one segment (250 ps at
+  0.2 K/ps). `ramp.dat` and `stress.dat` are appended across jobs; each resumed job dumps its own
+  `traj.<first step>.lammpstrj.gz`.
 - `tmax` must stay below the model's superheated melting point (run5_ep301: about 1090 K at 2 K/ps). A complete ramp
   writes `ramp_done.txt` last.
 - The trajectory is dumped every 5 K; `stress.dat` records the pressure tensor every 1 ps (see Barostat).
@@ -250,7 +253,7 @@ The steps, with their checks, are wrapped in `scripts/` (`scripts/README.md`); t
 cd recryst
 (cd calib && sbatch --array=0-53 submit.sh)                     # references -> calib/<MODEL_ID>/
 (cd calib && sbatch submit_calibrate.sh)                        # calibrate.out, calib_params.sh
-sbatch --array=0 submit_ramp.sh                                 # x0 r1 at HRATE to TMAX (A30s: no restart)
+sbatch -A perc -p a100-40gb --gpus-per-node=2 --ntasks-per-node=2 --array=0 submit_ramp.sh   # x0 r1, chains itself
 bash scripts/analyze_ramps.sh
 CELLS=x0 bash scripts/submit_grid.sh --dry-run                  # Phase A; then without --dry-run
 bash scripts/analyze_grid.sh summary; bash scripts/analyze_grid.sh verdict
@@ -321,8 +324,7 @@ job, about 3.0 per 1-A100 job. nozbl_paw (`tests/scaling/submit_size.sh`, x10): 
 as run5_ep301); at 444 (32.8k atoms) 1.34 ns/day on 1 A100 (34.3 of 41 GB GPU memory) and 2.59 on 2 (1.93×, 23.3 GB
 each), hence `NGPU` = 2 per 444 run.
 - Calibration: 54 jobs × 20 ps (references at the melt-quench `SIZE`), minutes each.
-- Ramp: 0.2 K/ps to 900 K is 3,010 ps: ≈ 22 h on 2 A30s at 333; **at 444 ≈ 28 h on 2 A100s, past the 24 h limit, and
-  `in.ramp` has no restart** — needs 4 GPUs, a shorter ramp or a restart before it can run (open, RUNBOOK recryst step 2).
+- Ramp: 0.2 K/ps to 900 K is 3,010 ps: ≈ 22 h on 2 A30s at 333, ≈ 28 h at 444 on 2 A100s, i.e. two chained jobs.
 - Anneals (nozbl_paw, 444, `MAX_NS` 2, 2 A100s): a hold that never halts is ≈ 19 h, one job. The full grid (5
   compositions × 5 Ta × 3 replicas) is 75 runs ≈ 2,900 GPU-hours if nothing halts, about 12 days on 10 perc GPUs (5
   runs at a time); `fix halt` cuts this where runs crystallize, and Phase A decides where Phase B is worth running.

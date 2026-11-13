@@ -1,19 +1,27 @@
 # Crystallization on heating (DSC-like): NPT 0 bar ramp (isotropic unless baro aniso) of an amorphous sample from
-# 300 K to tmax (default 900 K).
-#   start: meltquench/runs/<MODEL_ID>/<cell>_q10_r<rep>/amorphous_300K.data, with fresh velocities at 300 K
-#   300 K, 10 ps -> ramp 300 -> tmax at hrate K/ps ((tmax-300)/hrate ps) in 50 K segments, snap_<T>K.data at each boundary
+# 300 K to tmax (default 900 K), restartable at every 50 K boundary.
+#   fresh start: meltquench/runs/<MODEL_ID>/<cell>_q<QRATE>_r<rep>/amorphous_300K.data, fresh velocities at 300 K
+#                -> 300 K, 10 ps -> ramp 300 -> tmax at hrate K/ps ((tmax-300)/hrate ps) in 50 K segments
+#   resume:      -var resume 1 -var rfile ramp.<T>K.restart continues with the segment that starts at T
+#                (submit_ramp.sh passes the newest one); nothing before T is rerun
+# At each boundary T (300 K after the first 10 ps, then every 50 K): snap_<T>K.data and ramp.<T>K.restart. A job killed
+# inside a segment loses at most that segment (0.2 K/ps: 250 ps; ~2.3 h at 444 on 2 A100s).
 # Tx = T where the Ge/Sb/Te crystalline fraction (xfracGST) has made half its rise (analysis/recryst_summary.py),
 # cross-checked against the density change and the enthalpy release. tmax must stay below the model's superheated
 # melting (run5_ep301: ~1090 K at 2 K/ps, so 900 K; RUNBOOK.md meltquench step 1). Ends with ramp_done.txt.
 #
-# Variables: cell, rep, seed, root, dt, model (as in meltquench; model is required); hrate (K/ps, 1 production;
-#   0.2 rate check);
-#   src (required) amorphous data file (submit_ramp.sh passes the glass above)
+# Variables: cell, rep, seed, root, dt, model (as in meltquench; model is required); hrate (K/ps);
+#   src (required on a fresh start) amorphous data file (submit_ramp.sh passes the glass above)
+#   resume (0 = fresh start, default | 1 = continue from rfile; numeric because LAMMPS `if` cannot compare filenames),
+#   rfile, tstart (the boundary T of rfile, K; submit_ramp.sh passes it)
+#   tstop (optional, K, a boundary <= tmax: stop there without ramp_done.txt; tests, or to split a ramp by hand)
 #   tscale (optional, tests only), q_rc/q_thr/q_nmin (optional, crystallinity criterion; see recryst/README.md),
-#   baro (optional, iso default | aniso: barostat coupling, see recryst/README.md, "Barostat")
+#   baro (optional, iso default | aniso: barostat coupling; keep it the same across the jobs of one ramp)
 #   tmax (optional, K, a multiple of 50 above 300; default 900; submit_ramp.sh passes TMAX)
-# Outputs: ramp.dat (every 1 ps, columns in common/in.analysis), stress.dat (pressure tensor, every 1 ps), log.ramp,
-#   traj.lammpstrj.gz (every 5 K), snap_<T>K.data, ramp_done.txt (written last; marks a complete run)
+# Outputs: ramp.dat (every 1 ps, columns in common/in.analysis; appended across resumes, MSD columns restart from 0 at
+#   each resume), stress.dat (pressure tensor, every 1 ps, appended), log.ramp[.<job>], trajectory every 5 K
+#   (traj.lammpstrj.gz on a fresh start, traj.<first step>.lammpstrj.gz for each resumed job), snap_<T>K.data,
+#   ramp.<T>K.restart, ramp_done.txt (written last; marks a complete run)
 
 units           metal
 atom_style      atomic
@@ -22,29 +30,57 @@ boundary        p p p
 variable        tscale    index 1
 variable        baro      index iso
 variable        tmax      index 900
+variable        tstop     index ${tmax}
+variable        resume    index 0
+variable        rfile     index none
+variable        tstart    index 300
 variable        nseg      equal round((v_tmax-300)/50)
 if "$(v_tmax%50) != 0 || ${tmax} <= 300" then "print 'ERROR: tmax must be a multiple of 50 above 300 K'" "quit 1"
+if "$(v_tstop%50) != 0 || ${tstop} <= 300 || ${tstop} > ${tmax}" then &
+   "print 'ERROR: tstop must be a multiple of 50 in (300, tmax]'" "quit 1"
 variable        out       index ramp
 variable        thermo_ps index 1.0
 variable        Tdamp     equal 100*${dt}
 variable        Pdamp     equal 1000*${dt}
 variable        nps       equal round(1.0/${dt})
+variable        nstop     equal round((v_tstop-300)/50)          # last segment this job runs
 
+if "${resume} == 1" then "jump SELF resume"
+
+# ---------- fresh start: 300 K, 10 ps ----------
 read_data       ${src}
 include         ${root}/common/in.potential
 include         ${root}/common/in.analysis
-# deviatoric-stress check for the isotropic barostat (recryst_summary.py sdev_*; criterion in recryst/README.md)
 fix             stress all print ${nthermo} "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)" &
                 ${dat_mode} stress.dat screen no title "step time_ps pxx pyy pzz pxy pxz pyz"
-
 dump            traj all custom $(round(5.0/v_hrate*v_nps)) traj.lammpstrj.gz id type x y z c_q4[1] c_ncb
 dump_modify     traj sort id element Ge Sb Te C
-
 velocity        all create 300.0 ${seed} mom yes rot yes dist gaussian
 fix             npt all npt temp 300.0 300.0 ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
 run             $(round(10*v_tscale*v_nps))
+write_restart   ramp.300K.restart
+variable        k0 equal 1
+jump            SELF segments
 
-variable        Ta loop ${nseg}
+# ---------- resume at the boundary tstart ----------
+label           resume
+if "${tstart} == ${tstop}" then "jump SELF finish"         # killed after the last restart: nothing left to run
+if "$(v_tstart%50) != 0 || ${tstart} < 300 || ${tstart} >= ${tstop}" then &
+   "print 'ERROR: tstart must be a 50 K boundary below tstop (the T of rfile)'" "quit 1"
+read_restart    ${rfile}
+include         ${root}/common/in.potential
+variable        dat_mode index append                     # keep the ramp.dat rows of earlier jobs
+include         ${root}/common/in.analysis
+fix             stress all print ${nthermo} "$(step) $(time) $(pxx) $(pyy) $(pzz) $(pxy) $(pxz) $(pyz)" &
+                append stress.dat screen no
+dump            traj all custom $(round(5.0/v_hrate*v_nps)) traj.$(step).lammpstrj.gz id type x y z c_q4[1] c_ncb
+dump_modify     traj sort id element Ge Sb Te C
+variable        k0 equal round((${tstart}-300)/50)+1
+fix             npt all npt temp ${tstart} ${tstart} ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}   # replaced per segment below
+
+# ---------- segments k0 .. nstop: T1 = 250 + 50 k -> T2 = T1 + 50 ----------
+label           segments
+variable        Ta loop ${k0} ${nstop}
 label           ramp
 variable        T1 equal 250+50*${Ta}
 variable        T2 equal ${T1}+50
@@ -52,6 +88,9 @@ unfix           npt
 fix             npt all npt temp ${T1} ${T2} ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
 run             $(round(50.0/v_hrate*v_tscale*v_nps))
 write_data      snap_${T2}K.data
+write_restart   ramp.${T2}K.restart
 next            Ta
 jump            SELF ramp
+label           finish
+if "${tstop} < ${tmax}" then "print 'stopped at tstop ${tstop} K (no ramp_done.txt)'" "quit 0"
 print           "tmax ${tmax} hrate ${hrate}" file ramp_done.txt

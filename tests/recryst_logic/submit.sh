@@ -17,6 +17,8 @@
 #   halt_x0:           anneal with xstop 0.0, so fix halt stops the hold at its first check; run with the
 #                      anisotropic barostat (baro aniso) to exercise that path
 #   continuation:      submit_anneal.sh submitted with its continuation's resource flags, sbatch --test-only
+#   ramp_resume:       in.ramp stopped at 600 K (tstop), resumed to 900 K from ramp.600K.restart, then resumed from
+#                      ramp.900K.restart after removing ramp_done.txt (must only finish)
 #   calib:             recryst/calib/in.calib on two C-containing references, the x10 glass from tests/mq_logic
 #                      (300 K) and the minimized 1x1x1 x5 rocksalt (structures/111, 600 K), then calibrate.py on them;
 #                      checks xfracGST (Ge/Sb/Te only) against a recount from the dumps
@@ -28,12 +30,22 @@ source $ROOT/common/defaults.sh             # MODEL (per node type); this test s
 SRC=$ROOT/tests/mq_logic/x0/amorphous_300K.data
 L="$ROOT/common/run_lmp.sh 1"
 common="-var root $ROOT -var cell x0 -var rep 1 -var src $SRC -var dt 0.001 -var model $MODEL"
-rm -rf ramp_x0_h10_r1 anneal_x0_T600_r1 halt_x0 calib && mkdir ramp_x0_h10_r1 anneal_x0_T600_r1 halt_x0 calib
+rm -rf ramp_x0_h10_r1 ramp_resume anneal_x0_T600_r1 halt_x0 calib
+mkdir ramp_x0_h10_r1 ramp_resume anneal_x0_T600_r1 halt_x0 calib
 run() {   # run() <dir> <status file> <lammps args...>: run LAMMPS in <dir>, record its exit status, never abort
     local d=$1 f=$2; shift 2
     (cd $d && $L "$@") && echo 0 > $d/$f || echo $? > $d/$f
 }
 run ramp_x0_h10_r1 exit_status.txt -in $ROOT/recryst/in.ramp -log log.ramp $common -var seed 11 -var hrate 10
+# ramp restart: stop at the 600 K boundary (tstop), resume from ramp.600K.restart to 900 K, then resume once more from
+# ramp.900K.restart with ramp_done.txt removed (a job killed after the last restart: it must only finish)
+run ramp_resume exit_status.1.txt -in $ROOT/recryst/in.ramp -log log.ramp $common -var seed 11 -var hrate 10 -var tstop 600
+ls ramp_resume/ramp_done.txt > /dev/null 2>&1 && echo 1 > ramp_resume/done_after_1.txt || echo 0 > ramp_resume/done_after_1.txt
+run ramp_resume exit_status.2.txt -in $ROOT/recryst/in.ramp -log log.ramp.2 $common -var seed 11 -var hrate 10 \
+    -var resume 1 -var rfile ramp.600K.restart -var tstart 600
+rm -f ramp_resume/ramp_done.txt
+run ramp_resume exit_status.3.txt -in $ROOT/recryst/in.ramp -log log.ramp.3 $common -var seed 11 -var hrate 10 \
+    -var resume 1 -var rfile ramp.900K.restart -var tstart 900
 run anneal_x0_T600_r1 exit_status.1.txt -in $ROOT/recryst/in.anneal -log log.anneal.1 $common -var seed 12 \
     -var Ta 600 -var max_ns 0.1 -var tscale 0.1
 if [ -e anneal_x0_T600_r1/anneal_done.txt ]; then

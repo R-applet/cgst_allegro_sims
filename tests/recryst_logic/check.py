@@ -5,6 +5,10 @@ at tscale 0.1 and dt 1 fs: the anneal hold starts at step 4000 (10 ps at 300 K +
                      10 ps, then +10 K/ps): mean deviation < 15 K, scatter < 50 K (a single instantaneous T of 461
                      atoms fluctuates by ~35 K, so one sample is not a test); stress.dat has a row for every ramp.dat
                      step
+  ramp_resume        stopped at tstop 600 K (no ramp_done.txt), resumed from ramp.600K.restart to 900 K, resumed again
+                     from ramp.900K.restart without ramp_done.txt: all exit 0, ramp_done.txt at the end; restarts at
+                     300-900 K every 50 K; ramp.dat/stress.dat every 1000 steps 0-70000 with no gap, T on schedule; the
+                     resumed job's own traj.40000.lammpstrj.gz; recryst_summary reads it as complete
   anneal_x0_T600_r1  both jobs exit 0; anneal_done.txt at step 24000; anneal.dat rows every 1000 steps from 0 to
                      24000 with no gap across the resume; stress.dat rows every 1000 steps from 4000 to 24000;
                      restart files at 5000, 10000, 15000, 20000; trajectory frames every 2000 steps (2 ps) with
@@ -102,6 +106,31 @@ def run_checks():
     s = load_dat(r / "stress.dat")
     check("ramp: stress.dat has a row for every ramp.dat step", np.array_equal(s["step"], d["step"]),
           f"{len(s['step'])} vs {len(d['step'])} rows")
+
+    rr = HERE / "ramp_resume"                      # 10 ps at 300 K + 12 segments of 5 ps; 1 ps = 1000 steps
+    st = tuple(status(rr / f"exit_status.{k}.txt") for k in (1, 2, 3))
+    d1 = (rr / "done_after_1.txt").read_text().strip() if (rr / "done_after_1.txt").exists() else None
+    check("ramp restart: stop at tstop 600 K, resume to 900 K, resume after the last restart: all exit 0, no "
+          "ramp_done.txt after the first job, one at the end", st == ("0", "0", "0") and d1 == "0"
+          and (rr / "ramp_done.txt").exists(), f"exit {st}, done after job 1: {d1}")
+    rst = sorted(int(f.name[5:-10]) for f in rr.glob("ramp.*K.restart"))
+    snaps = sorted(int(f.name[5:-6]) for f in rr.glob("snap_*K.data"))
+    check("ramp restart: restart files at every boundary 300-900 K, snap_350K ... snap_900K",
+          rst == list(range(300, 901, 50)) and snaps == list(range(350, 901, 50)), f"restarts {rst}; {len(snaps)} snaps")
+    d = load_dat(rr / "ramp.dat")
+    s = load_dat(rr / "stress.dat")
+    dev = d["T_K"] - np.where(d["time_ps"] < 10, 300.0, 300.0 + 10.0 * (d["time_ps"] - 10))
+    check("ramp restart: ramp.dat every 1000 steps 0-70000 across the resume (no gap), stress.dat on the same steps, "
+          "T on the schedule", np.array_equal(d["step"], np.arange(0, 70001, 1000)) and np.array_equal(s["step"], d["step"])
+          and abs(dev.mean()) < 15 and dev.std() < 50,
+          f"{len(d['step'])} ramp rows, {len(s['step'])} stress rows, T mean dev {dev.mean():+.1f} K")
+    tr = sorted(f.name for f in rr.glob("traj*.lammpstrj.gz"))
+    check("ramp restart: the resumed job dumps its own trajectory file (traj.40000.lammpstrj.gz)",
+          "traj.lammpstrj.gz" in tr and "traj.40000.lammpstrj.gz" in tr, " ".join(tr))
+    out = subprocess.run([sys.executable, str(HERE.parents[1] / "analysis/recryst_summary.py"), str(rr.parent / "ramp_resume")],
+                         capture_output=True, text=True).stdout
+    check("ramp restart: recryst_summary reads the resumed ramp as complete",
+          any(l.startswith("ramp_resume ") for l in out.splitlines()), out.strip().splitlines()[-1][:100] if out.strip() else "")
 
     a = HERE / "anneal_x0_T600_r1"
     st = (status(a / "exit_status.1.txt"), status(a / "exit_status.2.txt"))
