@@ -1,12 +1,12 @@
-best: q_rc 3.7  q_thr 0.7  q_nmin 3  (crystal min 0.845, amorphous max 0.028)
-  crystal   crys_x5_600K.lammpstrj.gz                xfracGST 0.845
-  amorphous amor_x10_300K.lammpstrj.gz               xfracGST 0.028
-current default (3.6, 0.5, 4): crystal min 0.858, amorphous max 0.089
-suggested XSTOP at 600 K: 0.72  (0.85 x the lowest crystal-reference xfracGST, 0.845, x5)
-  --x-crystal at 600 K for recryst_summary.py, per composition (one call per composition): x5 0.845; no crystal reference for x10 (x_c from the run's plateau, else XSTOP)
+best: q_rc 3.8  q_thr 0.7  q_nmin 3  (crystal min 0.801, amorphous max 0.032)
+  crystal   crys_x5_600K.lammpstrj.gz                xfracGST 0.801
+  amorphous amor_x10_300K.lammpstrj.gz               xfracGST 0.032
+current default (3.6, 0.5, 4): crystal min 0.808, amorphous max 0.093
+suggested XSTOP at 600 K: 0.68  (0.85 x the lowest crystal-reference xfracGST, 0.801, x5)
+  --x-crystal at 600 K for recryst_summary.py, per composition (one call per composition): x5 0.801; no crystal reference for x10 (x_c from the run's plateau, else XSTOP)
 WARNING: the best criterion is at the edge of the scanned grid (q_nmin 3); the optimum may lie outside it, so extend RC/THR/NMIN in calibrate.py and rerun
-largest crystalline Ge/Sb/Te cluster in the amorphous references, criterion (3.7, 0.7, 3):
-  suggested --nucleated-size at 300 K: 20  (2 x the largest glass cluster, 9; x10 9)
+largest crystalline Ge/Sb/Te cluster in the amorphous references, criterion (3.8, 0.7, 3):
+  suggested --nucleated-size at 300 K: 30  (2 x the largest glass cluster, 11; x10 11)
 largest crystalline Ge/Sb/Te cluster in the amorphous references, criterion (3.6, 0.5, 4):
-  suggested --nucleated-size at 300 K: 30  (2 x the largest glass cluster, 14; x10 14)
+  suggested --nucleated-size at 300 K: 50  (2 x the largest glass cluster, 24; x10 24)
 wrote calib_scan.csv, calib.png

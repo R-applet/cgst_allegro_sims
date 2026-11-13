@@ -23,7 +23,7 @@ less dense.
 | `glass_relax` (12358735, N) | DFT melt-quench glasses (5.86 g/cc) relaxed at 300 K, 0 bar: 6.222 g/cc (+6.5%); DFT amorphous 6.234 (+0.8%), cubic 6.238 (+0.3%) | 6.273 (+7.3%), 6.292, 6.272 |
 | 1k `dft_glass` | not run yet: needs this potential's own 10 K/ps glass (melt-quench) | CONSISTENT |
 | `mq_logic` (12358737) | melt-quench input logic incl. `tmelt`, MSD gate and the gate failure: PASS (33 checks) | PASS |
-| `recryst_logic` (12358738) | ramp, anneal + resume, halt, calibration, analysis: PASS (41 checks). Rerun with the new ramp-restart case: job 12359106 | PASS |
+| `recryst_logic` (12359106) | ramp, **ramp restart** (stop at 600 K, resume to 900 K, resume after the last restart: no gap in `ramp.dat`/`stress.dat`, restarts every 50 K, own trajectory file, read as complete), anneal + resume, halt, calibration, analysis: PASS (46 checks; the job's FAIL was the new check misreading `ramp.<T>K.restart` names, fixed and rechecked on its outputs) | PASS |
 | `mq_analysis` (CPU) | analysis code known answers incl. the closest-approach check: PASS | PASS |
 | `scaling` size test (12358493–97) | 333 on 1 A100 3.12 ns/day (= run5_ep301); 444 on 1 / 2 / 4 A100s 1.34 / 2.59 / 4.98 ns/day (scaling 96% / 93%), peak 34.3 / 23.3 / 11.9 GB per GPU → `NGPU` = 2 at 444 (`scaling_size.txt`) | 333: 3.13 ns/day |
 

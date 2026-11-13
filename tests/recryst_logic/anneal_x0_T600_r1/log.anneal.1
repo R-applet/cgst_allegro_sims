@@ -19,7 +19,7 @@ package kokkos newton on neigh half
 # Variables: cell, rep, seed, root, dt, model (as in meltquench; model is required); Ta (K); max_ns (hold length,
 #   5 in production);
 #   xstop (default 0.8; set it below the crystal-reference xfracGST at Ta, recryst/README.md);
-#   src (optional amorphous data file, default from meltquench/runs/<cell>_q10_r<rep>);
+#   src (required: amorphous data file, meltquench/runs/<MODEL_ID>/<cell>_q10_r<glass>/amorphous_300K.data);
 #   resume (0 = fresh start, default | 1 = continue from rfile; a numeric flag because LAMMPS `if` cannot compare
 #   filenames); rfile; tscale (tests only); q_rc/q_thr/q_nmin (optional, crystallinity criterion);
 #   baro (optional, iso default | aniso; keep it the same across the jobs of one chain; recryst/README.md,
@@ -40,10 +40,6 @@ variable        baro      index iso
 variable        resume    index 0
 variable        rfile     index none
 variable        xstop     index 0.8
-variable        src       index ${root}/meltquench/runs/${cell}_q10_r${rep}/amorphous_300K.data
-variable        src       index /scratch/gilbreth/rapplet/cgst_allegro_sims/meltquench/runs/${cell}_q10_r${rep}/amorphous_300K.data
-variable        src       index /scratch/gilbreth/rapplet/cgst_allegro_sims/meltquench/runs/x0_q10_r${rep}/amorphous_300K.data
-variable        src       index /scratch/gilbreth/rapplet/cgst_allegro_sims/meltquench/runs/x0_q10_r1/amorphous_300K.data
 variable        out       index anneal
 variable        thermo_ps index 1.0
 variable        Tdamp     equal 100*${dt}
@@ -72,18 +68,18 @@ if "${resume} == 1" then "jump SELF resume"
 read_data       ${src}
 read_data       /scratch/gilbreth/rapplet/cgst_allegro_sims/tests/mq_logic/x0/amorphous_300K.data
 Reading data file ...
-  orthogonal box = (0.039139769 0.039139769 0.039139769) to (24.08086 24.08086 24.08086)
+  orthogonal box = (0.010099456 0.010099456 0.010099456) to (24.109901 24.109901 24.109901)
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   461 atoms
   reading velocities ...
   461 velocities
-  read_data CPU = 0.049 seconds
+  read_data CPU = 0.046 seconds
 include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -91,7 +87,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.N.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -236,35 +232,35 @@ WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
 Per MPI rank memory allocation (min/avg/max) = 8.205 | 8.205 | 8.205 Mbytes
    Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
-         0   0              300           -397.56647      13896.218      30.143641      6.2872852     -0.093851666   -0.062637627    0              0              0              0              0.10629067     0.10629067   
-      1000   1              293.94495     -1194.4015      13986.983      30.340527      6.2464856     -0.095734281   -0.080439797    0.22880886     0.17104462     0.17753095     0              0.088937093    0.088937093  
-Loop time of 4.03419 on 1 procs for 1000 steps with 461 atoms
+         0   0              300            1361.9369      13997.174      30.362634      6.2419375     -0.098772351   -0.034268541    0              0              0              0              0.093275488    0.093275488  
+      1000   1              337.74815     -1959.9805      14114.59       30.617331      6.1900125     -0.098895525   -0.092787757    0.22972915     0.2539607      0.24268298     0              0.11279826     0.11279826   
+Loop time of 2.3726 on 1 procs for 1000 steps with 461 atoms
 
-Performance: 21.417 ns/day, 1.121 hours/ns, 247.881 timesteps/s, 114.273 katom-step/s
-99.1% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 36.416 ns/day, 0.659 hours/ns, 421.479 timesteps/s, 194.302 katom-step/s
+99.2% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 3.6999     | 3.6999     | 3.6999     |   0.0 | 91.71
-Neigh   | 0.0071819  | 0.0071819  | 0.0071819  |   0.0 |  0.18
-Comm    | 0.077601   | 0.077601   | 0.077601   |   0.0 |  1.92
-Output  | 0.0021258  | 0.0021258  | 0.0021258  |   0.0 |  0.05
-Modify  | 0.17888    | 0.17888    | 0.17888    |   0.0 |  4.43
-Other   |            | 0.0685     |            |       |  1.70
+Pair    | 2.1213     | 2.1213     | 2.1213     |   0.0 | 89.41
+Neigh   | 0.0062422  | 0.0062422  | 0.0062422  |   0.0 |  0.26
+Comm    | 0.057798   | 0.057798   | 0.057798   |   0.0 |  2.44
+Output  | 0.0011396  | 0.0011396  | 0.0011396  |   0.0 |  0.05
+Modify  | 0.13474    | 0.13474    | 0.13474    |   0.0 |  5.68
+Other   |            | 0.05139    |            |       |  2.17
 
 Nlocal:            461 ave         461 max         461 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1486 ave        1486 max        1486 min
+Nghost:           1485 ave        1485 max        1485 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        22248 ave       22248 max       22248 min
+FullNghs:        21860 ave       21860 max       21860 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 22248
-Ave neighs/atom = 48.260304
-Neighbor list builds = 11
+Total # of neighbors = 21860
+Ave neighs/atom = 47.418655
+Neighbor list builds = 12
 Dangerous builds = 0
 unfix           npt
 fix             npt all npt temp 300.0 ${Ta} ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
@@ -278,37 +274,37 @@ WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
 Per MPI rank memory allocation (min/avg/max) = 8.13 | 8.13 | 8.13 Mbytes
    Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
-      1000   1              293.94495     -1194.4015      13986.983      30.340527      6.2464856     -0.095734281   -0.080439797    0.22880886     0.17104462     0.17753095     0              0.088937093    0.088937093  
-      2000   2              387.90722      508.57204      13986.876      30.340296      6.2465332     -0.079561287   -0.019898319    0.42665189     0.29012103     0.31639224     0              0.10629067     0.10629067   
-      3000   3              493.96348      1786.1334      14076.289      30.534249      6.2068554     -0.06158199     0.036169393    0.62663574     0.53803206     0.46242453     0              0.10629067     0.10629067   
-      4000   4              588.94582      1359.887       14060.861      30.500782      6.2136657     -0.04619766     0.055652722    1.1005653      0.91244612     0.94860572     0              0.067245119    0.067245119  
-Loop time of 12.01 on 1 procs for 3000 steps with 461 atoms
+      1000   1              337.74815     -1959.9805      14114.59       30.617331      6.1900125     -0.098895525   -0.092787757    0.22972915     0.2539607      0.24268298     0              0.11279826     0.11279826   
+      2000   2              393.15166      818.86612      14027.028      30.427392      6.228653      -0.084817344   -0.01855742     0.26826752     0.31529068     0.26314571     0              0.093275488    0.093275488  
+      3000   3              492.57028     -2319.3779      14233.74       30.875793      6.1381959     -0.069422403   -0.0505879      0.4319887      0.45388127     0.41181973     0              0.093275488    0.093275488  
+      4000   4              603.43786     -173.10017      14261.426      30.935849      6.1262798     -0.050692268    0.02379667     0.54456654     0.44078815     0.47144233     0              0.069414317    0.069414317  
+Loop time of 7.04931 on 1 procs for 3000 steps with 461 atoms
 
-Performance: 21.582 ns/day, 1.112 hours/ns, 249.791 timesteps/s, 115.154 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 36.770 ns/day, 0.653 hours/ns, 425.574 timesteps/s, 196.189 katom-step/s
+99.2% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 11.002     | 11.002     | 11.002     |   0.0 | 91.60
-Neigh   | 0.029432   | 0.029432   | 0.029432   |   0.0 |  0.25
-Comm    | 0.23829    | 0.23829    | 0.23829    |   0.0 |  1.98
-Output  | 0.0069849  | 0.0069849  | 0.0069849  |   0.0 |  0.06
-Modify  | 0.5261     | 0.5261     | 0.5261     |   0.0 |  4.38
-Other   |            | 0.2076     |            |       |  1.73
+Pair    | 6.2942     | 6.2942     | 6.2942     |   0.0 | 89.29
+Neigh   | 0.022724   | 0.022724   | 0.022724   |   0.0 |  0.32
+Comm    | 0.17501    | 0.17501    | 0.17501    |   0.0 |  2.48
+Output  | 0.0046948  | 0.0046948  | 0.0046948  |   0.0 |  0.07
+Modify  | 0.39819    | 0.39819    | 0.39819    |   0.0 |  5.65
+Other   |            | 0.1545     |            |       |  2.19
 
 Nlocal:            461 ave         461 max         461 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1501 ave        1501 max        1501 min
+Nghost:           1482 ave        1482 max        1482 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        21844 ave       21844 max       21844 min
+FullNghs:        21526 ave       21526 max       21526 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 21844
-Ave neighs/atom = 47.383948
-Neighbor list builds = 46
+Total # of neighbors = 21526
+Ave neighs/atom = 46.694143
+Neighbor list builds = 45
 Dangerous builds = 0
 unfix           npt
 # hold start and the criterion of the dumped c_ncb, read by analysis/recryst_summary.py
@@ -340,47 +336,47 @@ WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
 Per MPI rank memory allocation (min/avg/max) = 8.13 | 8.13 | 8.13 Mbytes
    Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
-      4000   4              588.94582      1359.887       14060.861      30.500782      6.2136657     -0.04619766     0.055652722    1.1005653      0.91244612     0.94860572     0              0.067245119    0.067245119  
-      5000   5              595.0888      -3742.1485      14285.854      30.988837      6.1158044     -0.036529865   -0.032155013    1.8704691      1.536258       1.3944155      0              0.10629067     0.10629067   
-      6000   6              593.08296      632.48483      14089.024      30.561873      6.2012451     -0.038768639    0.049791843    2.3527193      1.6983331      1.5944578      0              0.14533623     0.14533623   
-      7000   7              570.3869       1776.672       14190.729      30.782492      6.1568005     -0.040277906    0.067425514    2.6397685      2.2422236      1.8627387      0              0.080260304    0.080260304  
-      8000   8              598.15507     -3784.2062      14317.56       31.057615      6.1022609     -0.036743128   -0.032948705    2.7919339      2.4923837      2.0058272      0              0.088937093    0.088937093  
-      9000   9              574.74063      626.53267      14192.888      30.787176      6.1558639     -0.044483469    0.04168579     3.1020251      3.0300054      2.4869333      0              0.10412148     0.10412148   
-     10000   10             586.31477      790.56855      14101.696      30.589361      6.1956725     -0.048008685    0.042707884    2.9890299      3.0602944      2.4538789      0              0.11496746     0.11496746   
-     11000   11             619.00414     -503.56275      14218.903      30.843607      6.1446013     -0.043099309    0.027045574    3.2251908      3.6335781      2.7366644      0              0.10195228     0.10195228   
-     12000   12             628.73982     -126.89628      14229.226      30.866001      6.1401433     -0.039955322    0.038694723    3.8439554      4.1808574      3.152842       0              0.093275488    0.093275488  
-     13000   13             624.89252     -544.7633       14183.111      30.765967      6.1601076     -0.040857599    0.029280009    4.5285972      4.4190726      3.5050056      0              0.093275488    0.093275488  
-     14000   14             585.0305      -808.3766       14229.98       30.867635      6.1398182     -0.037846517    0.02203634     4.717294       4.8733514      3.7323971      0              0.093275488    0.093275488  
-Loop time of 40.2047 on 1 procs for 10000 steps with 461 atoms
+      4000   4              603.43786     -173.10017      14261.426      30.935849      6.1262798     -0.050692268    0.02379667     0.54456654     0.44078815     0.47144233     0              0.069414317    0.069414317  
+      5000   5              580.72657      1710.9892      14244.792      30.899766      6.1334337     -0.044778728    0.06312158     0.77927944     0.64144882     0.63755376     0              0.10195228     0.10195228   
+      6000   6              616.9827      -738.71621      14231.984      30.871983      6.1389535     -0.042925668    0.022418452    1.347803       1.0017199      0.8132815      0              0.04989154     0.04989154   
+      7000   7              606.11392     -1026.1209      14213.874      30.832698      6.1467752     -0.046326622    0.012102869    1.5361871      1.0671973      0.91267496     0              0.075921909    0.075921909  
+      8000   8              604.54281      44.426561      14274.757      30.964767      6.1205585     -0.039034403    0.039797999    1.7702778      1.4674109      1.0801841      0              0.075921909    0.075921909  
+      9000   9              584.82298     -2693.0034      14288.459      30.994488      6.1146894     -0.042818613   -0.019485081    1.8991408      1.8278914      1.4165098      0              0.078091106    0.078091106  
+     10000   10             613.63254      572.9314       14194.18       30.789978      6.1553037     -0.041804359    0.048352177    2.152701       1.7902931      1.4459577      0              0.080260304    0.080260304  
+     11000   11             651.7033       410.88892      14239.45       30.888178      6.1357346     -0.037266064    0.054711949    2.3324238      2.0658828      1.6619418      0              0.078091106    0.078091106  
+     12000   12             619.86945     -350.31121      14292.464      31.003176      6.1129759     -0.040757554    0.032414302    2.5274375      2.4733886      1.725056       0              0.062906725    0.062906725  
+     13000   13             587.93643      512.72382      14345.82       31.118915      6.0902402     -0.042530414    0.043260066    3.3111964      2.7438829      1.941212       0              0.091106291    0.091106291  
+     14000   14             614.32647      1634.1074      14244.619      30.89939       6.1335082     -0.046094052    0.064656828    3.7674237      3.349503       2.3096959      0              0.10412148     0.10412148   
+Loop time of 23.5542 on 1 procs for 10000 steps with 461 atoms
 
-Performance: 21.490 ns/day, 1.117 hours/ns, 248.727 timesteps/s, 114.663 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 36.681 ns/day, 0.654 hours/ns, 424.554 timesteps/s, 195.719 katom-step/s
+99.1% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 36.755     | 36.755     | 36.755     |   0.0 | 91.42
-Neigh   | 0.11589    | 0.11589    | 0.11589    |   0.0 |  0.29
-Comm    | 0.80532    | 0.80532    | 0.80532    |   0.0 |  2.00
-Output  | 0.049709   | 0.049709   | 0.049709   |   0.0 |  0.12
-Modify  | 1.7777     | 1.7777     | 1.7777     |   0.0 |  4.42
-Other   |            | 0.7012     |            |       |  1.74
+Pair    | 20.98      | 20.98      | 20.98      |   0.0 | 89.07
+Neigh   | 0.094123   | 0.094123   | 0.094123   |   0.0 |  0.40
+Comm    | 0.59552    | 0.59552    | 0.59552    |   0.0 |  2.53
+Output  | 0.035708   | 0.035708   | 0.035708   |   0.0 |  0.15
+Modify  | 1.3289     | 1.3289     | 1.3289     |   0.0 |  5.64
+Other   |            | 0.52       |            |       |  2.21
 
 Nlocal:            461 ave         461 max         461 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1502 ave        1502 max        1502 min
+Nghost:           1470 ave        1470 max        1470 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        21592 ave       21592 max       21592 min
+FullNghs:        21500 ave       21500 max       21500 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 21592
-Ave neighs/atom = 46.83731
-Neighbor list builds = 182
+Total # of neighbors = 21500
+Ave neighs/atom = 46.637744
+Neighbor list builds = 187
 Dangerous builds = 0
 write_data      final.data
 System init for write_data ...
 print           "step $(step) time_ps $(time) xfracGST $(v_xfracGST) (stop at xfracGST > ${xstop} or step ${n_end})"                 file anneal_done.txt
-step 14000 time_ps 14 xfracGST 0.093275488069414297376 (stop at xfracGST > 0.8 or step 14000)
-Total wall time: 0:00:57
+step 14000 time_ps 14 xfracGST 0.10412147505423000049 (stop at xfracGST > 0.8 or step 14000)
+Total wall time: 0:00:33

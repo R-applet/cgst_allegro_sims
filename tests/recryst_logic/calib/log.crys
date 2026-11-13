@@ -8,7 +8,7 @@ package kokkos
 package kokkos newton on neigh half
 # Crystallinity calibration: sample a reference state at temperature T for calibrate.py.
 #   src -> minimize (crystal only) -> NPT iso 0 bar at T: 10 ps equilibration, then 10 ps dumped every 0.5 ps
-# Reference states (calib/submit.sh): rocksalt x0..x5 crystals (structures/333) and the 10 K/ps amorphous samples,
+# Reference states (calib/submit.sh): rocksalt x0..x5 crystals (structures/<SIZE>, as the glasses) and the 10 K/ps amorphous samples,
 # each at 300, 500, 550, 600, 650 and 700 K (including the planned anneal temperatures). Short enough that the
 # amorphous sample does not crystallize.
 # Variables: src (data file), T (K), tag (output prefix), seed, root, dt, minimize (0|1), model (required; as in
@@ -33,12 +33,12 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   486 atoms
-  read_data CPU = 0.078 seconds
+  read_data CPU = 0.070 seconds
 include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -46,7 +46,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.N.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -104,30 +104,30 @@ WARNING: Fix MINIMIZE/kk not (yet) compatible with Kokkos sorting on device (src
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
 Per MPI rank memory allocation (min/avg/max) = 4.609 | 4.609 | 4.609 Mbytes
    Step          Temp          E_pair         E_mol          TotEng         Press     
-         0   0              38.535858      0              38.535858     -12450.618    
-        79   0             -15.774672      0             -15.774672     -4216.0366    
-Loop time of 0.601771 on 1 procs for 79 steps with 486 atoms
+         0   0              42.068805      0              42.068805     -10813.577    
+        85   0             -16.438816      0             -16.438816     -2511.4412    
+Loop time of 0.400053 on 1 procs for 85 steps with 486 atoms
 
-97.7% CPU use with 1 MPI tasks x 1 OpenMP threads
+94.2% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 Minimization stats:
   Stopping criterion = energy tolerance
   Energy initial, next-to-last, final = 
-      38.5358580180928  -15.7746576772692  -15.7746716162686
-  Force two-norm initial, final = 12.348952 0.015284816
-  Force max component initial, final = 1.008453 0.0051317763
-  Final line search alpha, max atom move = 1 0.0051317763
-  Iterations, force evaluations = 79 137
+      42.0688050097381  -16.4388004933561   -16.438815508965
+  Force two-norm initial, final = 12.606354 0.013675996
+  Force max component initial, final = 1.026698 0.0031677717
+  Final line search alpha, max atom move = 1 0.0031677717
+  Iterations, force evaluations = 85 150
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 0.54582    | 0.54582    | 0.54582    |   0.0 | 90.70
-Neigh   | 0.0048081  | 0.0048081  | 0.0048081  |   0.0 |  0.80
-Comm    | 0.012767   | 0.012767   | 0.012767   |   0.0 |  2.12
+Pair    | 0.35149    | 0.35149    | 0.35149    |   0.0 | 87.86
+Neigh   | 0.00334    | 0.00334    | 0.00334    |   0.0 |  0.83
+Comm    | 0.0097715  | 0.0097715  | 0.0097715  |   0.0 |  2.44
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.03837    |            |       |  6.38
+Other   |            | 0.03546    |            |       |  8.86
 
 Nlocal:            486 ave         486 max         486 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -135,12 +135,12 @@ Nghost:           1605 ave        1605 max        1605 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        24966 ave       24966 max       24966 min
+FullNghs:        24892 ave       24892 max       24892 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 24966
-Ave neighs/atom = 51.37037
-Neighbor list builds = 6
+Total # of neighbors = 24892
+Ave neighs/atom = 51.218107
+Neighbor list builds = 5
 Dangerous builds = 0
 reset_timestep 0
 include         ${root}/common/in.analysis
@@ -252,44 +252,44 @@ WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
 Per MPI rank memory allocation (min/avg/max) = 8.58 | 8.58 | 8.58 Mbytes
    Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
-         0   0              600           -1352.8819      14032.399      28.873248      6.2618024     -0.032458172    0.020557692    3.5019237e-29  3.1554436e-30  3.4882443e-29  1.2621774e-29  0.95061728     0.97613883   
-      1000   1              559.1819      -2774.612       14441.303      29.714615      6.0844999      0.05240287     0.073075004    0.23762972     0.1743569      0.18173448     0.64887352     0.89300412     0.92190889   
-      2000   2              583.07598     -1446.5041      14341.894      29.51007       6.1266737      0.042453418    0.091024046    0.28054146     0.30137424     0.2309315      1.0339385      0.84979424     0.89154013   
-      3000   3              586.36938      770.81413      14351.693      29.530233      6.1224905      0.049900065    0.13974543     0.32273566     0.46834142     0.29961778     1.6356221      0.85185185     0.88720174   
-      4000   4              607.70248      963.23014      14288.379      29.399956      6.1496204      0.037049853    0.13311522     0.29853767     0.5986999      0.32959445     2.4730611      0.82716049     0.86334056   
-      5000   5              579.25475      700.23044      14339.593      29.505336      6.1276568      0.042408204    0.13002399     0.27028532     0.56026861     0.30901085     3.3287089      0.8127572      0.84381779   
-      6000   6              628.2557       507.02385      14317.716      29.46032       6.13702        0.03803308     0.1283974      0.27165268     0.53837701     0.31415519     3.145315       0.81687243     0.85032538   
-      7000   7              593.16363     -615.61954      14371.436      29.570855      6.11408        0.036894037    0.1020464      0.31118647     0.73780261     0.41772178     3.8750414      0.8127572      0.85032538   
-      8000   8              600.54477     -1559.2411      14338.848      29.503802      6.1279753      0.03576036     0.084513986    0.26614217     0.62063134     0.42120422     3.8048057      0.82304527     0.86334056   
-      9000   9              566.97185     -238.20233      14229.623      29.279059      6.1750131      0.034859715    0.10364274     0.26892924     0.72184556     0.38242035     4.1289403      0.85185185     0.88069414   
-     10000   10             616.67788      1131.9121      14329.486      29.48454       6.1319787      0.029281726    0.12965994     0.29069986     0.76534611     0.45401351     4.6409736      0.83333333     0.86984816   
-Loop time of 42.07 on 1 procs for 10000 steps with 486 atoms
+         0   0              600            351.71348      14032.399      28.873248      6.2618024     -0.033824723    0.049910105    3.514298e-29   1.5685312e-29  8.522163e-29   3.1554436e-30  0.95061728     0.97180043   
+      1000   1              601.28513     -3126.7419      14532.535      29.902335      6.0463027      0.047434302    0.066640416    0.18877862     0.22217746     0.20067527     1.2357426      0.8909465      0.92190889   
+      2000   2              597.43051     -1153.8559      14450.813      29.734183      6.0804957      0.037944075    0.093595162    0.37523056     0.36686818     0.29182296     1.6035824      0.83744856     0.87418655   
+      3000   3              591.87606      209.94013      14462.127      29.757463      6.0757388      0.038119549    0.11836736     0.35623509     0.5499025      0.3563779      2.0924335      0.81481481     0.85466377   
+      4000   4              571.99128     -4358.2802      14621.57       30.085535      6.009485       0.04050107     0.032445201    0.32623577     0.57025118     0.40130183     2.5484067      0.83744856     0.87418655   
+      5000   5              586.20631      2303.6304      14285.87       29.394794      6.1507003      0.026881052    0.14476247     0.26255345     0.61869179     0.41976239     2.789555       0.8600823      0.89154013   
+      6000   6              616.3283      -2069.0554      14442.752      29.717596      6.0838896      0.02692681     0.068052184    0.40810952     0.64668529     0.42077396     3.247746       0.8127572      0.84815618   
+      7000   7              625.45386      1931.052       14389.267      29.607546      6.1065032      0.023755897    0.14012083     0.36901423     0.62945512     0.48365742     3.5813033      0.82098765     0.85683297   
+      8000   8              611.59117      594.13009      14458.345      29.749682      6.077328       0.027695068    0.11761875     0.62968128     0.87940008     0.49761823     4.3162534      0.77366255     0.80911063   
+      9000   9              591.11883     -433.70976      14426.41       29.683972      6.090781       0.025447684    0.09366311     0.69588022     1.0519419      0.52459648     3.7411932      0.78600823     0.81995662   
+     10000   10             621.16295     -248.60841      14482.39       29.799156      6.067238       0.021848818    0.097351311    0.56700772     0.915335       0.57927372     3.92716        0.76748971     0.80043384   
+Loop time of 24.6655 on 1 procs for 10000 steps with 486 atoms
 
-Performance: 20.537 ns/day, 1.169 hours/ns, 237.699 timesteps/s, 115.522 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 35.029 ns/day, 0.685 hours/ns, 405.425 timesteps/s, 197.036 katom-step/s
+99.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 38.343     | 38.343     | 38.343     |   0.0 | 91.14
-Neigh   | 0.24371    | 0.24371    | 0.24371    |   0.0 |  0.58
-Comm    | 0.89916    | 0.89916    | 0.89916    |   0.0 |  2.14
-Output  | 0.021463   | 0.021463   | 0.021463   |   0.0 |  0.05
-Modify  | 1.805      | 1.805      | 1.805      |   0.0 |  4.29
-Other   |            | 0.7572     |            |       |  1.80
+Pair    | 21.849     | 21.849     | 21.849     |   0.0 | 88.58
+Neigh   | 0.19088    | 0.19088    | 0.19088    |   0.0 |  0.77
+Comm    | 0.6625     | 0.6625     | 0.6625     |   0.0 |  2.69
+Output  | 0.014703   | 0.014703   | 0.014703   |   0.0 |  0.06
+Modify  | 1.3983     | 1.3983     | 1.3983     |   0.0 |  5.67
+Other   |            | 0.5501     |            |       |  2.23
 
 Nlocal:            486 ave         486 max         486 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1608 ave        1608 max        1608 min
+Nghost:           1602 ave        1602 max        1602 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        23668 ave       23668 max       23668 min
+FullNghs:        23412 ave       23412 max       23412 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 23668
-Ave neighs/atom = 48.699588
-Neighbor list builds = 371
+Total # of neighbors = 23412
+Ave neighs/atom = 48.17284
+Neighbor list builds = 356
 Dangerous builds = 0
 dump            traj all custom $(round(0.5*v_nps)) ${tag}.lammpstrj.gz id type x y z
 dump            traj all custom 500 ${tag}.lammpstrj.gz id type x y z
@@ -301,43 +301,43 @@ WARNING: Fix STORE/ATOM not (yet) compatible with Kokkos sorting on device (src/
 WARNING: Fix with atom-based arrays not (yet) compatible with Kokkos sorting on device, switching to legacy host sorting (src/KOKKOS/atom_kokkos.cpp:225)
 Per MPI rank memory allocation (min/avg/max) = 8.505 | 8.505 | 8.505 Mbytes
    Step          Time           Temp          Press          Volume         v_Vat         Density         v_PEat         v_Hat        c_msdGe[4]     c_msdSb[4]     c_msdTe[4]       v_msdC        v_xfrac       v_xfracGST  
-     10000   10             616.67788      1131.9121      14329.486      29.48454       6.1319787      0.029281726    0.12965994     0.29069986     0.76534611     0.45401351     4.6409736      0.83333333     0.86984816   
-     11000   11             612.93533      2402.7818      14207.123      29.232763      6.1847924      0.034249677    0.1571551      0.27348226     0.70548903     0.44564346     4.6845206      0.83744856     0.87418655   
-     12000   12             610.07527      1555.4485      14306.547      29.43734       6.1418108      0.031037414    0.13831236     0.35214736     0.84859966     0.49023044     4.7879722      0.82304527     0.85466377   
-     13000   13             614.91814      1852.7183      14265.441      29.35276       6.1595085      0.025065243    0.13832893     0.28846703     0.76592997     0.46609528     5.3615402      0.85390947     0.88503254   
-     14000   14             568.78586     -1106.1394      14363.564      29.554658      6.1174307      0.026636018    0.079601607    0.42310881     0.83739887     0.4736864      5.19272        0.82716049     0.86117137   
-     15000   15             575.60686     -417.24182      14260.64       29.34288       6.1615823      0.027705121    0.094313526    0.28363693     0.87025299     0.45148014     5.1220922      0.8436214      0.88069414   
-     16000   16             597.62347     -209.52402      14354.096      29.535176      6.1214658      0.029605457    0.10283295     0.43144249     0.78356355     0.47329186     5.2651196      0.80041152     0.8329718    
-     17000   17             617.12286      1241.0877      14280.822      29.384406      6.1528747      0.027636908    0.13000409     0.41967612     0.88148684     0.52191725     5.661891       0.82716049     0.86550976   
-     18000   18             533.03229     -1311.2613      14422.484      29.675893      6.0924392      0.029096127    0.073566698    0.40906481     0.87020125     0.50966715     5.2296038      0.8127572      0.84815618   
-     19000   19             608.78283     -1285.4295      14356          29.539095      6.1206537      0.029307712    0.084137877    0.41941417     0.85523077     0.59207104     5.9141517      0.82510288     0.85683297   
-     20000   20             568.4375       2087.3813      14234.084      29.288238      6.1730779      0.021778586    0.13326163     0.41822416     0.92756434     0.61027747     6.0888341      0.80658436     0.84598698   
-Loop time of 42.724 on 1 procs for 10000 steps with 486 atoms
+     10000   10             621.16295     -248.60841      14482.39       29.799156      6.067238       0.021848818    0.097351311    0.56700772     0.915335       0.57927372     3.92716        0.76748971     0.80043384   
+     11000   11             624.0919       1756.8134      14290.583      29.404493      6.1486717      0.021658761    0.1344055      0.49706602     0.9332284      0.63331839     3.5022506      0.80041152     0.8308026    
+     12000   12             568.72868     -840.98712      14391.78       29.612715      6.1054371      0.020995085    0.078813974    0.55078884     0.89054365     0.67805989     4.2352868      0.77777778     0.81127983   
+     13000   13             613.8676      -2928.0688      14546.806      29.9317        6.040371       0.024705548    0.049189011    0.60714849     0.97067076     0.68106829     3.7882281      0.78600823     0.82212581   
+     14000   14             602.3589       2631.6106      14404.238      29.638349      6.1001566      0.020788158    0.1471706      0.59762658     0.97735441     0.62469123     3.5632839      0.76748971     0.79826464   
+     15000   15             591.27905      673.91218      14439.09       29.710061      6.0854326      0.024899771    0.11366806     0.70891822     0.91582642     0.67078039     3.8323732      0.77983539     0.80694143   
+     16000   16             568.38808     -1338.905       14434.424      29.700461      6.0873996      0.024286839    0.072785546    0.63708447     0.94109952     0.67664072     3.9184666      0.75925926     0.79609544   
+     17000   17             614.24696      173.15884      14352.043      29.530953      6.1223412      0.020748769    0.10317468     0.64278879     1.0051993      0.65290551     3.6017108      0.74897119     0.78524946   
+     18000   18             627.29046     -128.08859      14375.205      29.578611      6.1124767      0.024732623    0.10328473     0.64307731     1.0849799      0.71939461     4.0949877      0.75102881     0.78524946   
+     19000   19             609.00174      2213.1981      14435.651      29.702985      6.0868822      0.017728963    0.13731744     0.63052409     1.1888222      0.70487898     4.276192       0.7962963      0.82429501   
+     20000   20             601.48879     -539.316        14381.55       29.591667      6.1097799      0.017975537    0.085603102    0.61982749     1.3004758      0.78041773     4.5098396      0.7962963      0.82646421   
+Loop time of 25.8978 on 1 procs for 10000 steps with 486 atoms
 
-Performance: 20.223 ns/day, 1.187 hours/ns, 234.061 timesteps/s, 113.754 katom-step/s
-99.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+Performance: 33.362 ns/day, 0.719 hours/ns, 386.133 timesteps/s, 187.660 katom-step/s
+99.3% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 39.097     | 39.097     | 39.097     |   0.0 | 91.51
-Neigh   | 0.19946    | 0.19946    | 0.19946    |   0.0 |  0.47
-Comm    | 0.8651     | 0.8651     | 0.8651     |   0.0 |  2.02
-Output  | 0.034699   | 0.034699   | 0.034699   |   0.0 |  0.08
-Modify  | 1.7898     | 1.7898     | 1.7898     |   0.0 |  4.19
-Other   |            | 0.7379     |            |       |  1.73
+Pair    | 23.208     | 23.208     | 23.208     |   0.0 | 89.61
+Neigh   | 0.1565     | 0.1565     | 0.1565     |   0.0 |  0.60
+Comm    | 0.63795    | 0.63795    | 0.63795    |   0.0 |  2.46
+Output  | 0.021463   | 0.021463   | 0.021463   |   0.0 |  0.08
+Modify  | 1.3352     | 1.3352     | 1.3352     |   0.0 |  5.16
+Other   |            | 0.539      |            |       |  2.08
 
 Nlocal:            486 ave         486 max         486 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-Nghost:           1588 ave        1588 max        1588 min
+Nghost:           1601 ave        1601 max        1601 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 Neighs:              0 ave           0 max           0 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
-FullNghs:        23866 ave       23866 max       23866 min
+FullNghs:        23568 ave       23568 max       23568 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
 
-Total # of neighbors = 23866
-Ave neighs/atom = 49.106996
-Neighbor list builds = 304
+Total # of neighbors = 23568
+Ave neighs/atom = 48.493827
+Neighbor list builds = 291
 Dangerous builds = 0
-Total wall time: 0:01:26
+Total wall time: 0:00:51

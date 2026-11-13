@@ -113,7 +113,7 @@ def run_checks():
     check("ramp restart: stop at tstop 600 K, resume to 900 K, resume after the last restart: all exit 0, no "
           "ramp_done.txt after the first job, one at the end", st == ("0", "0", "0") and d1 == "0"
           and (rr / "ramp_done.txt").exists(), f"exit {st}, done after job 1: {d1}")
-    rst = sorted(int(f.name[5:-10]) for f in rr.glob("ramp.*K.restart"))
+    rst = sorted(int(f.name[5:-9]) for f in rr.glob("ramp.*K.restart"))   # ramp.<T>K.restart
     snaps = sorted(int(f.name[5:-6]) for f in rr.glob("snap_*K.data"))
     check("ramp restart: restart files at every boundary 300-900 K, snap_350K ... snap_900K",
           rst == list(range(300, 901, 50)) and snaps == list(range(350, 901, 50)), f"restarts {rst}; {len(snaps)} snaps")
