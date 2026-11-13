@@ -1,7 +1,7 @@
 # Part 2 results: melt-quench of Ge₂Sb₂Te₅ + x% C
 
 Allegro potential run5_ep301 in LAMMPS; 3×3×3 rocksalt cells (12.4k–13.8k atoms) of GST with 0, 1.07, 2.54, 5.14 and
-9.96 at.% C. Full methods: `../README.md`; numbers: `../results/` (`mq_summary.txt`, `mq_structure.txt`); figures:
+9.96 at.% C. Full methods: `meltquench/README.md`; numbers: `meltquench/results/run5_ep301/` (`mq_summary.txt`, `mq_structure.txt`); figures:
 `make_figures.py`, `render_structures.py`. The same results are in `part2_report.pdf` and `part2_slides.pptx`.
 
 ## In one paragraph
@@ -112,14 +112,15 @@ g_CC(1.9 Å) = 0 in all four x10 glasses. At 2.5 Å, g is 0.05–0.09 for Ge–C
 
 ## Provenance
 
-Branch `part3`, Part 2 results commit 7a8138a. Runs in `meltquench/runs/<cell>_q<rate>_r<rep>`; analysis with
-`analysis/mq_summary.py` and `analysis/mq_structure.py` (job 12309964).
+Branch `part3`, Part 2 results commit 7a8138a. Runs in `meltquench/runs/run5_ep301/<cell>_q<rate>_r<rep>` (in
+`meltquench/runs/` until commit 350ddc9, tag `run5_ep301-final`); analysis with `analysis/mq_summary.py`
+and `analysis/mq_structure.py` (job 12309964).
 
 ## Rebuilding these documents
 
 From the repository root:
-- Figures: `env/cgst-ana/bin/python meltquench/report/make_figures.py` and `.../render_structures.py` (OVITO, software
+- Figures: `env/cgst-ana/bin/python meltquench/results/run5_ep301/report/make_figures.py` and `.../render_structures.py` (OVITO, software
   renderer). Colors are the dataviz reference palette, validated with its `validate_palette.js`.
-- Report: `module load texlive/20220321`, then `latexmk -pdf part2_report.tex` in `meltquench/report/`.
+- Report: `module load texlive/20220321`, then `latexmk -pdf part2_report.tex` in `meltquench/results/run5_ep301/report/`.
 - Slides: `node build_deck.js` with `pptxgenjs` on `NODE_PATH` and `PPTX_SKILL` set to the pptx skill directory (for
   `apply_theme.js`). Node and pptxgenjs are not part of `env/`; see the header of `build_deck.js`.

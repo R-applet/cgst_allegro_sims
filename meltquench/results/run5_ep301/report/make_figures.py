@@ -25,12 +25,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[4]
+MODEL_ID = Path(__file__).resolve().parents[1].name   # this report lives in meltquench/results/<MODEL_ID>/report
 sys.path.insert(0, str(ROOT / "analysis"))
 from mq_summary import load_rdf  # noqa: E402
 from runio import load_dat  # noqa: E402
 
-RES, RUNS = ROOT / "meltquench/results", ROOT / "meltquench/runs"
+RES, RUNS = ROOT / "meltquench/results" / MODEL_ID, ROOT / "meltquench/runs" / MODEL_ID
 OUT = Path(__file__).resolve().parent / "figures"
 CELLS = ["x0", "x1", "x2p5", "x5", "x10"]
 XC = {"x0": 0.0, "x1": 1.07, "x2p5": 2.54, "x5": 5.14, "x10": 9.96}            # actual at.% C (README.md)

@@ -11,7 +11,7 @@
 # Variables: cell, rep, seed, root, dt, model (as in meltquench; model is required); Ta (K); max_ns (hold length,
 #   5 in production);
 #   xstop (default 0.8; set it below the crystal-reference xfracGST at Ta, recryst/README.md);
-#   src (optional amorphous data file, default from meltquench/runs/<cell>_q10_r<rep>);
+#   src (required: amorphous data file, meltquench/runs/<MODEL_ID>/<cell>_q10_r<glass>/amorphous_300K.data);
 #   resume (0 = fresh start, default | 1 = continue from rfile; a numeric flag because LAMMPS `if` cannot compare
 #   filenames); rfile; tscale (tests only); q_rc/q_thr/q_nmin (optional, crystallinity criterion);
 #   baro (optional, iso default | aniso; keep it the same across the jobs of one chain; recryst/README.md,
@@ -32,7 +32,6 @@ variable        baro      index iso
 variable        resume    index 0
 variable        rfile     index none
 variable        xstop     index 0.8
-variable        src       index ${root}/meltquench/runs/${cell}_q10_r${rep}/amorphous_300K.data
 variable        out       index anneal
 variable        thermo_ps index 1.0
 variable        Tdamp     equal 100*${dt}

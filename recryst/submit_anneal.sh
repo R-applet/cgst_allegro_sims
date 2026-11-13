@@ -16,7 +16,8 @@
 # Array index i -> cell CELLS[i / NREP], replica rep = i % NREP + 1 (with NREP 3, the mapping of
 # meltquench/submit.sh). Replica rep starts from melt-quench glass ((rep - 1) % 3) + 1 with its own velocity seed, so
 # beyond 3 replicas the glasses are reused: such replicas share the glass structure and differ in their dynamics.
-# Run directory: runs/anneal_<cell>_T<TA>_r<rep>/, or runs/anneal_<cell>_<TAG>_T<TA>_r<rep>/ with TAG set.
+# Run directory: runs/<MODEL_ID>/anneal_<cell>_T<TA>_r<rep>/, or .../anneal_<cell>_<TAG>_T<TA>_r<rep>/ with TAG set;
+# the glass is meltquench/runs/<MODEL_ID>/<cell>_q10_r<glass>/amorphous_300K.data (MODEL_ID: common/model.sh).
 # Settings (--export=ALL,NAME=value): TA (K, required); NREP (replicas per cell, default 3); MAX_NS (hold length,
 # default 5); XSTOP (fix halt level on xfracGST, default 0.8; set from the calibration, recryst/README.md); MAXCHAIN
 # (jobs per chain, default 4); EXTRA_VARS (extra LAMMPS -var options, e.g. -var baro aniso); TAG (optional run-name
@@ -36,7 +37,7 @@ TA=${TA:?set TA (K)}
 NREP=${NREP:-3}
 MAX_NS=${MAX_NS:-5}
 XSTOP=${XSTOP:-0.8}                         # fix halt level; set from the calibration (recryst/README.md)
-source $ROOT/common/defaults.sh             # DT (same as the melt-quench), MODEL (per node type)
+source $ROOT/common/defaults.sh             # DT (same as the melt-quench), MODEL_ID, MODEL (per node type)
 CHAIN=${CHAIN:-1}
 MAXCHAIN=${MAXCHAIN:-4}
 CELLS=(x0 x1 x2p5 x5 x10)
@@ -44,7 +45,9 @@ i=$SLURM_ARRAY_TASK_ID
 cell=${CELLS[$((i / NREP))]}
 rep=$((i % NREP + 1))
 glass=$(((rep - 1) % 3 + 1))                # meltquench/submit.sh makes 3 glasses per cell
-run=runs/anneal_${cell}${TAG:+_$TAG}_T${TA}_r${rep}
+run=runs/$MODEL_ID/anneal_${cell}${TAG:+_$TAG}_T${TA}_r${rep}
+src=$ROOT/meltquench/runs/$MODEL_ID/${cell}_q10_r${glass}/amorphous_300K.data
+[ -e $src ] || { echo "no glass $src (run meltquench/submit.sh with this MODEL_ID first)" >&2; exit 1; }
 mkdir -p $run
 
 cd $run
@@ -70,7 +73,7 @@ if [ $CHAIN -lt $MAXCHAIN ]; then
 fi
 $ROOT/common/run_lmp.sh $SLURM_NTASKS -in $ROOT/recryst/in.anneal -log log.anneal.$CHAIN \
     -var root $ROOT -var cell $cell -var rep $rep -var seed $((30011 * (i + 1) + TA)) -var Ta $TA \
-    -var src $ROOT/meltquench/runs/${cell}_q10_r${glass}/amorphous_300K.data \
+    -var src $src \
     -var max_ns $MAX_NS -var dt $DT -var resume $([ -n "$latest" ] && echo 1 || echo 0) -var rfile ${latest:-none} \
     -var xstop $XSTOP -var model $MODEL ${EXTRA_VARS:-}
 if [ -e anneal_done.txt ]; then prune 1; fi

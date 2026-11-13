@@ -1,5 +1,5 @@
 // Part 2 (melt-quench) slide deck -> part2_slides.pptx, from the figures of make_figures.py / render_structures.py
-// and the numbers in meltquench/results (same content as part2_results.md and part2_report.pdf).
+// and the numbers in meltquench/results/<MODEL_ID> (same content as part2_results.md and part2_report.pdf).
 // Structured deck (pptx skill): theme, two layouts, sections, placeholders, speaker notes; native charts for the
 // simple trends, figure images for curves, distributions and renders. Colors follow the figures (dataviz palette).
 // Usage: NODE_PATH=<dir with node_modules/pptxgenjs> PPTX_SKILL=<pptx skill dir> node build_deck.js

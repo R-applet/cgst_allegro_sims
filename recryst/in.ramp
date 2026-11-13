@@ -1,6 +1,6 @@
 # Crystallization on heating (DSC-like): NPT 0 bar ramp (isotropic unless baro aniso) of an amorphous sample from
 # 300 K to 900 K.
-#   start: meltquench/runs/<cell>_q10_r<rep>/amorphous_300K.data, with fresh velocities at 300 K
+#   start: meltquench/runs/<MODEL_ID>/<cell>_q10_r<rep>/amorphous_300K.data, with fresh velocities at 300 K
 #   300 K, 10 ps -> ramp 300 -> 900 K at hrate K/ps (600/hrate ps) in 50 K segments, snap_<T>K.data at each boundary
 # Tx = T where the Ge/Sb/Te crystalline fraction (xfracGST) has made half its rise (analysis/recryst_summary.py),
 # cross-checked against the density change and the enthalpy release. 900 K stays below the model's superheated
@@ -8,7 +8,7 @@
 #
 # Variables: cell, rep, seed, root, dt, model (as in meltquench; model is required); hrate (K/ps, 1 production;
 #   0.2 rate check);
-#   src (optional) amorphous data file, default ${root}/meltquench/runs/${cell}_q10_r${rep}/amorphous_300K.data
+#   src (required) amorphous data file (submit_ramp.sh passes the glass above)
 #   tscale (optional, tests only), q_rc/q_thr/q_nmin (optional, crystallinity criterion; see recryst/README.md),
 #   baro (optional, iso default | aniso: barostat coupling, see recryst/README.md, "Barostat")
 # Outputs: ramp.dat (every 1 ps, columns in common/in.analysis), stress.dat (pressure tensor, every 1 ps), log.ramp,
@@ -20,7 +20,6 @@ boundary        p p p
 
 variable        tscale    index 1
 variable        baro      index iso
-variable        src       index ${root}/meltquench/runs/${cell}_q10_r${rep}/amorphous_300K.data
 variable        out       index ramp
 variable        thermo_ps index 1.0
 variable        Tdamp     equal 100*${dt}

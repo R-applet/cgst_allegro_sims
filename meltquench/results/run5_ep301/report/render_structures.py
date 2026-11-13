@@ -24,8 +24,9 @@ from ovito.modifiers import (ComputePropertyModifier, CreateBondsModifier, Delet
                              ExpressionSelectionModifier)
 from ovito.vis import TachyonRenderer, Viewport
 
-ROOT = Path(__file__).resolve().parents[2]
-RUNS, OUT = ROOT / "meltquench/runs", Path(__file__).resolve().parent / "figures"
+ROOT = Path(__file__).resolve().parents[4]
+MODEL_ID = Path(__file__).resolve().parents[1].name   # this report lives in meltquench/results/<MODEL_ID>/report
+RUNS, OUT = ROOT / "meltquench/runs" / MODEL_ID, Path(__file__).resolve().parent / "figures"
 TMP = OUT / "_render_tmp"     # raw renders before paneling (removed at the end)
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import make_figures as mf  # noqa: E402  (shared colors and rcParams)
