@@ -16,7 +16,7 @@ load_dat(path)  the .dat time series written by common/in.analysis (mq.dat, ramp
 mean_std(arrs)  mean and sample std (ddof = 1) over replicas (axis 0), ignoring NaN; the std is NaN with fewer than
                 two values, so a single replica never reports a spread of zero.
 complete_runs(runs, marker)  the run directories that finished, i.e. contain marker, the file the run writes last
-                (melt-quench: amorphous_300K.data, the default; ramp: snap_900K.data; anneal: anneal_done.txt);
+                (melt-quench: amorphous_300K.data, the default; ramp: ramp_done.txt; anneal: anneal_done.txt);
                 each other one is reported on stdout and left out, so a running or failed task does not stop the
                 summary of the others. May return an empty list.
 group_of(name)  the replica group of a run directory name: the name without its trailing _r<rep> (x0_q10_r2 ->

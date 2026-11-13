@@ -17,13 +17,13 @@
 # meltquench/submit.sh). Replica rep starts from melt-quench glass ((rep - 1) % 3) + 1 with its own velocity seed, so
 # beyond 3 replicas the glasses are reused: such replicas share the glass structure and differ in their dynamics.
 # Run directory: runs/<MODEL_ID>/anneal_<cell>_T<TA>_r<rep>/, or .../anneal_<cell>_<TAG>_T<TA>_r<rep>/ with TAG set;
-# the glass is meltquench/runs/<MODEL_ID>/<cell>_q10_r<glass>/amorphous_300K.data (MODEL_ID: common/model.sh).
-# Settings (--export=ALL,NAME=value): TA (K, required); NREP (replicas per cell, default 3); MAX_NS (hold length,
-# default 5); XSTOP (fix halt level on xfracGST, default 0.8; set from the calibration, recryst/README.md); MAXCHAIN
-# (jobs per chain, default 4); EXTRA_VARS (extra LAMMPS -var options, e.g. -var baro aniso); TAG (optional run-name
-# label for a variant of the same runs, e.g. TAG=aniso with EXTRA_VARS="-var baro aniso": same seeds and glasses, its
-# own directories and replica group; before _T so the analysis name patterns still match); DT and MODEL come from
-# common/defaults.sh.
+# the glass is meltquench/runs/<MODEL_ID>/<cell>_q<QRATE>_r<glass>/amorphous_300K.data (MODEL_ID: common/model.sh).
+# Settings (--export=ALL,NAME=value): TA (K, required); NREP (replicas per cell, default 3); MAX_NS (hold length, ns)
+# and XSTOP (fix halt level on xfracGST), both from params/<MODEL_ID>.sh unless set; MAXCHAIN (jobs per chain,
+# default 4); EXTRA_VARS (extra LAMMPS -var options; not the criterion or barostat); TAG (optional run-name label for
+# a variant of the same runs: same seeds and glasses, its own directories and replica group; before _T so the
+# analysis name patterns still match; scripts/submit_grid.sh passes RUNTAG). The criterion (Q_VARS), barostat (BARO)
+# and glass rate (QRATE) come from params/<MODEL_ID>.sh, DT and MODEL from common/defaults.sh.
 # Each task: exits if anneal_done.txt exists; as a continuation, stops the chain with an error if there is no newer
 # restart than its predecessor started from (chain_progress.txt: the predecessor made no progress); otherwise
 # records the newest restart, queues its own continuation (afterany, same array index) and runs, resuming from that
@@ -35,9 +35,11 @@ cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ..)
 TA=${TA:?set TA (K)}
 NREP=${NREP:-3}
-MAX_NS=${MAX_NS:-5}
-XSTOP=${XSTOP:-0.8}                         # fix halt level; set from the calibration (recryst/README.md)
+m=${MAX_NS:-}; x=${XSTOP:-}
 source $ROOT/common/defaults.sh             # DT (same as the melt-quench), MODEL_ID, MODEL (per node type)
+source $ROOT/params/$MODEL_ID.sh            # MAX_NS, XSTOP, BARO, QRATE, Q_VARS (calibrated criterion)
+MAX_NS=${m:-$MAX_NS}; XSTOP=${x:-$XSTOP}
+: "${Q_VARS:?no calibrated criterion: run recryst/calib (submit.sh, then submit_calibrate.sh) for $MODEL_ID first}"
 CHAIN=${CHAIN:-1}
 MAXCHAIN=${MAXCHAIN:-4}
 CELLS=(x0 x1 x2p5 x5 x10)
@@ -46,7 +48,7 @@ cell=${CELLS[$((i / NREP))]}
 rep=$((i % NREP + 1))
 glass=$(((rep - 1) % 3 + 1))                # meltquench/submit.sh makes 3 glasses per cell
 run=runs/$MODEL_ID/anneal_${cell}${TAG:+_$TAG}_T${TA}_r${rep}
-src=$ROOT/meltquench/runs/$MODEL_ID/${cell}_q10_r${glass}/amorphous_300K.data
+src=$ROOT/meltquench/runs/$MODEL_ID/${cell}_q${QRATE}_r${glass}/amorphous_300K.data
 [ -e $src ] || { echo "no glass $src (run meltquench/submit.sh with this MODEL_ID first)" >&2; exit 1; }
 mkdir -p $run
 
@@ -75,5 +77,5 @@ $ROOT/common/run_lmp.sh $SLURM_NTASKS -in $ROOT/recryst/in.anneal -log log.annea
     -var root $ROOT -var cell $cell -var rep $rep -var seed $((30011 * (i + 1) + TA)) -var Ta $TA \
     -var src $src \
     -var max_ns $MAX_NS -var dt $DT -var resume $([ -n "$latest" ] && echo 1 || echo 0) -var rfile ${latest:-none} \
-    -var xstop $XSTOP -var model $MODEL ${EXTRA_VARS:-}
+    -var xstop $XSTOP -var model $MODEL -var baro $BARO $Q_VARS ${EXTRA_VARS:-}
 if [ -e anneal_done.txt ]; then prune 1; fi

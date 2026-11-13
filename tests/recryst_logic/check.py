@@ -28,15 +28,17 @@ at tscale 0.1 and dt 1 fs: the anneal hold starts at step 4000 (10 ps at 300 K +
                      blocks of 10 ps); clusters() writes clusters_q3.6_0.5_4.txt with every hold frame once, in step
                      order, across the two jobs' dump files, and gives the same clusters from the dumped c_ncb as
                      from a recount; main() skips an incomplete anneal (a copy without anneal_done.txt) by name;
-                     main() --clusters exits with an error without --nucleated-size and, with it, prints the
-                     group's nucleation line with n_base
+                     main() --clusters exits with an error without --nucleated-size or without the criterion and,
+                     with both, prints the group's nucleation line with n_base; the '#' header names MODEL_ID, the
+                     model the run's log names, and the criterion, and a WARNING line appears for another MODEL_ID
   known answers      load_dat keeps the last row of a repeated step; ramp() on a synthetic logistic xfracGST
                      centred at 650 K gives Tx_xfrac within 3 K of 650 for both a 0.8 and a 0.6 ceiling (the
                      half-rise definition does not move with the ceiling) and NaN when xfracGST does not rise;
                      kinetics() on a sphere growing at 2 A/ps (200 m/s) gives v_growth within 2% and t_nuc within one
                      frame of the analytic time; the same sphere counted in a periodic cell gives 200 m/s within 3%
                      with the 10-60% window while a 10-90% window reads below 95%; single_grain is 1 without a
-                     second nucleus, 0 with one, NaN without a fit window; survival_rate() gives J = 2 / (1400 ps x 1e5 A^3) for nucleation at
+                     second grain, 0 with one in every window frame, the exact fraction with one in every other frame,
+                     NaN without a fit window; survival_rate() gives J = 2 / (1400 ps x 1e5 A^3) for nucleation at
                      100 and 300 ps and one run censored at 1000 ps; smooth() keeps a constant constant at the ends;
                      stress() on 300 ps of production-like noise
                      (0.46 kbar per instantaneous component, the 461-atom test cell's level scaled to 13.8k atoms):
@@ -52,6 +54,7 @@ at tscale 0.1 and dt 1 fs: the anneal hold starts at step 4000 (10 ps at 300 K +
 Writes RESULT.txt (one PASS/FAIL line per check, then the verdict) and exits 1 on any failure; a crash in the checker
 is reported as a FAIL.
 """
+import os
 import shutil
 import subprocess
 import sys
@@ -206,12 +209,26 @@ def run_checks():
           "anneal_x0_T600_r9: incomplete (no anneal_done.txt), skipped" in out
           and any(l.startswith("anneal_x0_T600_r1 ") for l in out.splitlines()), out.strip().replace("\n", " | ")[:120])
     summ = [sys.executable, str(HERE.parents[1] / "analysis/recryst_summary.py"), "--tscale", "0.1", "--clusters"]
-    bad = subprocess.run(summ + [str(a)], capture_output=True, text=True)
-    good = subprocess.run(summ + ["--nucleated-size", "50", str(a)], capture_output=True, text=True)
+    crit = ["--q-rc", "3.6", "--q-thr", "0.5", "--q-nmin", "4"]
+    bad = subprocess.run(summ + crit + [str(a)], capture_output=True, text=True)
+    nocrit = subprocess.run(summ + ["--nucleated-size", "50", str(a)], capture_output=True, text=True)
+    used = rs.model_of(a)
+    good = subprocess.run(summ + crit + ["--nucleated-size", "50", str(a)], capture_output=True, text=True,
+                          env={**os.environ, "MODEL_ID": str(used)})
+    other = subprocess.run(summ + crit + ["--nucleated-size", "50", str(a)], capture_output=True, text=True,
+                           env={**os.environ, "MODEL_ID": "not_this_model"})
     nl = [l for l in good.stdout.splitlines() if "nucleation:" in l]
-    check("analysis: main() --clusters needs --nucleated-size, and with it prints the nucleation line with n_base",
-          bad.returncode != 0 and "--nucleated-size" in bad.stderr and good.returncode == 0 and nl and "n_base" in nl[0],
-          f"without: exit {bad.returncode}; with: {nl[0].strip()[:90] if nl else good.stderr.strip()[-90:]}")
+    check("analysis: main() --clusters needs --nucleated-size and the criterion, and with them prints the nucleation "
+          "line with n_base",
+          bad.returncode != 0 and "--nucleated-size" in bad.stderr and nocrit.returncode != 0 and "--q-rc" in nocrit.stderr
+          and good.returncode == 0 and nl and "n_base" in nl[0],
+          f"without: exit {bad.returncode}/{nocrit.returncode}; with: {nl[0].strip()[:90] if nl else good.stderr.strip()[-90:]}")
+    head = [l for l in good.stdout.splitlines() if l.startswith("#")]
+    check("analysis: main() header names MODEL_ID, the model the run used and the criterion; warns on another model",
+          used is not None and head and f"# MODEL_ID {used}; runs used: {used}" == head[0]
+          and any("criterion q_rc 3.6 q_thr 0.5 q_nmin 4" in l for l in head) and "WARNING" not in good.stdout
+          and f"WARNING: {a.name} ran with model {used}, not MODEL_ID not_this_model" in other.stdout,
+          " | ".join(head)[:120])
 
     with tempfile.TemporaryDirectory() as tmp:
         f = Path(tmp) / "x.dat"
@@ -259,11 +276,17 @@ def run_checks():
     rs.V_WINDOW = saved
     check("known answer: v_growth in a periodic cell, 200 m/s within 3% with the 10-60% window; 10-90% reads low",
           abs(vnew / 200 - 1) < 0.03 and vold / 200 < 0.95, f"10-60%: {vnew:.1f} m/s, 10-90%: {vold:.1f} m/s")
+    g = (bigp >= 0.10 * 10000) & (bigp <= 0.60 * 10000)              # the fit window's frames
+    half = np.zeros_like(bigp)
+    half[np.flatnonzero(g)[::2]] = 60                                 # a second grain in every other window frame
     one = rs.kinetics(cl | {"big2": np.zeros_like(bigp)}, 50)["single_grain"]
     two = rs.kinetics(cl | {"big2": np.full_like(bigp, 60)}, 50)["single_grain"]
+    mid = rs.kinetics(cl | {"big2": half}, 50)["single_grain"]
     none = rs.kinetics(cl | {"big": np.minimum(bigp, 500)}, 50)["single_grain"]
-    check("known answer: single_grain 1 with no second nucleus, 0 with a second >= nucleated size, NaN without window",
-          one == 1.0 and two == 0.0 and np.isnan(none), f"{one}, {two}, {none}")
+    want = 1 - len(np.flatnonzero(g)[::2]) / g.sum()
+    check("known answer: single_grain is the fraction of window frames without a second grain: 1, 0, the exact "
+          "fraction for a second grain in every other frame, NaN without a window",
+          one == 1.0 and two == 0.0 and abs(mid - want) < 1e-12 and np.isnan(none), f"{one}, {two}, {mid:.3f}, {none}")
     sr = rs.survival_rate([100.0, 300.0, np.nan], [1000.0, 1000.0, 1000.0], 1e5)
     J = 2 / (1400e-12 * 1e5 * 1e-30)
     check("known answer: survival_rate() J = 2 / (1400 ps x 1e5 A^3), 2 of 3 nucleated",

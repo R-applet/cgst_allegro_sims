@@ -4,7 +4,7 @@ Per run directory (mq.dat, gate.txt, stages.txt, rdf_300K.dat, amorphous_300K.da
   Tm_app    apparent melting T on the 10 K/ps heating ramp (window from stages.txt): T at max dH/dt (5 ps
             smoothing). This is superheated (no crystal-liquid interface), so it is an upper bound on the model
             Tm, not Tm itself.
-  rho_l     liquid density at 1500 K (g/cc), mean over the 1500 K hold (end of heating to quench start)
+  rho_l     liquid density at tmelt (1500 K by default; g/cc), mean over the tmelt hold (end of heating to quench start)
   rho_a     amorphous density at 300 K (g/cc), mean over the final 50 ps
   Tg        glass transition from a bilinear fit of V/atom(T) on the quench (times from stages.txt), breakpoint
             scanned over 400-1300 K; NaN if the quench has fewer than 20 points
@@ -12,7 +12,7 @@ Per run directory (mq.dat, gate.txt, stages.txt, rdf_300K.dat, amorphous_300K.da
             (recryst/README.md, "Crystal-like order already in the glass"); compare runs against that baseline
   CN_ij     partial coordination at 300 K: mean number of j atoms within the bond cutoff of an i atom (rdf_300K.dat)
   Z_i       total coordination of species i, summed over all partners (needs amorphous_300K.data for the counts)
-  hold_ps   the 1500 K hold (gate.txt). A run that fails its MSD gate stops before the quench, so every complete run
+  hold_ps   the tmelt hold (gate.txt). A run that fails its MSD gate stops before the quench, so every complete run
             passed it; runs compared with each other must share hold_ps, and a WARNING is printed if they do not.
 With --out DIR, also writes DIR/<group>_curves.dat: rho(T) and H(T) on the heating ramp and the quench in 10 K bins,
 mean and sample std over the replicas of each (cell, qrate) group (the header lists the replicas; std is NaN for one).
@@ -66,7 +66,7 @@ def bilinear_tg(T, V, lo=400.0, hi=1300.0):
     return best[1]
 
 
-T_BINS = np.arange(295.0, 1515.0, 10.0)                        # 10 K bins centred on 300, 310, ..., 1500 K
+T_BINS = np.arange(295.0, 2015.0, 10.0)                        # 10 K bins centred on 300, 310, ..., 2000 K (tmelt)
 
 
 def binned(T, y):
@@ -156,7 +156,7 @@ def main(runs, tscale, rc, out=None):
         groups.setdefault(group_of(r["run"]), []).append(r)
     holds = sorted({r["hold_ps"] for r in rows})
     if len(holds) > 1:
-        print(f"WARNING: the runs have different 1500 K holds ({', '.join(f'{h:g}' for h in holds)} ps), so their "
+        print(f"WARNING: the runs have different tmelt holds ({', '.join(f'{h:g}' for h in holds)} ps), so their "
               "melts had different thermal histories")
     if out:
         Path(out).mkdir(parents=True, exist_ok=True)

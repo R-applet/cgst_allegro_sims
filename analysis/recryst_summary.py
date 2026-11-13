@@ -11,7 +11,7 @@ ramp runs (ramp.dat):
             Sign-agnostic: in run5_ep301, as in its DFT reference, the glass is denser than the crystal
             (tests/RESULTS.md 1g, 1k), so crystallization lowers the density instead of raising it as in experiment
   drho_x    signed density change across Tx_rho (g/cc): mean over 20 ps after minus 20 ps before
-  xfrac_end xfracGST at 900 K
+  xfrac_end xfracGST at the ramp's end (tmax, 900 K by default)
   Tx_H and Tx_rho always return a value; read them only when Tx_xfrac is finite (crystallization happened).
 anneal runs (anneal.dat; hold start from hold_start.txt and xstop from anneal_done.txt, both written by in.anneal):
   x_a       baseline, mean xfracGST of the first 20 ps of the hold
@@ -34,8 +34,10 @@ both (stress.dat, written by in.ramp and in.anneal):
             sdev_z = their difference over its standard error (Welch). A crystal grown against the isotropic barostat
             leaves a stress that persists to the end, so it shows up as a large sdev_z; recryst/README.md gives the
             criterion. NaN when the series has fewer than 4 blocks.
-Only complete runs are analysed (ramp: snap_900K.data; anneal: anneal_done.txt); others are listed and skipped.
---clusters (anneal runs), under the criterion --q-rc/--q-thr/--q-nmin (default: the in.analysis default):
+Only complete runs are analysed (ramp: ramp_done.txt, or snap_900K.data for ramps from before in.ramp had tmax;
+anneal: anneal_done.txt); others are listed and skipped.
+--clusters (anneal runs), under the criterion --q-rc/--q-thr/--q-nmin (required with --clusters: the calibrated
+  criterion of the model, recryst/calib/<MODEL_ID>/calib_params.sh, Q_ARGS):
   per dumped frame, the largest crystalline Ge/Sb/Te cluster and the number of such clusters of at least
   --nucleus-min atoms -> <run>/clusters_q<rc>_<thr>_<nmin>.txt (one file per criterion, so runs under the default
   and the calibrated criterion can be compared). Per run:
@@ -44,8 +46,10 @@ Only complete runs are analysed (ramp: snap_900K.data; anneal: anneal_done.txt);
             few hundred atoms, recryst/README.md, so a small size would mark every run nucleated at t = 0)
   v_growth  growth velocity (m/s): slope of the largest cluster's equivalent-sphere radius while it holds 10-60% of
             the Ge/Sb/Te atoms (periodic images bias it by < 0.5% up to 60%, -5% by 80%)
-  single_grain  1 if no second cluster reaches --nucleated-size during that window, 0 if one does (the radius then
-            mixes grains), NaN without a window
+  single_grain  fraction of the window's frames in which no second cluster has --nucleated-size atoms (1: one grain
+            throughout; below 0.8, i.e. a second grain in more than 20% of the frames, the radius mixes grains and
+            v_growth is an upper bound), NaN without a window. A fraction, not a flag: every run5_ep301 anneal showed a
+            short-lived second cluster in a frame or two (recryst/results/run5_ep301/RESULTS.md)
   Per replica group:
   survival  n_nucleated of n_runs, J_surv = n_nucleated / (total observed hold time x V), runs that never nucleated
             counting as censored at t_end (maximum likelihood for an exponential waiting time), relative error
@@ -60,12 +64,15 @@ Only complete runs are analysed (ramp: snap_900K.data; anneal: anneal_done.txt);
   Both rates need many replicas: one waiting time per run, so the error is ~1/sqrt(runs) (recryst/README.md).
 Replica groups (runio.group_of: the name without _r<rep>) with two or more runs also get mean +- sample std.
 Times in ps; NaN when the event did not happen within the run.
+Output starts with '#' header lines: MODEL_ID (environment, common/model.sh), the model file each run's log names, the
+criterion and end point used. A run whose log names a model other than MODEL_ID is reported as a WARNING line.
 
 Usage: python recryst_summary.py [--tscale S] [--x-crystal X | --x-end X]
        [--clusters --nucleated-size N [--nucleus-min N]]
        [--q-rc R --q-thr T --q-nmin N] <run_dir> ...       Directory names select the mode: ramp_* or anneal_*_T<Ta>_*.
 """
 import argparse
+import os
 import re
 from math import erf, pi, sqrt
 from pathlib import Path
@@ -217,7 +224,7 @@ def kinetics(cl, nucleated):
     """From one run's clusters() output: t_nuc, the first hold time the largest cluster has >= nucleated atoms;
     v_growth (m/s), the slope of its equivalent-sphere radius r = (3 N V / (4 pi N_GST))^(1/3) while it holds
     V_WINDOW (10-60%) of the Ge/Sb/Te atoms (least squares; NaN with fewer than 3 frames there); and single_grain,
-    1 if no second cluster reaches `nucleated` atoms in that window, 0 if one does (then the radius mixes grains),
+    the fraction of that window's frames with no second cluster of `nucleated` atoms (1: one grain throughout),
     NaN without a window. A sphere meets its own periodic image at pi/6 = 52% of the cell, but the overlap stays
     small: counted exactly in a periodic cell, the slope is within 0.5% of the true one up to 60%, -1.5% at 70%,
     -5% at 80% (tests/recryst_logic, check.py). So 60% is the cap."""
@@ -228,7 +235,7 @@ def kinetics(cl, nucleated):
     ok = g.sum() >= 3
     return {"t_nuc": first_cross(t, big, nucleated - 0.5),
             "v_growth": np.polyfit(t[g], r[g], 1)[0] * 100.0 if ok else np.nan,     # A/ps -> m/s
-            "single_grain": float(big2[g].max() < nucleated) if ok else np.nan}
+            "single_grain": float((big2[g] < nucleated).mean()) if ok else np.nan}
 
 
 def survival_rate(t_nuc, t_end, volume):
@@ -266,6 +273,16 @@ def mfpt(tracks, volume, t_base=20.0):
             "n_replicas": len(tracks)}
 
 
+def model_of(run):
+    """Stem of the compiled model a run used (models/<MODEL_ID>[.G|.N].nequip.pt2 -> MODEL_ID), from the substituted
+    pair_coeff line of its first LAMMPS log; None if no log names one."""
+    for log in sorted(run.glob("log.*")):
+        m = re.search(r"^pair_coeff\s+\*\s+\*\s+(\S+\.pt2)\s", log.read_text(errors="replace"), re.M)
+        if m:
+            return Path(m[1]).name.split(".")[0]
+    return None
+
+
 def fmt(v):
     return v if isinstance(v, str) else f"{v:.4g}"
 
@@ -283,24 +300,38 @@ def main():
                     help="largest-cluster size (atoms) that marks a run as nucleated, for t_nuc; required with "
                          "--clusters: the 'suggested --nucleated-size' that calibrate.py prints for Ta and this "
                          "criterion")
-    ap.add_argument("--q-rc", type=float, default=3.6)
-    ap.add_argument("--q-thr", type=float, default=0.5)
-    ap.add_argument("--q-nmin", type=int, default=4)
+    ap.add_argument("--q-rc", type=float, help="criterion, required with --clusters (calib_params.sh Q_ARGS)")
+    ap.add_argument("--q-thr", type=float)
+    ap.add_argument("--q-nmin", type=int)
     a = ap.parse_args()
     if a.x_crystal is not None and a.x_end is not None:
         ap.error("--x-crystal and --x-end are alternatives: --x-end fixes x_c for every run, --x-crystal is a fallback")
     if a.clusters and a.nucleated_size is None:
         ap.error("--clusters needs --nucleated-size: the glass already has crystal-like clusters of up to a few "
                  "hundred atoms, so use the value recryst/calib/calibrate.py suggests for Ta and this criterion")
+    if a.clusters and None in (a.q_rc, a.q_thr, a.q_nmin):
+        ap.error("--clusters needs --q-rc, --q-thr and --q-nmin: the model's calibrated criterion "
+                 "(recryst/calib/<MODEL_ID>/calib_params.sh, Q_ARGS)")
     ramps = [r for r in a.runs if r.name.startswith("ramp_")]
     anneals = [r for r in a.runs if re.match(r"anneal_.+_T\d+_", r.name)]
     for r in set(a.runs) - set(ramps) - set(anneals):
         print(f"{r.name}: not a ramp_* or anneal_*_T<Ta>_* directory, skipped")
-    if a.clusters:
-        print(f"clusters: criterion q_rc {a.q_rc:g} q_thr {a.q_thr:g} q_nmin {a.q_nmin}; t_nuc at "
-              f"{a.nucleated_size} atoms")
+    expected = os.environ.get("MODEL_ID")
+    # ramps from before in.ramp took tmax (run5_ep301) end at 900 K and write no ramp_done.txt; their log has no tmax
+    old = [r for r in ramps if not (r / "ramp_done.txt").exists() and (r / "snap_900K.data").exists()
+           and (r / "log.ramp").exists() and "tmax" not in (r / "log.ramp").read_text(errors="replace")]
+    done = (complete_runs([r for r in ramps if r not in old], "ramp_done.txt") + old
+            + complete_runs(anneals, "anneal_done.txt"))
+    used = {run.name: model_of(run) for run in done}
+    print(f"# MODEL_ID {expected or 'unset'}; runs used: " + ", ".join(sorted({str(m) for m in used.values()})))
+    print(f"# x_c: {f'--x-end {a.x_end:g}' if a.x_end is not None else 'per run (x_c_from)'}"
+          + (f"; clusters: criterion q_rc {a.q_rc:g} q_thr {a.q_thr:g} q_nmin {a.q_nmin}, t_nuc at "
+             f"{a.nucleated_size} atoms" if a.clusters else ""))
+    for name, m in sorted(used.items()):
+        if expected and m != expected:
+            print(f"WARNING: {name} ran with model {m}, not MODEL_ID {expected}")
     groups, cls = {}, {}
-    for run in complete_runs(ramps, "snap_900K.data") + complete_runs(anneals, "anneal_done.txt"):
+    for run in done:
         name = run.name
         if run in ramps:
             res = ramp(run, a.tscale)

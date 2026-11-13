@@ -1,11 +1,11 @@
 # Melt-quench of rocksalt Ge2Sb2Te5 + x% C with the Allegro model in -var model (common/model.sh). All stages NPT, isotropic, 0 bar.
 #   0. minimize -> 300 K, 20 ps
-#   1. heat 300 -> 1500 K at 10 K/ps (120 ps); the enthalpy/volume jump gives an apparent (superheated) Tm
-#   2. hold 1500 K for hold_ps (100 ps; the same for every run, so every composition has the same thermal history).
+#   1. heat 300 -> tmelt K (default 1500) at 10 K/ps ((tmelt-300)/10 ps); the enthalpy/volume jump gives an apparent (superheated) Tm
+#   2. hold tmelt for hold_ps (100 ps; the same for every run, so every composition has the same thermal history).
 #      Gate, checked 20 ps before the end: every species must have an MSD >= 100 A^2 *within the hold*, so the liquid
 #      has no memory of the crystal or the replicated C pattern. If not, the run stops with an ERROR (exit 1): rerun
 #      every composition with a longer hold_ps. Liquid RDF over the last 20 ps
-#   3. quench 1500 -> 300 K at qrate K/ps in 100 K segments, writing snap_<T>K.data at each boundary
+#   3. quench tmelt -> 300 K at qrate K/ps in 100 K segments, writing snap_<T>K.data at each boundary
 #   4. hold 300 K, 100 ps: relax 50 ps, then RDF and coordination averaged over the last 50 ps
 #      -> amorphous_300K.data (input to recryst/)
 # Each RDF window is preceded by up to one window of padding (common/in.rdf), so stages 2 and 4 run up to 20 and
@@ -22,11 +22,13 @@
 #   dt     timestep in ps (tests/RESULTS.md, 1c)
 #   tscale optional, multiplies every duration and the MSD gate (testing only; 1 in production).
 #          Every stage must stay a whole number of ps (e.g. tscale 0.1 works with qrate 10).
-#   hold_ps optional, 1500 K hold in ps before tscale (default 100; submit.sh passes HOLD_PS).
+#   hold_ps optional, tmelt hold in ps before tscale (default 100; submit.sh passes HOLD_PS).
+#   tmelt  optional, melt temperature in K, a multiple of 100 (default 1500; submit.sh passes TMELT). Set it from
+#          the model's superheated melting point with margin (RUNBOOK.md, pilot step); the same for every run.
 #   gate_A2 optional, MSD gate in A^2 before tscale (default 100; tests raise it to force a gate failure).
 # Thermostat/barostat damping: Tdamp = 100 dt, Pdamp = 1000 dt (LAMMPS-recommended ratios).
 # Outputs in the run directory: mq.dat (every 1 ps; columns in common/in.analysis), log.mq, traj.lammpstrj.gz,
-# rdf_1500K.dat, rdf_300K.dat, liquid_1500K.data, snap_<T>K.data, amorphous_300K.data, gate.txt, stages.txt,
+# rdf_<tmelt>K.dat, rdf_300K.dat, liquid_<tmelt>K.data, snap_<T>K.data, amorphous_300K.data, gate.txt, stages.txt,
 # and rolling restart files mq.restart.a/b every 50 ps (for manual recovery only; a run normally fits one job).
 
 units           metal
@@ -36,6 +38,9 @@ boundary        p p p
 variable        tscale    index 1
 variable        size      index 333
 variable        hold_ps   index 100
+variable        tmelt     index 1500
+variable        nq        equal round((v_tmelt-300)/100)          # 100 K quench segments
+if "$(v_tmelt%100) != 0 || ${tmelt} <= 300" then "print 'ERROR: tmelt must be a multiple of 100 above 300 K'" "quit 1"
 variable        gate_A2   index 100
 variable        out       index mq
 variable        thermo_ps index 1.0
@@ -64,18 +69,18 @@ velocity        all create 300.0 ${seed} mom yes rot yes dist gaussian
 fix             npt all npt temp 300.0 300.0 ${Tdamp} iso 0.0 0.0 ${Pdamp}
 run             $(round(20*v_tscale*v_nps))
 
-# ---------- 1. heat 300 -> 1500 K at 10 K/ps ----------
+# ---------- 1. heat 300 -> tmelt at 10 K/ps ----------
 print           "heat_start_ps $(step*dt)" file stages.txt
 dump_modify     traj every ${nps}
 unfix           npt
-fix             npt all npt temp 300.0 1500.0 ${Tdamp} iso 0.0 0.0 ${Pdamp}
-run             $(round(120*v_tscale*v_nps))
+fix             npt all npt temp 300.0 ${tmelt} ${Tdamp} iso 0.0 0.0 ${Pdamp}
+run             $(round((v_tmelt-300)/10*v_tscale*v_nps))
 print           "heat_end_ps $(step*dt)" append stages.txt
 
-# ---------- 2. hold 1500 K for hold_ps; the MSD gate checks that the liquid has decorrelated ----------
+# ---------- 2. hold tmelt for hold_ps; the MSD gate checks that the liquid has decorrelated ----------
 dump_modify     traj every ${dump_hold}
 unfix           npt
-fix             npt all npt temp 1500.0 1500.0 ${Tdamp} iso 0.0 0.0 ${Pdamp}
+fix             npt all npt temp ${tmelt} ${tmelt} ${Tdamp} iso 0.0 0.0 ${Pdamp}
 # MSD measured from the start of the hold (the in.analysis MSDs start at step 0 and include the crystal)
 compute         hGe Ge msd com yes
 compute         hSb Sb msd com yes
@@ -102,13 +107,13 @@ variable        passed   equal $(v_hmin_now>=v_gate_now)
 print           "hold_ps ${hold_ps} min_species_msd_A2 $(v_hmin_now:%.1f) gate_A2 $(v_gate_now:%.6g) passed ${passed}" &
                 file gate.txt
 if "${passed} == 0" then &
-   "print 'ERROR: MSD gate not met within the 1500 K hold; rerun every composition with a longer hold_ps (HOLD_PS)'" &
+   "print 'ERROR: MSD gate not met within the ${tmelt} K hold; rerun every composition with a longer hold_ps (HOLD_PS)'" &
    "quit 1"
 # last 20 ps of the hold: liquid RDF
 variable        rdf_ps   index $(20*v_tscale)
-variable        rdf_file string rdf_1500K.dat
+variable        rdf_file string rdf_${tmelt}K.dat
 include         ${root}/common/in.rdf
-write_data      liquid_1500K.data
+write_data      liquid_${tmelt}K.data
 unfix           hg
 uncompute       hGe
 uncompute       hSb
@@ -116,11 +121,11 @@ uncompute       hTe
 if "${nC} > 0" then "uncompute hC"
 print           "quench_start_ps $(step*dt)" append stages.txt
 
-# ---------- 3. quench 1500 -> 300 K at qrate K/ps, 100 K per segment ----------
+# ---------- 3. quench tmelt -> 300 K at qrate K/ps, 100 K per segment ----------
 dump_modify     traj every $(round(10.0/v_qrate*v_nps))
-variable        Ta loop 12
+variable        Ta loop ${nq}
 label           quench
-variable        T1 equal 1600-100*${Ta}
+variable        T1 equal ${tmelt}+100-100*${Ta}
 variable        T2 equal ${T1}-100
 unfix           npt
 fix             npt all npt temp ${T1} ${T2} ${Tdamp} iso 0.0 0.0 ${Pdamp}

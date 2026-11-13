@@ -1,18 +1,19 @@
 # Crystallization on heating (DSC-like): NPT 0 bar ramp (isotropic unless baro aniso) of an amorphous sample from
-# 300 K to 900 K.
+# 300 K to tmax (default 900 K).
 #   start: meltquench/runs/<MODEL_ID>/<cell>_q10_r<rep>/amorphous_300K.data, with fresh velocities at 300 K
-#   300 K, 10 ps -> ramp 300 -> 900 K at hrate K/ps (600/hrate ps) in 50 K segments, snap_<T>K.data at each boundary
+#   300 K, 10 ps -> ramp 300 -> tmax at hrate K/ps ((tmax-300)/hrate ps) in 50 K segments, snap_<T>K.data at each boundary
 # Tx = T where the Ge/Sb/Te crystalline fraction (xfracGST) has made half its rise (analysis/recryst_summary.py),
-# cross-checked against the density change and the enthalpy release. 900 K stays below the model's superheated
-# melting (~1090 K at 2 K/ps).
+# cross-checked against the density change and the enthalpy release. tmax must stay below the model's superheated
+# melting (run5_ep301: ~1090 K at 2 K/ps, so 900 K; RUNBOOK.md pilot step). Ends with ramp_done.txt.
 #
 # Variables: cell, rep, seed, root, dt, model (as in meltquench; model is required); hrate (K/ps, 1 production;
 #   0.2 rate check);
 #   src (required) amorphous data file (submit_ramp.sh passes the glass above)
 #   tscale (optional, tests only), q_rc/q_thr/q_nmin (optional, crystallinity criterion; see recryst/README.md),
 #   baro (optional, iso default | aniso: barostat coupling, see recryst/README.md, "Barostat")
+#   tmax (optional, K, a multiple of 50 above 300; default 900; submit_ramp.sh passes TMAX)
 # Outputs: ramp.dat (every 1 ps, columns in common/in.analysis), stress.dat (pressure tensor, every 1 ps), log.ramp,
-#   traj.lammpstrj.gz (every 5 K), snap_<T>K.data
+#   traj.lammpstrj.gz (every 5 K), snap_<T>K.data, ramp_done.txt (written last; marks a complete run)
 
 units           metal
 atom_style      atomic
@@ -20,6 +21,9 @@ boundary        p p p
 
 variable        tscale    index 1
 variable        baro      index iso
+variable        tmax      index 900
+variable        nseg      equal round((v_tmax-300)/50)
+if "$(v_tmax%50) != 0 || ${tmax} <= 300" then "print 'ERROR: tmax must be a multiple of 50 above 300 K'" "quit 1"
 variable        out       index ramp
 variable        thermo_ps index 1.0
 variable        Tdamp     equal 100*${dt}
@@ -40,7 +44,7 @@ velocity        all create 300.0 ${seed} mom yes rot yes dist gaussian
 fix             npt all npt temp 300.0 300.0 ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
 run             $(round(10*v_tscale*v_nps))
 
-variable        Ta loop 12
+variable        Ta loop ${nseg}
 label           ramp
 variable        T1 equal 250+50*${Ta}
 variable        T2 equal ${T1}+50
@@ -50,3 +54,4 @@ run             $(round(50.0/v_hrate*v_tscale*v_nps))
 write_data      snap_${T2}K.data
 next            Ta
 jump            SELF ramp
+print           "tmax ${tmax} hrate ${hrate}" file ramp_done.txt
