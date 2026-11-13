@@ -2,7 +2,7 @@
 amorphous, cubic and hexagonal (C-)GST, and does the model reproduce the DFT curve?
 
 Each *_EOS_Eform_train.xyz file is one structure rescaled homogeneously to ~24 volumes (fractional coordinates
-identical, ions not relaxed). For every frame, evaluate the checkpoint (run5_ep301.ckpt, eager, float64) and compare
+identical, ions not relaxed). For every frame, evaluate the checkpoint ($CKPT, common/model.sh; eager, float64) and compare
 static pressures P = -tr(stress)/3 (ASE sign: P > 0 means the cell wants to expand) and energies with the DFT values.
 Per file: V0 and rho0 where P(V) crosses zero (cubic fit of P vs V), for DFT and model, plus the pressure RMSE and
 the energy-shape error (E - E at the frame nearest V0, per atom). These frames are in the training set, so this
@@ -10,6 +10,8 @@ tests the fit on these structures, not transfer to the model's own glasses.
 Writes frames.csv and RESULT.txt. Run inside the LAMMPS container (submit.sh).
 """
 import csv
+import os
+import sys
 import warnings
 from pathlib import Path
 
@@ -17,8 +19,8 @@ import numpy as np
 
 warnings.filterwarnings("ignore")
 HERE = Path(__file__).resolve().parent
-TRAIN = Path("/depot/prism/data/rapplet/cgst-vasp-data/xyz_files/train")
-CKPT = "/depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/run5_ep301.ckpt"
+TRAIN = Path(os.environ.get("DFT_TRAIN") or sys.exit("set DFT_TRAIN and CKPT (source common/model.sh)"))
+CKPT = os.environ.get("CKPT") or sys.exit("set CKPT (source common/model.sh)")
 SETS = ["GST_AM_EOS", "GST_CUB_EOS", "GST_HEX_EOS"] + [f"C{c}_{p}_EOS" for c in (1, 5, 10) for p in ("AM", "CUB", "HEX")] \
     + ["C14_AM_EOS", "C18_AM_EOS"]
 KBAR = 1602.1766

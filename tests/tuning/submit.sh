@@ -14,10 +14,11 @@
 # Verdict -> RESULT.txt
 cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ../..)
+source $ROOT/common/defaults.sh             # MODEL (per node type)
 for cc in 7.5 7.0; do
-    $ROOT/common/run_lmp.sh 1 -in in.commcut -log log.cc$cc -var cc $cc > screen_cc$cc.txt 2>&1 || echo "FAILED cc=$cc" >> failures.txt
+    $ROOT/common/run_lmp.sh 1 -in in.commcut -log log.cc$cc -var cc $cc -var model $MODEL > screen_cc$cc.txt 2>&1 || echo "FAILED cc=$cc" >> failures.txt
 done
-PMIX_MCA_psec=native $ROOT/common/run_lmp.sh 1 -in in.commcut -log log.pmix -var cc 7.5 > screen_pmix.txt 2>&1 \
+PMIX_MCA_psec=native $ROOT/common/run_lmp.sh 1 -in in.commcut -log log.pmix -var cc 7.5 -var model $MODEL > screen_pmix.txt 2>&1 \
     || echo "FAILED pmix run" >> failures.txt
 {
     cat failures.txt 2>/dev/null

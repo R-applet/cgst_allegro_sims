@@ -2,10 +2,11 @@
 # Run with -var frames "<i j k ...>" (the list in frames.txt). Appends "frame PE pxx pyy pzz pyz pxz pxy" (eV, bar;
 # velocities are zero, so the pressure is the virial alone) to lammps_energies.txt
 # and writes forces_<frame>.dump (id fx fy fz), all in the current directory, which must hold frame_<i>.data.
-# Optional: -var root <project root> (default ../.., i.e. run from tests/model_check), -var model <file>.
+# Optional: -var root <project root> (default ../.., i.e. run from tests/model_check).
+# Required: -var model <compiled model file>.
 
 variable        root  index ../..
-variable        model index ${root}/models/run5_ep301.nequip.pt2
+# model: required, -var model $MODEL (common/defaults.sh picks models/$MODEL_ID[.G|.N].nequip.pt2 per node)
 variable        dt    index 0.001
 variable        f     index ${frames}
 shell           rm -f lammps_energies.txt

@@ -6,10 +6,11 @@
 # The compiled model must match the node's CPU: common/defaults.sh sets MODEL per node type (a30 b/d, a100-40gb g/n),
 # and inputs take it as -var model $MODEL (models/provenance.md).
 # Which nodes and containers have been tested, with results: tests/RESULTS.md (environment probe, 1d, 1f).
-# SIF can be overridden from the environment (tests/container uses this for lammps_stable.sif).
+# The container is $SIF from common/model.sh; it can be overridden from the environment (tests/container uses this
+# for lammps_stable.sif).
 set -euo pipefail
 NGPU=$1; shift
-SIF=${SIF:-/depot/prism/data/rushik/lammps_wallegro/lammps_debug.sif}
+source "$(dirname "$(realpath "$0")")/model.sh"
 module load cuda/12.6.0 >/dev/null 2>&1 || true
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
 # Slurm can raise CPUs/task above the request (e.g. to cover --mem), leaving SLURM_CPUS_PER_TASK and

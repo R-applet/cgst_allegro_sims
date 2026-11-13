@@ -1,7 +1,7 @@
 """Model vs DFT pressure on identical structures, by config type: is the dense model glass (tests/RESULTS.md, 1g)
 a fitting error or a property of the reference DFT?
 
-For every frame of the held-out test set (CGST/cgst_test_paw.xyz), evaluate the checkpoint (run5_ep301.ckpt, eager,
+For every frame of the held-out test set (CGST/cgst_test_paw.xyz), evaluate the checkpoint ($CKPT, common/model.sh; eager,
 float64) and compare P = -trace(stress)/3 with the DFT value stored in the frame. Both are static (virial-only)
 stresses, ASE sign convention (P > 0 means the cell wants to expand), so the comparison is like for like.
   model P < DFT P on amorphous frames  -> the model under-predicts the glass's outward pressure, so at 0 bar its glass
@@ -13,6 +13,8 @@ mean bias, RMSE of P, energy MAE). Pressures in kbar (1 eV/A^3 = 1602.1766 kbar)
 Run inside the LAMMPS container with the modified nequip/allegro on PYTHONPATH (submit.sh).
 """
 import csv
+import os
+import sys
 import warnings
 from collections import defaultdict
 from pathlib import Path
@@ -21,8 +23,8 @@ import numpy as np
 
 warnings.filterwarnings("ignore")
 HERE = Path(__file__).resolve().parent
-TESTSET = "/depot/prism/data/rushik/CGST/cgst_test_paw.xyz"
-CKPT = "/depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/run5_ep301.ckpt"
+TESTSET = os.environ.get("TESTSET") or sys.exit("set TESTSET and CKPT (source common/model.sh)")
+CKPT = os.environ.get("CKPT") or sys.exit("set CKPT (source common/model.sh)")
 KBAR = 1602.1766
 
 

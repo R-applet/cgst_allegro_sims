@@ -16,7 +16,7 @@
 # job aborts there (tests/container, job 12235379).
 cd $SLURM_SUBMIT_DIR
 module load cuda/12.6.0
-D=/depot/prism/data/rushik/lammps_wallegro
+source ../../common/model.sh; D=$(dirname $SIF)
 nvidia-smi --query-gpu=name,compute_cap --format=csv > probe.txt
 for s in debug stable; do
     srun --ntasks=1 apptainer run --nv --bind /depot,/scratch $D/lammps_$s.sif -h > lmp_help_$s.txt 2>&1

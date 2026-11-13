@@ -14,6 +14,7 @@ Both are analysed with the same code and bond cutoffs (analysis/mq_structure.fra
 Verdict CONSISTENT if the model density is within 2% of the coldest-20 DFT density and every mean Z within 0.15.
 Writes RESULT.txt. Run: ../../env/cgst-ana/bin/python check.py (~30 s)
 """
+import os
 import sys
 from pathlib import Path
 
@@ -23,8 +24,10 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / "analysis"))
 import mq_structure as ms  # noqa: E402
 
-DFT = Path("/depot/prism/data/rapplet/cgst-vasp-data/xyz_files/train/GST_Melt_Quench_Eform_train.xyz")
-MODEL = HERE.parent / "mq_analysis/ref/model_glass_300K.npz"   # frozen copy; source and sha256 in ref/SHA256SUMS
+DFT = Path(os.environ.get("DFT_TRAIN", "/depot/prism/data/rapplet/cgst-vasp-data/xyz_files/train")) / "GST_Melt_Quench_Eform_train.xyz"
+MODEL = Path(os.environ.get("MODEL_GLASS", HERE.parent / "mq_analysis/ref/model_glass_300K.npz"))
+# default: the frozen run5_ep301 glass (source, sha256: ref/SHA256SUMS); for another model, set MODEL_GLASS to its own
+# 10 K/ps glass npz (RUNBOOK.md)
 AMU_A3_TO_GCC = 1.66053907
 MASS_PER_ATOM = (2 * 72.63 + 2 * 121.76 + 5 * 127.6) / 9         # Ge2Sb2Te5, amu
 KBAR = 1602.1766

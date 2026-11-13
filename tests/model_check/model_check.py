@@ -1,7 +1,7 @@
 """Test 1b: the compiled LAMMPS model reproduces the training checkpoint.
 
   prepare  pick test-set frames (one per size/C-content class, CGST/cgst_test_paw.xyz), write them as LAMMPS
-           data files, and evaluate the checkpoint (run5_ep301.ckpt, eager, float64 on CUDA) on the frames as
+           data files, and evaluate the checkpoint ($CKPT, common/model.sh; eager, float64 on CUDA) on the frames as
            read back from those files, so the reference forces are in LAMMPS's rotated frame.
   compare  read LAMMPS's energies, forces and pressure tensor (in.model_check) and report |dE|/atom, max |dF| and
            max |dP| against the checkpoint, plus model-vs-DFT energy errors for context.
@@ -10,6 +10,7 @@ Pressure: LAMMPS P = -stress (ASE sign convention), 1 eV/A^3 = 1602176.6 bar; ze
 
 prepare must run inside the LAMMPS container with the modified nequip/allegro on PYTHONPATH (see submit.sh).
 """
+import os
 import sys
 from collections import Counter
 from pathlib import Path
@@ -18,8 +19,8 @@ import numpy as np
 from ase.io import iread, read, write
 
 HERE = Path(__file__).resolve().parent
-TESTSET = "/depot/prism/data/rushik/CGST/cgst_test_paw.xyz"
-CKPT = "/depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/run5_ep301.ckpt"
+TESTSET = os.environ.get("TESTSET") or sys.exit("set TESTSET and CKPT (source common/model.sh)")
+CKPT = os.environ.get("CKPT") or sys.exit("set CKPT (source common/model.sh)")
 SPECORDER = ["Ge", "Sb", "Te", "C"]
 Z_OF_TYPE = {1: 32, 2: 51, 3: 52, 4: 6}
 EV_A3_TO_BAR = 1602176.6

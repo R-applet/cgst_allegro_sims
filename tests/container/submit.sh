@@ -19,13 +19,15 @@
 cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ../..)
 MC=$ROOT/tests/model_check
+source $ROOT/common/defaults.sh             # MODEL (this node); SIF from common/model.sh
+SIF_DIR=$(dirname $SIF)
 : > failures.txt
 for s in debug stable; do
-    export SIF=/depot/prism/data/rushik/lammps_wallegro/lammps_$s.sif
+    export SIF=$SIF_DIR/lammps_$s.sif
     mkdir -p frames_$s && ln -sf $MC/frame_*.data frames_$s/
     (cd frames_$s && $ROOT/common/run_lmp.sh 1 -in $MC/in.model_check -log log.model_check -var root $ROOT \
-        -var frames "$(cat $MC/frames.txt)" > screen.txt 2>&1) || echo "FAILED energies: $s (frames_$s/screen.txt)" >> failures.txt
-    $ROOT/common/run_lmp.sh 1 -in ../scaling/in.bench -log log.bench_$s -var ana 1 -var tag cont_$s \
+        -var model $MODEL -var frames "$(cat $MC/frames.txt)" > screen.txt 2>&1) || echo "FAILED energies: $s (frames_$s/screen.txt)" >> failures.txt
+    $ROOT/common/run_lmp.sh 1 -in ../scaling/in.bench -log log.bench_$s -var ana 1 -var tag cont_$s -var model $MODEL \
         > screen_bench_$s.txt 2>&1 || echo "FAILED bench: $s (screen_bench_$s.txt)" >> failures.txt
 done
 {

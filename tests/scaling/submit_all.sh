@@ -10,7 +10,7 @@ submit () {   # partition ngpu ana cpus_per_task [extra sbatch args]; env ACCT (
     [[ $tag == $ONLY ]] || return 0
     sbatch -A ${ACCT:-strachan} --qos=normal -p $p -N1 --gpus-per-node=$n --ntasks-per-node=$n --cpus-per-task=$c \
         --mem=32G -t 01:00:00 "$@" -J cgst-bench-$tag -o slurm-$tag.out \
-        --wrap "cd $PWD && ../../common/run_lmp.sh $n -in in.bench -log log.$tag -var ana $a -var tag $tag"
+        --wrap "cd $PWD && source ../../common/defaults.sh && ../../common/run_lmp.sh $n -in in.bench -log log.$tag -var ana $a -var tag $tag -var model \$MODEL"
 }
 for n in 1 2; do submit a30 $n 1 4; done   # no 3-GPU run: the group cap (6 A30s, 4 held long-term) never allows 3
 submit a30 2 0 4                       # 1e: analysis overhead (compare with a30_g2_ana1)

@@ -1,4 +1,4 @@
-# Melt-quench of rocksalt Ge2Sb2Te5 + x% C with Allegro run5_ep301. All stages NPT, isotropic, 0 bar.
+# Melt-quench of rocksalt Ge2Sb2Te5 + x% C with the Allegro model in -var model (common/model.sh). All stages NPT, isotropic, 0 bar.
 #   0. minimize -> 300 K, 20 ps
 #   1. heat 300 -> 1500 K at 10 K/ps (120 ps); the enthalpy/volume jump gives an apparent (superheated) Tm
 #   2. hold 1500 K for hold_ps (100 ps; the same for every run, so every composition has the same thermal history).

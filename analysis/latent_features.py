@@ -1,6 +1,6 @@
 """Per-atom Allegro latent features, per-atom energies and Q4 crystal-like bond counts for LAMMPS dump frames.
 
-For each selected frame, one forward pass of the eager checkpoint (run5_ep301.ckpt) yields:
+For each selected frame, one forward pass of the eager checkpoint ($CKPT, from common/model.sh) yields:
   latent  (N, 256) float32  the invariant scalar edge features after the single Allegro layer (`edge_features`,
                             256x0e), mean-pooled over each atom's outgoing edges (edge_index[0] = centre atom)
   e_atom  (N,)              per-atom energy (`atomic_energy`, after per-type scale/shift and ZBL)
@@ -13,6 +13,7 @@ DUMP:steps restricts a dump to those timesteps; a bare DUMP takes every frame.
 Output npz keys: per frame k, f<k>_latent, f<k>_e_atom, f<k>_ncb, f<k>_types, plus frames = "dump:step" labels.
 """
 import argparse
+import os
 import sys
 import warnings
 from pathlib import Path
@@ -22,7 +23,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from bondorder import crystal_bonds, read_dump  # noqa: E402
 
-CKPT = "/depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/run5_ep301.ckpt"
+CKPT = os.environ.get("CKPT") or sys.exit("set CKPT (source common/model.sh): the model checkpoint to evaluate")
 SYMBOLS = {1: "Ge", 2: "Sb", 3: "Te", 4: "C"}
 
 

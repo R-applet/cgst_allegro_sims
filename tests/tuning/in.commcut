@@ -4,7 +4,7 @@
 units           metal
 atom_style      atomic
 boundary        p p p
-variable        model     index ../../models/run5_ep301.nequip.pt2
+# model: required, -var model $MODEL (common/defaults.sh picks models/$MODEL_ID[.G|.N].nequip.pt2 per node)
 variable        dt        index 0.002
 variable        thermo_ps index 1.0
 variable        out       index commcut_${cc}

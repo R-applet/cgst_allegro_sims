@@ -2,8 +2,10 @@
 order, from GST_Melt_Quench (DFT glasses), AM_GST_runs (DFT amorphous) and CUB_GST_runs (crystal control).
 Also writes frames.txt (frame ids) and start.csv (config type, natoms, DFT-frame density in g/cc)."""
 import csv
+import os
+import sys
 from ase.io import iread, write
-TESTSET = "/depot/prism/data/rushik/CGST/cgst_test_paw.xyz"
+TESTSET = os.environ.get("TESTSET") or sys.exit("set TESTSET (source common/model.sh)")
 TYPES = ["GST_Melt_Quench", "AM_GST_runs", "CUB_GST_runs"]
 idx = {t: [] for t in TYPES}
 frames = {}

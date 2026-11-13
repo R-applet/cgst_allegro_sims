@@ -7,7 +7,7 @@
 units           metal
 atom_style      atomic
 boundary        p p p
-variable        model index ../../models/run5_ep301.nequip.pt2
+# model: required, -var model $MODEL (common/defaults.sh picks models/$MODEL_ID[.G|.N].nequip.pt2 per node)
 read_data       ../../structures/333/${cell}.data
 include         ../../common/in.potential
 thermo          100

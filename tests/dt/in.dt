@@ -13,7 +13,7 @@ boundary        p p p
 variable        root  index ../..
 variable        seed  index 1730561
 variable        nve_ps index 20
-variable        model index ${root}/models/run5_ep301.nequip.pt2
+# model: required, -var model $MODEL (common/defaults.sh picks models/$MODEL_ID[.G|.N].nequip.pt2 per node)
 variable        dt    equal 0.001        # equal-style so the loop below can redefine it
 read_data       ${root}/structures/222/x10.data
 include         ${root}/common/in.potential
