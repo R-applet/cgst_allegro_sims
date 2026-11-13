@@ -13,7 +13,7 @@
 #
 # Variables (-var on the command line):
 #   cell   x0 | x1 | x2p5 | x5 | x10      (structures/<size>/<cell>.data)
-#   size   optional, supercell directory (default 333; 111 for tests)
+#   size   optional, supercell directory (default 333; 111 for tests; submit.sh passes SIZE from params)
 #   seed   velocity seed (submit.sh derives it from cell and replica)
 #   qrate  quench rate in K/ps (10 production; 1 sensitivity)
 #   root   project root (absolute path)

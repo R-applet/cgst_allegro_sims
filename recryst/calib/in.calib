@@ -1,6 +1,6 @@
 # Crystallinity calibration: sample a reference state at temperature T for calibrate.py.
 #   src -> minimize (crystal only) -> NPT iso 0 bar at T: 10 ps equilibration, then 10 ps dumped every 0.5 ps
-# Reference states (calib/submit.sh): rocksalt x0..x5 crystals (structures/333) and the 10 K/ps amorphous samples,
+# Reference states (calib/submit.sh): rocksalt x0..x5 crystals (structures/<SIZE>, as the glasses) and the 10 K/ps amorphous samples,
 # each at 300, 500, 550, 600, 650 and 700 K (including the planned anneal temperatures). Short enough that the
 # amorphous sample does not crystallize.
 # Variables: src (data file), T (K), tag (output prefix), seed, root, dt, minimize (0|1), model (required; as in

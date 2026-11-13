@@ -67,7 +67,8 @@ melt-quench, `MODEL_GLASS=<npz> python check.py`. **Decide there** how the glass
 which no GPU job has run yet: run them before the first production job of each study. **Pass:** `VERDICT: PASS`.
 
 ## meltquench: melt-quench (`meltquench/`)
-1. **Superheating pilot (sets `TMELT`, `HOLD_PS`).** x0 r1 and x10 r1, which are also production runs (same seeds):
+1. **Superheating pilot (sets `TMELT`, `HOLD_PS`).** At the params' `SIZE` (444 for nozbl_paw; build the cells with
+   `python structures/build_supercells.py --nrep 4`). x0 r1 and x10 r1, which are also production runs (same seeds):
    ```
    cd meltquench && sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1 --array=0,12 submit.sh
    python ../analysis/mq_summary.py --out results/nozbl_paw runs/nozbl_paw/*_q10_r1        # env/cgst-ana

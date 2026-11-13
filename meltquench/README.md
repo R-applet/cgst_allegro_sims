@@ -1,7 +1,7 @@
 # Melt-quench (`meltquench/`)
 
-`in.meltquench` takes a 3×3×3 rocksalt cell (`structures/333/<cell>.data`) through melt and quench to an amorphous
-sample at 300 K. Every stage is NPT, isotropic, 0 bar, with Nosé–Hoover damping Tdamp = 100 dt and Pdamp = 1000 dt.
+`in.meltquench` takes an N×N×N rocksalt cell (`structures/<SIZE>/<cell>.data`; `SIZE` in params: 333 for run5_ep301,
+444 from nozbl_paw on) through melt and quench to an amorphous sample at 300 K. Every stage is NPT, isotropic, 0 bar, with Nosé–Hoover damping Tdamp = 100 dt and Pdamp = 1000 dt.
 
 This README describes the method; results are per model in `results/<MODEL_ID>/` (run5_ep301:
 `results/run5_ep301/RESULTS.md` and its `report/`). Runs go to `runs/<MODEL_ID>/`; `MODEL_ID` is set in
@@ -76,7 +76,8 @@ Array index i → cell `(x0 x1 x2p5 x5 x10)[i/3]`, replica `i%3+1`; runs go to `
 strachan's 6-GPU A30 cap runs at most 3 of these jobs at once. One A100 gives 2.9–3.1 ns/day, close to the 3.35
 ns/day of 2 A30s (`tests/RESULTS.md` 1d), so the perc queue roughly doubles throughput. `common/defaults.sh`
 picks the right compiled model on either node type, and `submit.sh` passes `$SLURM_NTASKS` GPUs to LAMMPS.
-Each run fits in one wall-time window: about 3–5 h at 10 K/ps and 11–13 h at 1 K/ps for 13.8k atoms on 2 A30s
+Each run fits in one wall-time window: about 3–5 h at 10 K/ps and 11–13 h at 1 K/ps for 13.8k atoms (333) on 2 A30s; a
+444 cell (32.8k atoms) costs about 2.4× that (`tests/scaling/submit_size.sh`)
 (3.35 ns/day, `tests/RESULTS.md` 1d), against a 1-day limit. So a failed run is normally rerun from scratch. For
 manual recovery, `snap_<T>K.data` marks each 100 K of the quench, and `mq.restart.a/b` hold the last two 50 ps
 points of any stage. Resuming from them needs a hand-edited input that starts at the right stage.

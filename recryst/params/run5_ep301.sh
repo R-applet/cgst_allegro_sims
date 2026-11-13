@@ -29,7 +29,7 @@ NREP=3              # replicas per (composition, Ta); more where a rate needs th
 TAS="500 550 600 650 700"   # the grid; must be calibration temperatures (CALIB_TS).
 
 _here=$(dirname "${BASH_SOURCE[0]}")
-source "$_here/../../meltquench/params/$MODEL_ID.sh"     # QRATE (and the melt-quench settings, for reference)
+source "$_here/../../meltquench/params/$MODEL_ID.sh"     # QRATE, SIZE (and the melt-quench settings, for reference)
 _calib=$_here/../calib/$MODEL_ID/calib_params.sh
 [ -e "$_calib" ] && source "$_calib"
 unset _calib _here
