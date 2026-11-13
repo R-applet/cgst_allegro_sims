@@ -1,0 +1,4 @@
+anneal_x0_T600_r1            x_a 0.08235  x_c 0.65  x_c_from x-end  t_inc 63  t50 270  n_JMAK 1.08  k_JMAK 0.002567  t_end 974  xfrac_end 0.7163  sdev_base 0.3682  sdev_end 1.222  sdev_z 16.84
+anneal_x0_T600_r2            x_a 0.08662  x_c 0.65  x_c_from x-end  t_inc 52  t50 251  n_JMAK 1.056  k_JMAK 0.002957  t_end 2411  xfrac_end 0.7128  sdev_base 0.2984  sdev_end 0.5582  sdev_z 5.227
+anneal_x0_T600_r3            x_a 0.0889  x_c 0.65  x_c_from x-end  t_inc 59  t50 288  n_JMAK 0.9936  k_JMAK 0.003811  t_end 1072  xfrac_end 0.714  sdev_base 0.3583  sdev_end 1.557  sdev_z 20.29
+anneal_x0_T600               n=3 mean +- sample std: x_a 0.08596 +- 0.0033  x_c 0.65 +- 0  t_inc 58 +- 5.6  t50 269.7 +- 19  n_JMAK 1.043 +- 0.044  k_JMAK 0.003112 +- 0.00064  t_end 1486 +- 8e+02  xfrac_end 0.7144 +- 0.0018  sdev_base 0.3416 +- 0.038  sdev_end 1.113 +- 0.51  sdev_z 14.12 +- 7.9
