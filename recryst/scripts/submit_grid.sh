@@ -1,6 +1,6 @@
 #!/bin/bash
 # Isothermal anneal grid (RUNBOOK.md, Part 3 steps 3-4): for each Ta in TAS and each composition in CELLS, NREP
-# replicas of submit_anneal.sh, with everything else from params/<MODEL_ID>.sh (criterion, BARO, XSTOP, MAX_NS, RUNTAG).
+# replicas of submit_anneal.sh, with everything else from recryst/params/<MODEL_ID>.sh (criterion, BARO, XSTOP, MAX_NS, RUNTAG).
 #   Phase A (pilot, x0 over the grid):   CELLS=x0 bash scripts/submit_grid.sh [--dry-run]
 #   Phase B (every composition):         bash scripts/submit_grid.sh [--dry-run]         (CELLS default: all five)
 #   a subset of temperatures:            TAS="600 650" CELLS=x0 bash scripts/submit_grid.sh
@@ -11,7 +11,7 @@
 # Resources: one perc A100-40GB per run by default; RES="-A strachan -p a30 --gpus-per-node=2 --ntasks-per-node=2"
 # for the A30s. Every submission is a separate go-ahead (RUNBOOK.md): run --dry-run first.
 set -euo pipefail
-tas=${TAS:-}                                # a TAS set here overrides params/<MODEL_ID>.sh
+tas=${TAS:-}                                # a TAS set here overrides recryst/params/<MODEL_ID>.sh
 source "$(dirname "$(realpath "$0")")/common.sh"
 TAS=${tas:-$TAS}
 DRY=0; [ "${1:-}" = "--dry-run" ] && DRY=1
@@ -20,7 +20,7 @@ RES=${RES:--A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1}
 for c in $CELLS; do [ -n "${CI[$c]:-}" ] || die "unknown cell $c (one of ${CELLS_ALL[*]})"; done
 for TA in $TAS; do
     case " $CALIB_TS " in *" $TA "*) ;; *) die "TA $TA is not a calibration temperature ($CALIB_TS)" ;; esac
-    [ $TA -lt $((TX_GUARD - 25)) ] || die "TA $TA is not below TX_GUARD $TX_GUARD - 25 K (params/$MODEL_ID.sh)"
+    [ $TA -lt $((TX_GUARD - 25)) ] || die "TA $TA is not below TX_GUARD $TX_GUARD - 25 K (recryst/params/$MODEL_ID.sh)"
 done
 unset TAG EXTRA_VARS                         # submit_anneal.sh reads both; take nothing from this shell
 echo "$MODEL_ID: CELLS $CELLS; TAS $TAS; NREP $NREP; criterion $Q_RC/$Q_THR/$Q_NMIN; BARO $BARO; XSTOP $XSTOP;" \

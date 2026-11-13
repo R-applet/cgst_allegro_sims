@@ -5,7 +5,7 @@ cation-vacancy sites. x = 10 is deliberately the vacancy-free endpoint (every va
 the others in vacancy count as well as C content; see `structures/build_supercells.py`.
 
 The workflow is model-independent. The potential is named by `MODEL_ID` in `common/model.sh`. Its design numbers are
-in `params/<MODEL_ID>.sh`, and its runs and results live in `<MODEL_ID>/` subdirectories. **`RUNBOOK.md`** is the
+in `<study>/params/<MODEL_ID>.sh`, and its runs and results live in `<MODEL_ID>/` subdirectories. **`RUNBOOK.md`** is the
 order of steps for a new model, with what each step must show.
 
 | Part | Directory | run5_ep301 (archived, tag `run5_ep301-final`) | Next model |

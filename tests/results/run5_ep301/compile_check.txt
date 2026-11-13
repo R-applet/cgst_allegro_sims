@@ -1,0 +1,3 @@
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+886e4f7bb46bd61030d092de8cf5bd61aa4c3191930372fc0b81f904a3490090  recompiled.nequip.pt2
+0a1a1b31733501e9880723f01ca1092a5d26d78793ecd7b089b451c1ea1301b1  /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2

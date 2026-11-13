@@ -19,11 +19,11 @@
 # Run directory: runs/<MODEL_ID>/anneal_<cell>_T<TA>_r<rep>/, or .../anneal_<cell>_<TAG>_T<TA>_r<rep>/ with TAG set;
 # the glass is meltquench/runs/<MODEL_ID>/<cell>_q<QRATE>_r<glass>/amorphous_300K.data (MODEL_ID: common/model.sh).
 # Settings (--export=ALL,NAME=value): TA (K, required); NREP (replicas per cell, default 3); MAX_NS (hold length, ns)
-# and XSTOP (fix halt level on xfracGST), both from params/<MODEL_ID>.sh unless set; MAXCHAIN (jobs per chain,
+# and XSTOP (fix halt level on xfracGST), both from recryst/params/<MODEL_ID>.sh unless set; MAXCHAIN (jobs per chain,
 # default 4); EXTRA_VARS (extra LAMMPS -var options; not the criterion or barostat); TAG (optional run-name label for
 # a variant of the same runs: same seeds and glasses, its own directories and replica group; before _T so the
 # analysis name patterns still match; scripts/submit_grid.sh passes RUNTAG). The criterion (Q_VARS), barostat (BARO)
-# and glass rate (QRATE) come from params/<MODEL_ID>.sh, DT and MODEL from common/defaults.sh.
+# and glass rate (QRATE) come from recryst/params/<MODEL_ID>.sh, DT and MODEL from common/defaults.sh.
 # Each task: exits if anneal_done.txt exists; as a continuation, stops the chain with an error if there is no newer
 # restart than its predecessor started from (chain_progress.txt: the predecessor made no progress); otherwise
 # records the newest restart, queues its own continuation (afterany, same array index) and runs, resuming from that
@@ -37,7 +37,7 @@ TA=${TA:?set TA (K)}
 NREP=${NREP:-3}
 m=${MAX_NS:-}; x=${XSTOP:-}
 source $ROOT/common/defaults.sh             # DT (same as the melt-quench), MODEL_ID, MODEL (per node type)
-source $ROOT/params/$MODEL_ID.sh            # MAX_NS, XSTOP, BARO, QRATE, Q_VARS (calibrated criterion)
+source $ROOT/recryst/params/$MODEL_ID.sh         # MAX_NS, XSTOP, BARO, QRATE, Q_VARS (calibrated criterion)
 MAX_NS=${m:-$MAX_NS}; XSTOP=${x:-$XSTOP}
 : "${Q_VARS:?no calibrated criterion: run recryst/calib (submit.sh, then submit_calibrate.sh) for $MODEL_ID first}"
 CHAIN=${CHAIN:-1}

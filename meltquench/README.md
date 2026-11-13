@@ -5,7 +5,7 @@ sample at 300 K. Every stage is NPT, isotropic, 0 bar, with Nosé–Hoover dampi
 
 This README describes the method; results are per model in `results/<MODEL_ID>/` (run5_ep301:
 `results/run5_ep301/RESULTS.md` and its `report/`). Runs go to `runs/<MODEL_ID>/`; `MODEL_ID` is set in
-`common/model.sh`, and the melt temperature, hold and quench rate come from `params/<MODEL_ID>.sh`.
+`common/model.sh`, and the melt temperature, hold and quench rate come from `meltquench/params/<MODEL_ID>.sh`.
 
 **Check the glass density for every model.** run5_ep301 quenches amorphous GST denser than its own rocksalt
 (6.29 vs 6.24 g/cc), unlike experiment (glass ~6–7% less dense). It inherits this from its DFT reference

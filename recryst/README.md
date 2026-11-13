@@ -1,7 +1,7 @@
 # Part 3: Recrystallization
 
 This README describes the method. Runs go to `runs/<MODEL_ID>/`, outputs to `results/<MODEL_ID>/`, calibration to
-`calib/<MODEL_ID>/`; every model-specific number comes from `params/<MODEL_ID>.sh` (and the `calib_params.sh` it
+`calib/<MODEL_ID>/`; every model-specific number comes from `recryst/params/<MODEL_ID>.sh` (and the `calib_params.sh` it
 sources). The order of steps for a new model, with pass criteria, is `../RUNBOOK.md`; run5_ep301's results are in
 `results/run5_ep301/RESULTS.md`, and numbers quoted below for run5_ep301 are examples, not settings.
 
@@ -76,7 +76,7 @@ Ta, but a ns anneal ages the glass, and its ordered patches may grow before a nu
 
 **Result, per model:** `calib/<MODEL_ID>/calibrate.out`, and `calib/<MODEL_ID>/calib_params.sh` generated from it
 (criterion, `--nucleated-size`, crystal and glass `xfracGST` per composition and T). Every Part 3 script reads the
-latter through `params/<MODEL_ID>.sh`, so no criterion or per-T value is typed into a script. run5_ep301: 3.8 Å, 0.6, 4
+latter through `recryst/params/<MODEL_ID>.sh`, so no criterion or per-T value is typed into a script. run5_ep301: 3.8 Å, 0.6, 4
 (`results/run5_ep301/RESULTS.md` section 1).
 
 ## 2. Heating ramp, Tx (`in.ramp`, `submit_ramp.sh`)
@@ -144,7 +144,7 @@ but a crystal grown in an anneal (grain boundaries, defects) reads much less: th
 at `xfracGST` ≈ 0.71 (run5_ep301). The first halt levels, 0.85 × the lowest crystal-reference `xfracGST`
 (`calibrate.py`'s suggestion: 0.72 at 600 K, 0.70 at 650 K), sat at or just above that plateau, so 600 K runs kept
 going for 1–2 ns after crystallizing. Hence **`XSTOP` comes from the grown crystal's plateau in Phase A, not from
-the perfect-crystal reference**: set it below that plateau in `params/<MODEL_ID>.sh` (0.65 for run5_ep301), one value
+the perfect-crystal reference**: set it below that plateau in `recryst/params/<MODEL_ID>.sh` (0.65 for run5_ep301), one value
 for every Ta. `analyze_grid.sh` accepts one `XSTOP` per set, ≥ `X_END`.
 The normalized fraction X = (xfracGST − x_a)/(x_c − x_a) needs an end point x_c. `recryst_summary.py` picks, first
 that applies: `--x-end` (one value for every run); the run's own plateau; `--x-crystal` (the composition's crystal
@@ -245,7 +245,7 @@ pure noise and z = 16 for a 2 kbar deviatoric step.
 
 ## Running
 The steps, with their checks, are wrapped in `scripts/` (`scripts/README.md`); the order for a new model is
-`../RUNBOOK.md`. Every setting comes from `params/<MODEL_ID>.sh`. The underlying commands:
+`../RUNBOOK.md`. Every setting comes from `recryst/params/<MODEL_ID>.sh`. The underlying commands:
 ```
 cd recryst
 (cd calib && sbatch --array=0-53 submit.sh)                     # references -> calib/<MODEL_ID>/

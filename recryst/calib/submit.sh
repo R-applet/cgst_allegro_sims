@@ -21,7 +21,7 @@ set -euo pipefail
 cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ../..)
 source $ROOT/common/defaults.sh             # DT, MODEL_ID, MODEL (per node type)
-source $ROOT/params/$MODEL_ID.sh            # QRATE (which glasses)
+source $ROOT/recryst/params/$MODEL_ID.sh         # QRATE (which glasses)
 mkdir -p $MODEL_ID && cd $MODEL_ID          # outputs per model: calib/<MODEL_ID>/
 TS=(300 500 550 600 650 700)
 NT=${#TS[@]}

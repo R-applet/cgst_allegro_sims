@@ -14,7 +14,7 @@
 #   all cells x 3 replicas:            sbatch --array=0-14 submit.sh
 #   1 K/ps sensitivity (x0, x10, r1):  sbatch --array=0,12 --export=ALL,QRATE=1 submit.sh
 #   longer melt hold for every run (after an MSD-gate ERROR): --export=ALL,HOLD_PS=150
-# QRATE, HOLD_PS and TMELT come from params/<MODEL_ID>.sh; QRATE and HOLD_PS set in the environment override it.
+# QRATE, HOLD_PS and TMELT come from meltquench/params/<MODEL_ID>.sh; QRATE and HOLD_PS set in the environment override it.
 # Array index i -> cell CELLS[i / 3], replica r = i % 3 + 1.
 # Run directory: runs/<MODEL_ID>/<cell>_q<QRATE>_r<r>/ (MODEL_ID: common/model.sh).
 # Velocity seed = 10007*(i+1) + QRATE, so every run has a different seed.
@@ -23,7 +23,7 @@ cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ..)
 q=${QRATE:-}; h=${HOLD_PS:-}
 source $ROOT/common/defaults.sh             # DT, MODEL_ID, MODEL (per node type)
-source $ROOT/params/$MODEL_ID.sh            # TMELT, QRATE, HOLD_PS (keep HOLD_PS the same for every run compared)
+source $ROOT/meltquench/params/$MODEL_ID.sh # TMELT, QRATE, HOLD_PS (keep HOLD_PS the same for every run compared)
 QRATE=${q:-$QRATE}; HOLD_PS=${h:-$HOLD_PS}
 CELLS=(x0 x1 x2p5 x5 x10)
 i=$SLURM_ARRAY_TASK_ID

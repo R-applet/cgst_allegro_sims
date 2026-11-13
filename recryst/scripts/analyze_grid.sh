@@ -2,7 +2,7 @@
 # Analysis of the anneal grid (submit_grid.sh; RUNBOOK.md, Part 3 steps 3-4), per composition and Ta that has runs.
 #   [CELLS="x0"] bash scripts/analyze_grid.sh summary [--dry-run]   checks, fraction summaries, ONE perc cluster job
 #   [CELLS="x0"] bash scripts/analyze_grid.sh verdict                after the cluster job: verdicts and growth table
-# Every number (criterion, NUC, GLASS_<cell>, X_END, XSTOP, MAX_NS, BARO, RUNTAG) is from params/<MODEL_ID>.sh and its
+# Every number (criterion, NUC, GLASS_<cell>, X_END, XSTOP, MAX_NS, BARO, RUNTAG) is from recryst/params/<MODEL_ID>.sh and its
 # calib_params.sh. Outputs in results/<MODEL_ID>/, each starting with '#' lines naming the model and criterion:
 #   grid_<cell>[_<RUNTAG>]_T<Ta>.txt            recryst_summary.py --x-end X_END (t_inc, t50, stress)
 #   grid_<cell>[_<RUNTAG>]_T<Ta>_clusters.txt   the same with --clusters (t_nuc, v_growth, single_grain, J_surv, MFPT)

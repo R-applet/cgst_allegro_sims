@@ -1,5 +1,5 @@
 #!/bin/bash
-# Ramp analysis (RUNBOOK.md, Part 3 step 2): the HRATE ramps of params/<MODEL_ID>.sh (0.2 K/ps for run5_ep301), any
+# Ramp analysis (RUNBOOK.md, Part 3 step 2): the HRATE ramps of recryst/params/<MODEL_ID>.sh (0.2 K/ps for run5_ep301), any
 # composition and replica that ran. recryst_summary.py reads only ramp.dat and stress.dat here (no dumps), so this
 # runs in seconds on a login node.
 #   bash scripts/analyze_ramps.sh       -> results/<MODEL_ID>/ramp_h<HRATE>.txt and ramp_tx_h<HRATE>.txt

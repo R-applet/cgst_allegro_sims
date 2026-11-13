@@ -3,14 +3,14 @@
 #   cwd = RECRYST       recryst/ (or $RECRYST, a fake tree for tests)
 #   RUNS, RESULTS       runs/$MODEL_ID and results/$MODEL_ID, relative to recryst/ (RESULTS is created)
 #   PY                  the cgst-ana python (or $PY)
-#   params              everything in params/$MODEL_ID.sh and its calib_params.sh (criterion, NUC, XC_*, GLASS_*,
+#   params              everything in recryst/params/$MODEL_ID.sh and its calib_params.sh (criterion, NUC, XC_*, GLASS_*,
 #                       XSTOP, X_END, TX_GUARD, BARO, RUNTAG, TAS, NREP, MAX_NS, ...)
 #   CELLS_ALL, CI       the composition order of submit_anneal.sh / submit_ramp.sh and each cell's index in it
 #   die, check          stop; stop unless FORCE=1 (then warn)
 #   n_end TA            the final step of a MAX_NS hold at TA (dt 2 fs; 10 ps at 300 K + 10 K/ps heat in in.anneal)
 #   check_anneal_set CELL TA RUN...  the checks every analysis repeats on a finished anneal set (see below)
 #   header              '#' lines naming the model, criterion and end point, for the top of every output file
-# Stops when params/$MODEL_ID.sh or the calibration (calib_params.sh) is missing: every number the scripts use comes
+# Stops when recryst/params/$MODEL_ID.sh or the calibration (calib_params.sh) is missing: every number the scripts use comes
 # from those two files, so no script carries a model's values.
 ROOT=$(realpath "$(dirname "${BASH_SOURCE[0]}")/../..")
 source "$ROOT/common/model.sh"
@@ -18,8 +18,9 @@ cd "${RECRYST:-$ROOT/recryst}"
 PY=${PY:-$ROOT/env/cgst-ana/bin/python}
 die() { echo "STOPPED: $*" >&2; exit 1; }
 check() { [ "${FORCE:-0}" = 1 ] && { echo "WARNING (FORCE=1): $*"; return 0; }; die "$*"; }
-[ -e "$ROOT/params/$MODEL_ID.sh" ] || die "no params/$MODEL_ID.sh (copy params/run5_ep301.sh and set every value, RUNBOOK.md)"
-source "$ROOT/params/$MODEL_ID.sh"
+[ -e "$ROOT/recryst/params/$MODEL_ID.sh" ] || die "no recryst/params/$MODEL_ID.sh (copy recryst/params/run5_ep301.sh and set every value, RUNBOOK.md)"
+[ -e "$ROOT/meltquench/params/$MODEL_ID.sh" ] || die "no meltquench/params/$MODEL_ID.sh (the glasses' QRATE)"
+source "$ROOT/recryst/params/$MODEL_ID.sh"
 [ -n "${Q_ARGS:-}" ] || die "no recryst/calib/$MODEL_ID/calib_params.sh: run the calibration first (RUNBOOK.md)"
 RUNS=runs/$MODEL_ID
 RESULTS=results/$MODEL_ID
