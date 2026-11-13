@@ -19,6 +19,7 @@ PASS  calib: calibrate.py suggests --nucleated-size at 300 K = 2 x the recounted
 PASS  analysis: ramp() gives finite Tx_H and stress metrics  (Tx_H 753 K, sdev 1.31 -> 1.71 kbar, z 1.3)
 PASS  analysis: hold_start.txt = 4 ps with criterion 3.6/0.5/4; xstop read back (0.8 default, 0 for halt_x0)  ({'hold_start_ps': 4.0, 'q_rc': 3.6, 'q_thr': 0.5, 'q_nmin': 4.0}, 0.8, 0.0)
 PASS  analysis: anneal() gives t_end 20 ps, x_c from xstop, NaN stress metrics for a 20 ps hold  (t_end 20, x_c 0.8 from xstop)
+PASS  analysis: --x-end fixes x_c for every run (over x-crystal and xstop); with --x-crystal it is refused  (x_c 0.3 from x-end; exit 2)
 PASS  analysis: clusters_q3.6_0.5_4.txt has every dumped hold step once, in order, across both jobs' files  (11 frames, 11 distinct dumped hold steps)
 PASS  analysis: clusters from the dumped c_ncb equal clusters from a recount  (largest [4, 28, 12, 15, 15, 16, 27, 9, 20, 6, 5] vs [4, 28, 12, 15, 15, 16, 27, 9, 20, 6, 5])
 PASS  analysis: main() skips an incomplete anneal and still reports the complete one  (anneal_x0_T600_r9: incomplete (no anneal_done.txt), skipped | anneal_x0_T600_r1            x_a 0.1063  x_c 0.8  x_c_from)

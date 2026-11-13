@@ -29,10 +29,16 @@ unset TAG                                   # an inherited TAG would rename the 
 # Criterion, used in-run by fix halt and the dumped c_ncb. sbatch --export=ALL carries EXTRA_VARS into the job, and
 # each continuation inherits it the same way, so the criterion stays fixed along a chain.
 export EXTRA_VARS="-var q_rc 3.8 -var q_thr 0.6 -var q_nmin 4${TAGP:+ -var baro aniso}"
-declare -A XSTOP=( [500]=0.75 [550]=0.73 [600]=0.72 [650]=0.70 [700]=0.68 )   # 0.85 x lowest crystal ref at TA (x5)
+# XSTOP 0.65 at every Ta (from 2026-11-13): a crystal grown in the glass plateaus near xfracGST 0.71 at 600 K, so the
+# earlier 0.85 x crystal-reference values (0.72-0.75) sat at or above that plateau and runs kept going for 1-2 ns after
+# crystallizing, or would never halt at 500/550 K. The first 600/650 K runs used 0.72/0.70.
+XSTOP=0.65
 TAS=${TAS:-500 550 600 650 700}
 for TA in $TAS; do
-    [ -n "${XSTOP[$TA]:-}" ] || { echo "TA $TA is not calibrated (500-700 K in 50 K steps)" >&2; exit 1; }
+    case " 500 550 600 650 700 " in
+        *" $TA "*) ;;
+        *) echo "TA $TA is not calibrated (500-700 K in 50 K steps)" >&2; exit 1 ;;
+    esac
 done
 
 limit=$(awk -v tx=$TX_X0 -v sd=$TX_X0_STD 'BEGIN { m = 2 * sd; if (m < 25) m = 25; printf "%.1f", tx - m }')
@@ -46,7 +52,7 @@ for TA in $TAS; do
     fi
     # One perc A100-40GB per run (strachan A30s: ~5-day backlog on 2026-11-10). Up to 9 runs at once.
     cmd=(sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1
-         --array=0-2 --export=ALL,TA=$TA,XSTOP=${XSTOP[$TA]}${TAGP:+,TAG=aniso} submit_anneal.sh)
+         --array=0-2 --export=ALL,TA=$TA,XSTOP=$XSTOP${TAGP:+,TAG=aniso} submit_anneal.sh)
     echo "TA $TA: ${cmd[*]}  (EXTRA_VARS=$EXTRA_VARS)"
     [ $DRY = 1 ] || "${cmd[@]}"
 done

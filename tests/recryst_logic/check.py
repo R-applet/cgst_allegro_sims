@@ -23,7 +23,8 @@ at tscale 0.1 and dt 1 fs: the anneal hold starts at step 4000 (10 ps at 300 K +
                      rounded up to a multiple of 10
   analysis           recryst_summary on the outputs: ramp() gives finite Tx_H and stress metrics; anneal() reads
                      hold_start.txt (4 ps, criterion 3.6/0.5/4) and xstop from anneal_done.txt (0.8; halt_x0: 0),
-                     takes x_c from xstop (no plateau in 20 ps), gives t_end 20 ps, and NaN stress metrics (20 ps < 4
+                     takes x_c from xstop (no plateau in 20 ps), or from --x-end over everything else (and refuses
+                     --x-end with --x-crystal), gives t_end 20 ps, and NaN stress metrics (20 ps < 4
                      blocks of 10 ps); clusters() writes clusters_q3.6_0.5_4.txt with every hold frame once, in step
                      order, across the two jobs' dump files, and gives the same clusters from the dumped c_ncb as
                      from a recount; main() skips an incomplete anneal (a copy without anneal_done.txt) by name;
@@ -178,6 +179,13 @@ def run_checks():
     check("analysis: anneal() gives t_end 20 ps, x_c from xstop, NaN stress metrics for a 20 ps hold",
           abs(ra["t_end"] - 20) < 1e-6 and ra["x_c_from"] == "xstop" and ra["x_c"] == 0.8
           and np.isnan(ra["sdev_z"]), f"t_end {ra['t_end']:g}, x_c {ra['x_c']} from {ra['x_c_from']}")
+    re_ = rs.anneal(a, 0.1, x_crystal=0.9, x_end=0.3)                  # --x-end wins over --x-crystal and xstop
+    rx = rs.anneal(a, 0.1, x_crystal=0.9)
+    both = subprocess.run([sys.executable, str(HERE.parents[1] / "analysis/recryst_summary.py"), "--x-crystal", "0.9",
+                           "--x-end", "0.3", str(a)], capture_output=True, text=True)
+    check("analysis: --x-end fixes x_c for every run (over x-crystal and xstop); with --x-crystal it is refused",
+          re_["x_c"] == 0.3 and re_["x_c_from"] == "x-end" and rx["x_c_from"] == "x-crystal" and both.returncode != 0
+          and "alternatives" in both.stderr, f"x_c {re_['x_c']} from {re_['x_c_from']}; exit {both.returncode}")
     steps = sorted({s for f in a.glob("traj.*.lammpstrj.gz") for s, _, _ in read_dump(f) if s >= 4000})
     cl = rs.clusters(a, 3.6, 0.5, 4, 10)
     rows = (a / "clusters_q3.6_0.5_4.txt").read_text().splitlines()

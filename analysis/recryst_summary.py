@@ -15,9 +15,12 @@ ramp runs (ramp.dat):
   Tx_H and Tx_rho always return a value; read them only when Tx_xfrac is finite (crystallization happened).
 anneal runs (anneal.dat; hold start from hold_start.txt and xstop from anneal_done.txt, both written by in.anneal):
   x_a       baseline, mean xfracGST of the first 20 ps of the hold
-  x_c       the fully crystalline value X is normalized to, from (first that applies): the run's own plateau (mean of
-            the last 100 ps, if the 5 ps-averaged xfracGST rose by less than 0.02 over the last 200 ps); --x-crystal
-            (the calibrated crystal reference at Ta for the run's composition; one call per composition, recryst/README.md); the run's xstop. x_c_from names the source.
+  x_c       the crystalline end point X is normalized to, from (first that applies): --x-end (one fixed value for every
+            run, so t_inc and t50 mean the same xfracGST in every run of a set); the run's own plateau (mean of the
+            last 100 ps, if the 5 ps-averaged xfracGST rose by less than 0.02 over the last 200 ps); --x-crystal (the
+            calibrated crystal reference at Ta for the run's composition); the run's xstop. x_c_from names the source.
+            Without --x-end, runs of one set can mix sources (a grown crystal plateaus near 0.71 at 600 K, against
+            0.95 for the perfect x0 crystal), which makes their t50 incomparable (recryst/README.md, Halt level).
   t_inc     first hold time where X = (xfracGST - x_a) / (x_c - x_a) (5 ps average) exceeds 0.05
   t50       first hold time where X exceeds 0.5
   n_JMAK, k_JMAK  descriptors of the curve shape only: the fit X = 1 - exp(-k (t - t_inc)^n) on 0.05 < X < 0.95.
@@ -58,7 +61,8 @@ Only complete runs are analysed (ramp: snap_900K.data; anneal: anneal_done.txt);
 Replica groups (runio.group_of: the name without _r<rep>) with two or more runs also get mean +- sample std.
 Times in ps; NaN when the event did not happen within the run.
 
-Usage: python recryst_summary.py [--tscale S] [--x-crystal X] [--clusters --nucleated-size N [--nucleus-min N]]
+Usage: python recryst_summary.py [--tscale S] [--x-crystal X | --x-end X]
+       [--clusters --nucleated-size N [--nucleus-min N]]
        [--q-rc R --q-thr T --q-nmin N] <run_dir> ...       Directory names select the mode: ramp_* or anneal_*_T<Ta>_*.
 """
 import argparse
@@ -146,7 +150,7 @@ def xstop_of(run):
     return float(re.search(r"stop at xfracGST > ([-\d.eE+]+)", (run / "anneal_done.txt").read_text())[1])
 
 
-def anneal(run, tscale, x_crystal=None):
+def anneal(run, tscale, x_crystal=None, x_end=None):
     d = load_dat(run / "anneal.dat")
     t0 = hold_start(run)
     m = d["time_ps"] >= t0
@@ -154,7 +158,9 @@ def anneal(run, tscale, x_crystal=None):
     xa = x[t <= 20 * tscale].mean()
     xs = smooth(x, 5)
     late, last = t >= t.max() - 200 * tscale, t >= t.max() - 100 * tscale
-    if t.max() >= 300 * tscale and xs[late][-1] - xs[late][0] < 0.02 and xs[late].mean() > xa + 0.1:
+    if x_end is not None:                             # one end point for every run of a set (--x-end)
+        xc, src = x_end, "x-end"
+    elif t.max() >= 300 * tscale and xs[late][-1] - xs[late][0] < 0.02 and xs[late].mean() > xa + 0.1:
         xc, src = x[last].mean(), "plateau"
     elif x_crystal is not None:
         xc, src = x_crystal, "x-crystal"
@@ -269,6 +275,8 @@ def main():
     ap.add_argument("runs", nargs="+", type=Path)
     ap.add_argument("--tscale", type=float, default=1.0)
     ap.add_argument("--x-crystal", type=float, help="crystal-reference xfracGST at Ta, for x_c (from calibrate.py)")
+    ap.add_argument("--x-end", type=float, help="fixed x_c for every run (overrides plateau, --x-crystal, xstop), "
+                    "so t_inc/t50 aim at the same xfracGST in every run; use a value every run reaches")
     ap.add_argument("--clusters", action="store_true")
     ap.add_argument("--nucleus-min", type=int, default=10, help="smallest cluster counted in n_clusters (atoms)")
     ap.add_argument("--nucleated-size", type=int,
@@ -279,6 +287,8 @@ def main():
     ap.add_argument("--q-thr", type=float, default=0.5)
     ap.add_argument("--q-nmin", type=int, default=4)
     a = ap.parse_args()
+    if a.x_crystal is not None and a.x_end is not None:
+        ap.error("--x-crystal and --x-end are alternatives: --x-end fixes x_c for every run, --x-crystal is a fallback")
     if a.clusters and a.nucleated_size is None:
         ap.error("--clusters needs --nucleated-size: the glass already has crystal-like clusters of up to a few "
                  "hundred atoms, so use the value recryst/calib/calibrate.py suggests for Ta and this criterion")
@@ -295,7 +305,7 @@ def main():
         if run in ramps:
             res = ramp(run, a.tscale)
         else:
-            res = anneal(run, a.tscale, a.x_crystal)
+            res = anneal(run, a.tscale, a.x_crystal, a.x_end)
             if a.clusters:
                 cl = clusters(run, a.q_rc, a.q_thr, a.q_nmin, a.nucleus_min)
                 res = kinetics(cl, a.nucleated_size) | res

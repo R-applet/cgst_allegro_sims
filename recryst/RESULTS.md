@@ -72,7 +72,9 @@ so the whole calibrated grid, 500–700 K, passes. The 0.2 K/ps Tx (571 K) belon
 anneal heating and would wrongly exclude all five.
 **Phase A (x0, 500–700 K, 3 replicas):** iso/aniso pairs at 600 and 650 K first (`BARO=aniso`, runs
 `anneal_x0_aniso_T<Ta>_r*`), because the 0.2 K/ps x0 crystal built 5 kbar of deviatoric stress (section 3); then 500,
-550 and 700 K with the chosen barostat. Record per Ta the verdicts, x0 `v_growth` per run, the iso-vs-aniso
+550 and 700 K with the chosen barostat. Grown x0 crystals plateau at `xfracGST` ≈ 0.71 at 600 K, below the first
+halt levels (0.72/0.70), so later runs halt at `XSTOP` = 0.65 and t_inc/t50 use one end point, `--x-end 0.65`
+(`README.md`, "Halt level"). Record per Ta the verdicts, x0 `v_growth` per run, the iso-vs-aniso
 comparison at 600 and 650 K (`rate_compare.py` on `screen_T<Ta>_clusters.txt` and `screen_aniso_T<Ta>_clusters.txt`,
 t50 and `v_growth`), and which barostat the rest of the grid uses, with the reason.
 

@@ -23,25 +23,30 @@ BARO=${BARO:-iso}
 case $BARO in iso) TAGP="" ;; aniso) TAGP="_aniso" ;; *) die "BARO must be iso or aniso, not '$BARO'" ;; esac
 R=anneal_x0${TAGP}                          # run-name stem of this set; outputs carry the same ${TAGP}
 Q="--q-rc 3.8 --q-thr 0.6 --q-nmin 4"
-# calibrate.out at 3.8/0.6/4: x0's own crystal reference, --nucleated-size, XSTOP, and the x0 glass xfracGST at Ta.
-# Checked against calib/calibrate.out (--choose 3.8 0.6 4, commit 5cfeee0).
-declare -A XC=( [500]=0.950 [550]=0.951 [600]=0.950 [650]=0.948 [700]=0.947 )
+# calibrate.out at 3.8/0.6/4 (--choose 3.8 0.6 4, commit 5cfeee0): --nucleated-size and the x0 glass xfracGST at Ta.
+# X_END: the one crystalline end point for t_inc/t50 in every run (recryst_summary.py --x-end). A crystal grown in the
+# glass plateaus near xfracGST 0.71 at 600 K (defects, grain boundaries), far below the perfect x0 crystal's 0.95, so a
+# per-run end point (plateau or reference) made t50 incomparable; 0.65 is reached by every run halted at XSTOP >= 0.65.
+X_END=0.65
 declare -A NUC=( [500]=230 [550]=250 [600]=260 [650]=210 [700]=130 )
-declare -A XSTOP=( [500]=0.75 [550]=0.73 [600]=0.72 [650]=0.70 [700]=0.68 )
 declare -A GLASS=( [500]=0.086 [550]=0.090 [600]=0.076 [650]=0.064 [700]=0.048 )
 TAS=$(for T in 500 550 600 650 700; do compgen -G "runs/${R}_T${T}_r*" > /dev/null && echo $T; done)
 [ -n "$TAS" ] || die "no screening runs (runs/${R}_T<Ta>_r*)"
 
 if [ $STAGE = summary ]; then
-    # 0. Per Ta: 3 finished runs, final criterion, the planned XSTOP and final step (5 ns at 2 fs).
+    # 0. Per Ta: 3 finished runs, final criterion, one XSTOP for the set (>= X_END) and the 5 ns final step at 2 fs.
+    #    XSTOP is not fixed per Ta: the first 600/650 K runs used 0.72/0.70, later runs 0.65 (submit_screen.sh).
     for T in $TAS; do
         d=$(ls runs/${R}_T${T}_r*/anneal_done.txt 2>/dev/null | wc -l)
         [ $d -ge 3 ] || check "T$T: only $d of 3 finished"
         crit=$(cat runs/${R}_T${T}_r*/hold_start.txt | awk '{print $4, $6, $8}' | sort -u)
         [ "$crit" = "3.8 0.6 4" ] || check "T$T criteria: $(echo $crit)"
-        want="(stop at xfracGST > ${XSTOP[$T]} or step $(( 5000 + 50 * (T - 300) + 2500000 )))"
         stops=$(grep -ho '(stop at.*)' runs/${R}_T${T}_r*/anneal_done.txt | sort -u)
-        [ "$stops" = "$want" ] || check "T$T: $(echo $stops), expected $want"
+        [ $(echo "$stops" | wc -l) = 1 ] || check "T$T: runs differ: $(echo $stops)"
+        n_end=$(( 5000 + 50 * (T - 300) + 2500000 ))
+        echo "$stops" | grep -q "or step $n_end)$" || check "T$T: not a 5 ns hold: $stops"
+        xs=$(echo "$stops" | head -1 | sed 's/.*> \([0-9.]*\) or.*/\1/')
+        awk -v x="$xs" -v e=$X_END 'BEGIN { exit !(x + 0 >= e) }' || check "T$T: XSTOP $xs below X_END $X_END"
         for l in runs/${R}_T${T}_r*/log.anneal.1; do   # substituted fix npt line: ' iso 0.0 0.0' or ' aniso 0.0 0.0'
             if [ $BARO = aniso ]; then grep -q ' aniso 0.0 0.0' $l && ! grep -q ' iso 0.0 0.0' $l
             else grep -q ' iso 0.0 0.0' $l && ! grep -q ' aniso 0.0 0.0' $l; fi || check "$l: barostat is not $BARO"
@@ -52,13 +57,13 @@ if [ $STAGE = summary ]; then
 
     # 1. Fraction curves per Ta, x0's own x_c (light: anneal.dat/stress.dat only).
     for T in $TAS; do
-        $PY $ROOT/analysis/recryst_summary.py --x-crystal ${XC[$T]} runs/${R}_T${T}_r* > screen${TAGP}_T${T}.txt
+        $PY $ROOT/analysis/recryst_summary.py --x-end $X_END runs/${R}_T${T}_r* > screen${TAGP}_T${T}.txt
     done
 
     # 2. Clusters, t_nuc, J_surv, MFPT: every frame -> ONE perc job for all screened Ta (values expanded here).
     cmds=""
     for T in $TAS; do
-        cmds+="$PY $ROOT/analysis/recryst_summary.py --x-crystal ${XC[$T]} --clusters --nucleated-size ${NUC[$T]} $Q"
+        cmds+="$PY $ROOT/analysis/recryst_summary.py --x-end $X_END --clusters --nucleated-size ${NUC[$T]} $Q"
         cmds+=" runs/${R}_T${T}_r* > screen${TAGP}_T${T}_clusters.txt 2>&1; "
     done
     echo "$cmds" | tr ';' '\n' | sed '/^ *$/d'

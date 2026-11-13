@@ -19,12 +19,16 @@ die() { echo "REFUSED: $*" >&2; exit 1; }
 flag() { [ "${FORCE:-0}" = 1 ] && { echo "WARNING (FORCE=1): $*"; return; }; die "$*"; }
 KIND=${KIND:?prod, screen or ramp}
 export EXTRA_VARS="-var q_rc 3.8 -var q_thr 0.6 -var q_nmin 4 -var baro aniso"
-declare -A XSTOP_AT=( [550]=0.73 [600]=0.72 [650]=0.70 )
 declare -A CI=( [x0]=0 [x1]=1 [x2p5]=2 [x5]=3 [x10]=4 )          # CELLS order in submit_anneal.sh / submit_ramp.sh
 
 case $KIND in
   prod|screen)
-    TA=${TA:?set TA}; XSTOP=${XSTOP_AT[$TA]:-}; [ -n "$XSTOP" ] || die "no calibrated XSTOP for TA=$TA"
+    TA=${TA:?set TA}
+    case " 500 550 600 650 700 " in *" $TA "*) ;; *) die "TA $TA is not calibrated (500-700 K)" ;; esac
+    # the aniso set halts where the iso set it pairs with halted (XSTOP changed to 0.65 on 2026-11-13)
+    XSTOP=$(grep -ho 'stop at xfracGST > [0-9.]*' runs/anneal_${CELL:-x0}_T${TA}_r1/anneal_done.txt 2>/dev/null \
+            | awk '{print $NF}')
+    [ -n "$XSTOP" ] || die "no finished iso run at TA=$TA to take XSTOP from"
     if [ $KIND = prod ]; then CELL=${CELL:?set CELL}; NREP=10; src=prod_overview.txt
         [ -e $src ] || die "$src missing (production analysis 'summary' stage)"
         n=$(awk -v c=$CELL '$1 == c { for (i = 1; i <= NF; i++) if ($i == "5:") print $(i + 1) + 0 }' $src)
@@ -45,7 +49,7 @@ case $KIND in
     ! compgen -G "runs/anneal_${CELL}_aniso_T${TA}_r*" > /dev/null || die "runs/anneal_${CELL}_aniso_T${TA}_r* exist"
     cmd=(sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1
          --array=$lo-$hi --export=ALL,TA=$TA,NREP=$NREP,XSTOP=$XSTOP,TAG=aniso submit_anneal.sh)
-    cmp="python ../analysis/recryst_summary.py --x-crystal <$CELL at $TA> runs/anneal_${CELL}_T${TA}_r* runs/anneal_${CELL}_aniso_T${TA}_r*"
+    cmp="python ../analysis/recryst_summary.py --x-end 0.65 runs/anneal_${CELL}_T${TA}_r* runs/anneal_${CELL}_aniso_T${TA}_r*"
     ;;
   ramp)
     CELL=${CELL:?set CELL}; [ -n "${CI[$CELL]:-}" ] || die "unknown CELL $CELL"; src=ramp_tx.txt

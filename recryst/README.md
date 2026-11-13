@@ -142,16 +142,21 @@ Replicas: replica r starts from melt-quench glass ((r − 1) mod 3) + 1 with its
 3 glasses once each. Nucleation itself is a rare event (one waiting time per run, rate error about 1/√n, 58% for 3
 runs); rates from these runs are by-products with that error, not the target.
 
-**Halt level and the crystalline end point.** A perfect x0 crystal reads ≈ 0.93 at 600 K under the default
-criterion, and a crystal grown in an anneal (grain boundaries, defects) reads less, so a halt at 0.9 would rarely
-fire. `XSTOP` (default 0.8, on `xfracGST`) should be set below what a crystallized sample reads at Ta: `calibrate.py`
-prints a suggestion per reference temperature (0.85 × the lowest crystal-reference `xfracGST`). The normalized
-fraction X = (xfracGST − x_a)/(x_c − x_a) uses x_c, the fully crystalline value: the run's own plateau if it reached
-one, else `--x-crystal` (the composition's own crystal-reference value at Ta, printed per composition by
-`calibrate.py`), else the run's `XSTOP`; `x_c_from` says which. `--x-crystal` takes one value per call, so run
-`recryst_summary.py` once per composition. Using the lowest reference (x5) for all would overstate X for x0, whose
-crystal reads about 0.95 against x5's 0.84 at 600 K. x10 has no crystal reference (its rocksalt disorders), so it
-falls back to its plateau or `XSTOP`.
+**Halt level and the crystalline end point.** A perfect x0 crystal reads ≈ 0.95 at 600 K under the final criterion,
+but a crystal grown in an anneal (grain boundaries, defects) reads much less: the Phase A x0 runs at 600 K plateaued
+at `xfracGST` ≈ 0.71. The first halt levels, 0.85 × the lowest crystal-reference `xfracGST` (`calibrate.py`'s
+suggestion: 0.72 at 600 K, 0.70 at 650 K), sat at or just above that plateau, so 600 K runs kept going for 1–2 ns
+after crystallizing, and at 500/550 K (0.75/0.73) runs would never have halted. From 2026-11-13, **`XSTOP` = 0.65 at
+every Ta** (`scripts/submit_screen.sh`); the first 600/650 K runs keep their 0.72/0.70, which `analyze_screen.sh`
+accepts (one `XSTOP` per set, ≥ 0.65).
+The normalized fraction X = (xfracGST − x_a)/(x_c − x_a) needs an end point x_c. `recryst_summary.py` picks, first
+that applies: `--x-end` (one value for every run); the run's own plateau; `--x-crystal` (the composition's crystal
+reference at Ta, from `calibrate.py`); the run's `XSTOP`; `x_c_from` says which. Without `--x-end`, runs of one set
+mixed sources (plateau 0.71 in some, reference 0.95 in others), so t50 meant `xfracGST` ≈ 0.40 in one run and ≈ 0.52
+in the next. **The analysis scripts therefore pass `--x-end 0.65`**: t_inc and t50 are measured toward the same
+`xfracGST` in every run, at every Ta, reached by every run that halts at `XSTOP` ≥ 0.65. `v_growth` does not use
+x_c. (`--x-end` and `--x-crystal` are alternatives; passing both is refused.) x10 has no crystal reference (its
+rocksalt disorders), which `--x-end` sidesteps.
 
 **Outputs.**
 - `anneal.dat` every 1 ps;
