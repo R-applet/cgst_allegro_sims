@@ -7,7 +7,7 @@ checkpoint copies are not tracked by git; their hashes are here.
 | MODEL_ID | Type | Short range | Training data | Checkpoint (sha256) | Compiled files | Status |
 |---|---|---|---|---|---|---|
 | `run5_ep301` | Allegro (nequip/allegro with per-pair ZBL, `zbl_updated`) | per-pair ZBL | `CGST/cgst_train_paw.xyz` | `run5_ep301.ckpt` (`b6ae59f2…96b1`) | `.pt2`, `.G`, `.N` | archived, tag `run5_ep301-final` |
-| `nozbl_paw` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `CGST/cgst_train_paw.xyz` | `nozbl_paw.ckpt` (`ed645c56…bfcc`) | to be compiled | in progress (default `MODEL_ID`) |
+| `nozbl_paw` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `CGST/cgst_train_paw.xyz` | `nozbl_paw.ckpt` (`ed645c56…bfcc`) | `.G`, `.N` (A30 file not yet built) | in progress (default `MODEL_ID`) |
 | (second potential) | — | — | — | — | — | to be provided |
 
 ## nozbl_paw
@@ -24,7 +24,16 @@ checkpoint copies are not tracked by git; their hashes are here.
 | Compile | the container's own nequip/allegro are the training versions, so `MODEL_SRC` is empty; `TRAIN_DIR` is `.../nequip_no_zbl`, where the checkpoint's relative `../cgst_train_paw.xyz` resolves |
 | Not used | `.../nequip_no_zbl/0718_nequip_no_zbl.nequip.pt2`: compiled 2026-07-18 from an older run on the pre-PAW data (`config.yaml`, `outputs/2026-07-15`) |
 
-Compiled files: to be filled in when built (`RUNBOOK.md`, A): file, node it was compiled on, sha256, validation.
+Compiled files (`models/compile_model.sh` on perc, from `models/nozbl_paw.ckpt`; the logs, `models/slurm-<job>.out`,
+print the hash):
+
+| file | compiled on | used on | sha256 | validated |
+|---|---|---|---|---|
+| `nozbl_paw.G.nequip.pt2` | a100-40gb gilbreth-g008, 2026-11-13 (job 12358491) | a100-40gb g-nodes | `f76aeea05254960c98abd3f4c27dbecc15b628627c0258ff360e24dcfc4e037d` | not yet (`model_check`, `model_select`; RUNBOOK B) |
+| `nozbl_paw.N.nequip.pt2` | a100-40gb gilbreth-n006, 2026-11-13 (job 12358492) | a100-40gb n-nodes | `a9933e81fcce76eccefb0223bf316df89d58021e254d5678d84a5c7e955dcf5f` | not yet (`model_check`, `model_select`; RUNBOOK B) |
+| `nozbl_paw.nequip.pt2` | — | a30 b- and d-nodes | — | not built (A30 queue; RUNBOOK A2) |
+
+Running and finishing in LAMMPS is not validation: the energies must still match the checkpoint (`model_check`).
 
 ## run5_ep301
 
