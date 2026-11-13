@@ -14,6 +14,8 @@ Known answers, independent of any simulation:
   5. toy C cell (a linear C3 chain, a C2 dimer, one C bonded to one Ge): C clusters 3/6 in size 3, 2/6 in size
      2, 1/6 in size 1; motifs C1 4/6, C2 1/6, Ge1 1/6; the chain's middle C has one 180 deg angle
   6. replica statistics (runio.mean_std): the std of 1, 2, 3 is 1 (sample std, ddof 1); one value gives NaN
+  7. closest approach (mq_summary.closest, rmin_*): on a synthetic RDF file, the lower edge of the first bin with
+     g > 0 per pair (Ge-Te 2.30 A, C-C 0.94 A), NaN for a pair that never appears
 Check 4 needs structures/111/x0.data (gitignored; python structures/build_supercells.py --nrep 1). The rocksalt
 angle check cannot see a reversed bond vector (cubic angles stay at 90/180); the toy cell's 180 deg check can.
 Writes RESULT.txt and exits 1 on any failure. Run: ../../env/cgst-ana/bin/python check.py (~20 s)
@@ -117,6 +119,23 @@ from runio import mean_std  # noqa: E402
 m, s = mean_std([[1.0, 5.0], [2.0, np.nan], [3.0, np.nan]])
 check("mean_std: sample std (ddof 1), NaN for a single value", m[0] == 2.0 and s[0] == 1.0 and m[1] == 5.0
       and np.isnan(s[1]), f"std {s[0]:g}, single-value std {s[1]}")
+
+# ---------- 7. closest approach (mq_summary.closest, for potentials without ZBL) ----------
+import tempfile  # noqa: E402
+from mq_summary import closest  # noqa: E402
+
+rr = (np.arange(300) + 0.5) * 0.02                       # bin centres, 0.02 A bins to 6 A, as common/in.rdf
+cols = np.zeros((300, 20))                             # 10 pairs x (g, cn) after the total g and cn
+cols[np.searchsorted(rr, 2.31):, 2 * 2] = 1.0            # Ge-Te (3rd pair): first g > 0 in the bin [2.30, 2.32)
+cols[np.searchsorted(rr, 0.95):, 2 * 9] = 0.5            # C-C (10th pair): first g > 0 in the bin [0.94, 0.96)
+with tempfile.TemporaryDirectory() as tmp:
+    f = Path(tmp) / "rdf_1500K.dat"
+    f.write_text("# fake\n# fake\n# fake\n0 300\n" + "\n".join(
+        f"{k + 1} {rr[k]:.2f} 0 0 " + " ".join(f"{v:g}" for v in cols[k]) for k in range(300)) + "\n")
+    cm = closest(f)
+check("closest(): lower edge of the first bin with g > 0, per pair; NaN for an absent pair",
+      abs(cm["Ge-Te"] - 2.30) < 1e-9 and abs(cm["C-C"] - 0.94) < 1e-9 and np.isnan(cm["Ge-Ge"]),
+      f"Ge-Te {cm['Ge-Te']:.2f}, C-C {cm['C-C']:.2f}, Ge-Ge {cm['Ge-Ge']}")
 
 lines.append(f"VERDICT: {'PASS' if ok else 'FAIL'}")
 (HERE / "RESULT.txt").write_text("\n".join(lines) + "\n")

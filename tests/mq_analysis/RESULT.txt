@@ -14,4 +14,5 @@ PASS  toy C cell: cluster sizes  ({3: 3, 2: 2, 1: 1})
 PASS  toy C cell: C motifs  ({'C1': 4, 'C2': 1, 'Ge1': 1})
 PASS  toy C cell: one 180 deg C angle (chain middle)
 PASS  mean_std: sample std (ddof 1), NaN for a single value  (std 1, single-value std nan)
+PASS  closest(): lower edge of the first bin with g > 0, per pair; NaN for an absent pair  (Ge-Te 2.30, C-C 0.94, Ge-Ge nan)
 VERDICT: PASS

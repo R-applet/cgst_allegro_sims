@@ -12,6 +12,12 @@ Per run directory (mq.dat, gate.txt, stages.txt, rdf_300K.dat, amorphous_300K.da
             (recryst/README.md, "Crystal-like order already in the glass"); compare runs against that baseline
   CN_ij     partial coordination at 300 K: mean number of j atoms within the bond cutoff of an i atom (rdf_300K.dat)
   Z_i       total coordination of species i, summed over all partners (needs amorphous_300K.data for the counts)
+  rmin_l, rmin_a  closest approach (A) of any atom pair in the liquid (rdf_<tmelt>K.dat, last 20 ps of the hold) and
+            the glass (rdf_300K.dat): the lower edge of the first RDF bin (0.02 A) with g > 0, over all pairs. A
+            WARNING names any pair below RMIN_WARN (1.0 A): a potential without short-range repulsion (no ZBL) can let
+            atoms collapse in the hot liquid. The per-pair values are printed below the table. C-C bonds are
+            1.2-1.5 A, so judge pairs, not one threshold; the RDF is time-averaged, so a brief contact can be missed
+            (a crash or an energy drift in tests/dt is the other sign)
   hold_ps   the tmelt hold (gate.txt). A run that fails its MSD gate stops before the quench, so every complete run
             passed it; runs compared with each other must share hold_ps, and a WARNING is printed if they do not.
 With --out DIR, also writes DIR/<group>_curves.dat: rho(T) and H(T) on the heating ramp and the quench in 10 K bins,
@@ -31,6 +37,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from runio import BOND_RC, SPECIES, complete_runs, group_of, load_dat, mean_std, parse_rc  # noqa: E402
 
 PAIRS = [(i, j) for i in range(4) for j in range(i, 4)]          # order of compute rdf in common/in.rdf
+RMIN_WARN = 1.0                                                   # A, closest-approach warning level (rmin_*)
 
 
 def load_rdf(path):
@@ -44,6 +51,23 @@ def load_rdf(path):
     for k, p in enumerate(PAIRS):
         out[p] = (block[:, 4 + 2 * k], block[:, 5 + 2 * k])
     return r, out
+
+
+def closest(path):
+    """{pair name: lower edge (A) of the first bin with g > 0} from an RDF file; NaN for a pair never seen."""
+    r, rdf = load_rdf(path)
+    lo = r - 0.5 * (r[1] - r[0])
+    out = {}
+    for (i, j), (g, _) in rdf.items():
+        k = np.flatnonzero(g > 0)
+        out[f"{SPECIES[i]}-{SPECIES[j]}"] = lo[k[0]] if len(k) else np.nan
+    return out
+
+
+def liquid_rdf(run):
+    """The run's liquid RDF file, rdf_<tmelt>K.dat (any rdf_*K.dat that is not 300 K), or None."""
+    f = [p for p in sorted(run.glob("rdf_*K.dat")) if p.name != "rdf_300K.dat"]
+    return f[0] if f else None
 
 
 def type_counts(path):
@@ -118,6 +142,11 @@ def summarize(run, tscale=1.0, rc=None):
     res["Tg"] = bilinear_tg(T[quench], d["V_A3_per_atom"][quench]) if quench.sum() > 20 else np.nan
     res["_curves"] = {s: [binned(T[m], d[c][m]) for c in ("rho_gcc", "H_eV_per_atom")]
                       for s, m in (("heat", heat), ("quench", quench))}
+    res["_rmin"] = {}
+    for tag, f in (("l", liquid_rdf(run)), ("a", run / "rdf_300K.dat")):
+        if f is not None and f.exists():
+            res["_rmin"][tag] = closest(f)
+            res[f"rmin_{tag}"] = np.nanmin(list(res["_rmin"][tag].values()))
     if (run / "rdf_300K.dat").exists():
         r, rdf = load_rdf(run / "rdf_300K.dat")
         n = type_counts(run / "amorphous_300K.data") if (run / "amorphous_300K.data").exists() else None
@@ -145,12 +174,23 @@ def main(runs, tscale, rc, out=None):
     if not runs:
         raise SystemExit("no complete runs")
     rows = [summarize(r, tscale, rc) for r in runs]
-    keys = ["Tm_app", "rho_l", "rho_a", "Tg", "xfrac_a", "hold_ps"]
+    keys = ["Tm_app", "rho_l", "rho_a", "Tg", "xfrac_a", "rmin_l", "rmin_a", "hold_ps"]
     keys += sorted({k for r in rows for k in r if k.startswith("CN_")})
     keys += [f"Z_{s}" for s in SPECIES if any(f"Z_{s}" in r for r in rows)]
     print("run".ljust(18) + "".join(k.rjust(9) for k in keys))
     for r in rows:
         print(r["run"].ljust(18) + "".join(f"{r.get(k, np.nan):9.3f}" for k in keys))
+    names = [f"{SPECIES[i]}-{SPECIES[j]}" for i, j in PAIRS]
+    print("\nclosest approach per pair (A), liquid / glass; nan: pair absent")
+    print("run".ljust(18) + "".join(n.rjust(12) for n in names))
+    for r in rows:
+        mm = r["_rmin"]
+        print(r["run"].ljust(18) + "".join(f"{mm.get('l', {}).get(n, np.nan):6.2f}/{mm.get('a', {}).get(n, np.nan):<5.2f}"
+                                           .rjust(12) for n in names))
+        for tag, lab in (("l", "liquid"), ("a", "glass")):
+            for n, v in mm.get(tag, {}).items():
+                if v < RMIN_WARN:
+                    print(f"WARNING: {r['run']} {lab}: {n} pairs as close as {v:.2f} A (< {RMIN_WARN} A): close contact")
     groups = {}
     for r in rows:
         groups.setdefault(group_of(r["run"]), []).append(r)
