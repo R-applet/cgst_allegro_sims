@@ -26,7 +26,10 @@ Each study directory has:
 - its LAMMPS inputs and submit scripts, which take everything model-specific from `common/model.sh` /
   `common/defaults.sh` (the potential, `DT`) and from `params/<MODEL_ID>.sh` (the study's design numbers, each with
   its source);
-- `runs/<MODEL_ID>/`: raw run directories (not tracked; `*/runs/` in `.gitignore`);
+- `runs/<MODEL_ID>/`: raw run directories (not tracked; `*/runs/` in `.gitignore`). Each holds `lmp_inputs/<log>/`,
+  written by `common/run_lmp.sh` when the run starts: a copy of the input and its includes, the exact command
+  (`run_command.sh`) and the provenance (`run_info.txt`: git commit, model file and sha256, container, node, job), for
+  human reference;
 - `results/<MODEL_ID>/`: summaries and write-ups, starting with `RESULTS.md` (tracked).
 
 To add a study, create the directory with this layout and a section in `RUNBOOK.md`; nothing else changes. To add a
@@ -43,7 +46,7 @@ potential, follow `RUNBOOK.md` A–B, then give each study a `params/<MODEL_ID>.
 - `common/`:
   - `model.sh`: `MODEL_ID` (default `nozbl_paw`) and its checkpoint, sources, timestep `DT`, container and DFT data;
   - `defaults.sh`: the compiled model `MODEL` for this node;
-  - `run_lmp.sh`: the container launcher, one MPI rank per GPU;
+  - `run_lmp.sh`: the container launcher, one MPI rank per GPU; it records each run's inputs (`record_inputs.sh`);
   - the shared LAMMPS includes `in.potential`, `in.analysis` and `in.rdf`.
 - `tests/`: validation of a potential (model, timestep, throughput, physics against DFT), the logic tests of the study
   inputs (`mq_logic/`, `recryst_logic/`) and the analysis checks (`mq_analysis/`, `dft_glass/`). Each writes a

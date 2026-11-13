@@ -51,6 +51,7 @@ reported (`RUNBOOK.md`, B).
 | `rdf_<tmelt>K.dat`, `rdf_300K.dat` | one averaged block each | total g(r) and 10 partials with running coordination, 0–6 Å in 0.02 Å bins |
 | `gate.txt` | once | `hold_ps`, the smallest per-species MSD in the hold, the gate it was compared with, and `passed` (0: the run stopped there with an ERROR in `log.mq`) |
 | `mq.restart.a`, `.b` | every 50 ps, alternating | rolling restart files, for manual recovery only |
+| `lmp_inputs/log.mq/` | at the start | reference copy of `in.meltquench` and its includes, `run_command.sh` (every `-var`), `run_info.txt` (commit, model and sha256, node, job); `common/record_inputs.sh` |
 | `stages.txt` | once | actual heating and quench start and end times (ps). Each RDF window is preceded by up to one window of padding (`common/in.rdf`), so stages 2 and 4 can run up to 20 and 50 ps longer than the table above |
 
 Coordination numbers use fixed bond cutoffs: 3.2 Å between Ge/Sb/Te (the common a-GST choice), 2.5 Å for C–Ge/Sb/Te

@@ -25,3 +25,5 @@ skills/
 __pycache__/
 # latent feasibility features (8.8 MB; regenerate with analysis/latent_features.py, see its README)
 tests/latent_feasibility/features.npz
+# reference copies of run inputs written by common/run_lmp.sh; the test inputs are tracked themselves
+tests/**/lmp_inputs/

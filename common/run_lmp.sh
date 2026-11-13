@@ -1,6 +1,8 @@
 #!/bin/bash
 # Run LAMMPS (Kokkos/CUDA, pair allegro) inside the project container, one MPI rank per GPU.
 # Usage (inside a Slurm allocation):  common/run_lmp.sh NGPU -in in.file -log log.file [-var name value ...]
+# Before starting, it records the input, its includes, the command and the provenance in lmp_inputs/<log>/
+# (common/record_inputs.sh), for human reference.
 #
 # Container: lammps_debug.sif = LAMMPS 30 Mar 2026, Kokkos 5.0.2 (CUDA, double), libtorch 2.8.0+cu126.
 # The compiled model must match the node's CPU: common/defaults.sh sets MODEL per node type (a30 b/d, a100-40gb g/n),
@@ -16,5 +18,8 @@ export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
 # Slurm can raise CPUs/task above the request (e.g. to cover --mem), leaving SLURM_CPUS_PER_TASK and
 # SLURM_TRES_PER_TASK inconsistent, which makes srun abort. Drop the latter and pass the count explicitly.
 unset SLURM_TRES_PER_TASK
+# reference copy of the input, its includes, the command and the provenance (lmp_inputs/<log>/; never stops a run)
+source "$(dirname "$(realpath "$0")")/record_inputs.sh"
+record_inputs $NGPU "$@" || echo "run_lmp.sh: could not record the inputs (lmp_inputs/); running anyway" >&2
 srun --ntasks=$NGPU --cpus-per-task=$OMP_NUM_THREADS apptainer run --nv --bind /depot,/scratch --env OMP_NUM_THREADS=$OMP_NUM_THREADS $SIF \
     -k on g $NGPU -sf kk -pk kokkos newton on neigh half "$@"

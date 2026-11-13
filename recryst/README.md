@@ -164,6 +164,8 @@ rocksalt disorders), which `--x-end` sidesteps.
 - `stress.dat`, the pressure tensor every 1 ps from the start of the hold;
 - the trajectory every 2 ps (one file per job), with image flags (`ix iy iz`, continuous across resumes) so
   unwrapped positions give diffusion over the whole hold;
+- `lmp_inputs/log.anneal.<job>/`: reference copy of the input and includes, the command and the provenance of each
+  job of the chain (`common/record_inputs.sh`; the same for ramps, `lmp_inputs/log.ramp[.<job>]/`);
 - restart files every 50 ps; `submit_anneal.sh` deletes all but the newest two before each job, and all but the
   newest once the run is done (about 2.6 MB each at 333; kept, they would total about 260 MB per 5 ns run).
 
