@@ -7,13 +7,14 @@ KOKKOS mode with Kokkos version 5.0.2 is enabled
 package kokkos
 package kokkos newton on neigh half
 # Test 1b: single-point energy and forces of the compiled model on each frame written by model_check.py prepare.
-# Run with -var frames "<i j k ...>" (the list in frames.txt). Appends "frame PE" to lammps_energies.txt
+# Run with -var frames "<i j k ...>" (the list in frames.txt). Appends "frame PE pxx pyy pzz pyz pxz pxy" (eV, bar;
+# velocities are zero, so the pressure is the virial alone) to lammps_energies.txt
 # and writes forces_<frame>.dump (id fx fy fz), all in the current directory, which must hold frame_<i>.data.
-# Optional: -var root <project root> (default ../.., i.e. run from tests/model_check), -var model <file>.
+# Optional: -var root <project root> (default ../.., i.e. run from tests/model_check).
+# Required: -var model <compiled model file>.
 
 variable        root  index ../..
-variable        model index ${root}/models/run5_ep301.nequip.pt2
-variable        model index /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+# model: required, -var model $MODEL (common/defaults.sh picks models/$MODEL_ID[.G|.N].nequip.pt2 per node)
 variable        dt    index 0.001
 variable        f     index ${frames}
 variable        f     index 0 767 800 1003 1005 1131 1270 1303 1507 1508 1541 1663 2013
@@ -35,13 +36,13 @@ WARNING: Triclinic box skew is large. LAMMPS will run inefficiently. (src/domain
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   144 atoms
-  read_data CPU = 0.036 seconds
+  read_data CPU = 0.032 seconds
 include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -62,11 +63,13 @@ group           Te type 3
 80 atoms in group Te
 group           C  type 4
 0 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+144 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_0.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -104,9 +107,9 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   3.8233417    
-Loop time of 7.6521e-05 on 1 procs for 0 steps with 144 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   3.9320774      1878.6198      11210.408      3638.5126     -588.44944      2039.2232     -1143.0871    
+Loop time of 7.1565e-05 on 1 procs for 0 steps with 144 atoms
 
 0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
@@ -118,7 +121,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 7.652e-05  |            |       |100.00
+Other   |            | 7.157e-05  |            |       |100.00
 
 Nlocal:            144 ave         144 max         144 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -133,7 +136,7 @@ Total # of neighbors = 6678
 Ave neighs/atom = 46.375
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -151,13 +154,13 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   768 atoms
-  read_data CPU = 0.017 seconds
+  read_data CPU = 0.016 seconds
 include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -178,11 +181,13 @@ group           Te type 3
 384 atoms in group Te
 group           C  type 4
 77 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+691 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_767.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -202,11 +207,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   75.082237    
-Loop time of 0.000202477 on 1 procs for 0 steps with 768 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   75.178308      4562.1714      5097.081       5405.9994     -331.12501     -8.6597757      512.17102    
+Loop time of 6.1085e-05 on 1 procs for 0 steps with 768 atoms
 
-59.3% CPU use with 1 MPI tasks x 1 OpenMP threads
+101.5% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -216,7 +221,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.0002025  |            |       |100.00
+Other   |            | 6.109e-05  |            |       |100.00
 
 Nlocal:            768 ave         768 max         768 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -231,7 +236,7 @@ Total # of neighbors = 40722
 Ave neighs/atom = 53.023438
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -249,13 +254,13 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   160 atoms
-  read_data CPU = 0.007 seconds
+  read_data CPU = 0.006 seconds
 include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -276,11 +281,13 @@ group           Te type 3
 80 atoms in group Te
 group           C  type 4
 16 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+144 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_800.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -300,11 +307,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   13.839837    
-Loop time of 7.2645e-05 on 1 procs for 0 steps with 160 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   14.001963      985.71305      4729.1707      1589.5721      3041.6965     -1633.2065     -1222.037     
+Loop time of 5.5685e-05 on 1 procs for 0 steps with 160 atoms
 
-60.6% CPU use with 1 MPI tasks x 1 OpenMP threads
+61.1% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -314,7 +321,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 7.265e-05  |            |       |100.00
+Other   |            | 5.568e-05  |            |       |100.00
 
 Nlocal:            160 ave         160 max         160 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -329,7 +336,7 @@ Total # of neighbors = 8030
 Ave neighs/atom = 50.1875
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -347,13 +354,13 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   320 atoms
-  read_data CPU = 0.010 seconds
+  read_data CPU = 0.009 seconds
 include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -374,11 +381,13 @@ group           Te type 3
 160 atoms in group Te
 group           C  type 4
 32 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+288 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_1003.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -398,11 +407,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   178.61496    
-Loop time of 6.5964e-05 on 1 procs for 0 steps with 320 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   177.23996      82901.118      83771.23       87662.306     -1472.5226      4970.4976      671.6028     
+Loop time of 5.5875e-05 on 1 procs for 0 steps with 320 atoms
 
-101.6% CPU use with 1 MPI tasks x 1 OpenMP threads
+0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -412,7 +421,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.596e-05  |            |       |100.00
+Other   |            | 5.587e-05  |            |       |100.00
 
 Nlocal:            320 ave         320 max         320 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -427,7 +436,7 @@ Total # of neighbors = 15926
 Ave neighs/atom = 49.76875
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -450,8 +459,8 @@ include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -472,11 +481,13 @@ group           Te type 3
 80 atoms in group Te
 group           C  type 4
 24 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+144 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_1005.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -496,11 +507,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   20.838351    
-Loop time of 6.4048e-05 on 1 procs for 0 steps with 168 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   20.562216      2265.6991     -705.59178      1529.5532     -560.04456      1910.1471      372.6804     
+Loop time of 5.6286e-05 on 1 procs for 0 steps with 168 atoms
 
-103.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+101.3% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -510,7 +521,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.405e-05  |            |       |100.00
+Other   |            | 5.629e-05  |            |       |100.00
 
 Nlocal:            168 ave         168 max         168 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -525,7 +536,7 @@ Total # of neighbors = 8862
 Ave neighs/atom = 52.75
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -548,8 +559,8 @@ include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -570,11 +581,13 @@ group           Te type 3
 80 atoms in group Te
 group           C  type 4
 32 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+144 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_1131.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -594,11 +607,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   33.617861    
-Loop time of 6.6563e-05 on 1 procs for 0 steps with 176 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   33.021794      1337.78       -317.96761     -6381.9694     -2172.1374      848.28687      827.99335    
+Loop time of 6.0765e-05 on 1 procs for 0 steps with 176 atoms
 
-94.6% CPU use with 1 MPI tasks x 1 OpenMP threads
+102.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -608,7 +621,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.656e-05  |            |       |100.00
+Other   |            | 6.077e-05  |            |       |100.00
 
 Nlocal:            176 ave         176 max         176 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -623,7 +636,7 @@ Total # of neighbors = 9280
 Ave neighs/atom = 52.727273
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -646,8 +659,8 @@ include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -668,11 +681,13 @@ group           Te type 3
 384 atoms in group Te
 group           C  type 4
 7 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+691 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_1270.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -692,11 +707,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0  -82.362694    
-Loop time of 0.00033078 on 1 procs for 0 steps with 698 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0  -82.151209      2189.8528      3720.891       3536.3027      442.34061      344.3141      -277.21504    
+Loop time of 5.7619e-05 on 1 procs for 0 steps with 698 atoms
 
-0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+62.5% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -706,7 +721,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.0003308  |            |       |100.00
+Other   |            | 5.762e-05  |            |       |100.00
 
 Nlocal:            698 ave         698 max         698 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -721,7 +736,7 @@ Total # of neighbors = 33460
 Ave neighs/atom = 47.936963
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -744,8 +759,8 @@ include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -766,11 +781,13 @@ group           Te type 3
 80 atoms in group Te
 group           C  type 4
 2 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+144 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_1303.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -790,11 +807,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0  -10.281124    
-Loop time of 6.2977e-05 on 1 procs for 0 steps with 146 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0  -10.023367      4475.1754      698.37375     -9475.1641     -256.19844     -1964.4432     -443.53056    
+Loop time of 5.6135e-05 on 1 procs for 0 steps with 146 atoms
 
-65.1% CPU use with 1 MPI tasks x 1 OpenMP threads
+64.1% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -804,7 +821,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.298e-05  |            |       |100.00
+Other   |            | 5.614e-05  |            |       |100.00
 
 Nlocal:            146 ave         146 max         146 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -819,7 +836,7 @@ Total # of neighbors = 6946
 Ave neighs/atom = 47.575342
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -842,8 +859,8 @@ include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -864,11 +881,13 @@ group           Te type 3
 160 atoms in group Te
 group           C  type 4
 4 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+288 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_1507.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -888,11 +907,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   33.115163    
-Loop time of 6.1485e-05 on 1 procs for 0 steps with 292 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   32.725179      3186.8895     -115.49522      300.9774      -1523.4744      718.1705       578.90364    
+Loop time of 5.4142e-05 on 1 procs for 0 steps with 292 atoms
 
-66.7% CPU use with 1 MPI tasks x 1 OpenMP threads
+101.6% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -902,7 +921,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.149e-05  |            |       |100.00
+Other   |            | 5.414e-05  |            |       |100.00
 
 Nlocal:            292 ave         292 max         292 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -917,7 +936,7 @@ Total # of neighbors = 13270
 Ave neighs/atom = 45.445205
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -940,8 +959,8 @@ include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -962,11 +981,13 @@ group           Te type 3
 384 atoms in group Te
 group           C  type 4
 39 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+691 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_1508.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -986,11 +1007,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   27.188024    
-Loop time of 0.000324818 on 1 procs for 0 steps with 730 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   27.38942       3224.1303      2612.8939      891.67518      294.57939      168.43427      867.24926    
+Loop time of 5.7238e-05 on 1 procs for 0 steps with 730 atoms
 
-65.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+66.4% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -1000,7 +1021,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.0003248  |            |       |100.00
+Other   |            | 5.724e-05  |            |       |100.00
 
 Nlocal:            730 ave         730 max         730 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -1015,7 +1036,7 @@ Total # of neighbors = 36524
 Ave neighs/atom = 50.032877
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -1038,8 +1059,8 @@ include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -1060,11 +1081,13 @@ group           Te type 3
 80 atoms in group Te
 group           C  type 4
 8 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+144 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_1541.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -1084,11 +1107,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   2.6469098    
-Loop time of 6.3528e-05 on 1 procs for 0 steps with 152 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   2.5604031     -4825.9958     -4859.4298      2871.5002     -470.50543      3897.9176     -908.65009    
+Loop time of 5.4863e-05 on 1 procs for 0 steps with 152 atoms
 
-66.1% CPU use with 1 MPI tasks x 1 OpenMP threads
+102.1% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -1098,7 +1121,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.353e-05  |            |       |100.00
+Other   |            | 5.486e-05  |            |       |100.00
 
 Nlocal:            152 ave         152 max         152 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -1113,7 +1136,7 @@ Total # of neighbors = 7442
 Ave neighs/atom = 48.960526
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -1136,8 +1159,8 @@ include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -1158,11 +1181,13 @@ group           Te type 3
 64 atoms in group Te
 group           C  type 4
 16 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+288 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_1663.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -1182,11 +1207,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   92.358006    
-Loop time of 6.5519e-05 on 1 procs for 0 steps with 304 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   91.45554      -8385.7225     -4418.3876     -6852.0691     -1824.1287     -1751.7186     -1417.4488    
+Loop time of 5.4753e-05 on 1 procs for 0 steps with 304 atoms
 
-68.7% CPU use with 1 MPI tasks x 1 OpenMP threads
+0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -1196,7 +1221,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.552e-05  |            |       |100.00
+Other   |            | 5.475e-05  |            |       |100.00
 
 Nlocal:            304 ave         304 max         304 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -1211,7 +1236,7 @@ Total # of neighbors = 15082
 Ave neighs/atom = 49.611842
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop
@@ -1229,13 +1254,13 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   691 atoms
-  read_data CPU = 0.019 seconds
+  read_data CPU = 0.015 seconds
 include         ${root}/common/in.potential
 include         /scratch/gilbreth/rapplet/cgst_allegro_sims/common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/run5_ep301.nequip.pt2)
-#   dt      timestep in ps (chosen by tests/dt; see tests/RESULTS.md)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
 newton          on
@@ -1256,11 +1281,13 @@ group           Te type 3
 384 atoms in group Te
 group           C  type 4
 0 atoms in group C
+group           GST type 1 2 3              # the lattice-forming species (xfracGST, common/in.analysis)
+691 atoms in group GST
 variable        nC equal count(C)
 
 timestep        ${dt}
 timestep        0.001
-thermo_style    custom step pe
+thermo_style    custom step pe pxx pyy pzz pyz pxz pxy
 dump            fr all custom 1 forces_${f}.dump id fx fy fz
 dump            fr all custom 1 forces_2013.dump id fx fy fz
 dump_modify     fr sort id format float %20.12g
@@ -1280,11 +1307,11 @@ Neighbor list info ...
       stencil: full/bin/3d
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   77.198907    
-Loop time of 0.000348156 on 1 procs for 0 steps with 691 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   80.020267      20345.695      19930.734      19917.83       155.37604     -2385.5894     -448.72262    
+Loop time of 5.8119e-05 on 1 procs for 0 steps with 691 atoms
 
-0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+91.2% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -1294,7 +1321,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.0003482  |            |       |100.00
+Other   |            | 5.812e-05  |            |       |100.00
 
 Nlocal:            691 ave         691 max         691 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -1309,7 +1336,7 @@ Total # of neighbors = 32608
 Ave neighs/atom = 47.18958
 Neighbor list builds = 0
 Dangerous builds = 0
-print           "${f} $(pe:%.10f)" append lammps_energies.txt screen no
+print           "${f} $(pe:%.10f) $(pxx:%.6f) $(pyy:%.6f) $(pzz:%.6f) $(pyz:%.6f) $(pxz:%.6f) $(pxy:%.6f)"                 append lammps_energies.txt screen no
 undump          fr
 next            f
 jump            SELF loop

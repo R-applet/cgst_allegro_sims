@@ -1,0 +1,4 @@
+ dt_fs  T_mean  drift_meV/at/ps  margin  std(Etot)/std(PE)  margin  pass
+   0.5  1562.4          -0.0001   976.4             0.0003    29.6   yes
+   1.0  1569.1          -0.0002   203.2             0.0013     7.8   yes
+   2.0  1557.3           0.0001   361.2             0.0059     1.7   yes

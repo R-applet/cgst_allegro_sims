@@ -5,7 +5,7 @@ used on your system (e.g., sometimes this means that shared libraries
 that the component requires are unable to be found/loaded).  Note that
 PMIx stopped checking at the first component that it did not find.
 
-Host:      gilbreth-b003.rcac.purdue.edu
+Host:      gilbreth-g000.rcac.purdue.edu
 Framework: psec
 Component: munge
 --------------------------------------------------------------------------
@@ -17,12 +17,12 @@ used on your system (e.g., sometimes this means that shared libraries
 that the component requires are unable to be found/loaded).  Note that
 PMIx stopped checking at the first component that it did not find.
 
-Host:      gilbreth-b003.rcac.purdue.edu
+Host:      gilbreth-g000.rcac.purdue.edu
 Framework: psec
 Component: munge
 --------------------------------------------------------------------------
 
-[gilbreth-b003.rcac.purdue.edu:674983] PMIX ERROR: ERROR in file ../../../../../../src/mca/gds/ds12/gds_ds12_lock_pthread.c at line 169
+[gilbreth-g000.rcac.purdue.edu:3859650] PMIX ERROR: ERROR in file ../../../../../../src/mca/gds/ds12/gds_ds12_lock_pthread.c at line 169
 LAMMPS (11 Feb 2026)
 KOKKOS mode with Kokkos version 5.0.2 is enabled
   using double precision
@@ -44,9 +44,9 @@ WARNING: Triclinic box skew is large. LAMMPS will run inefficiently. (src/domain
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   144 atoms
-  read_data CPU = 0.031 seconds
+  read_data CPU = 0.050 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -73,6 +73,7 @@ ti=3 tj=3 cut=6.00
 32 atoms in group Sb
 80 atoms in group Te
 0 atoms in group C
+144 atoms in group GST
 
 CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE-CITE
 
@@ -101,11 +102,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   3.8233417    
-Loop time of 6.5695e-05 on 1 procs for 0 steps with 144 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   3.9320774      1878.6198      11210.408      3638.5126     -588.44944      2039.2232     -1143.0871    
+Loop time of 5.4783e-05 on 1 procs for 0 steps with 144 atoms
 
-65.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+62.1% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -115,7 +116,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.569e-05  |            |       |100.00
+Other   |            | 5.478e-05  |            |       |100.00
 
 Nlocal:            144 ave         144 max         144 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -136,9 +137,9 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   768 atoms
-  read_data CPU = 0.005 seconds
+  read_data CPU = 0.004 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -165,6 +166,7 @@ ti=3 tj=3 cut=6.00
 154 atoms in group Sb
 384 atoms in group Te
 77 atoms in group C
+691 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -184,11 +186,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   75.082237    
-Loop time of 0.000192682 on 1 procs for 0 steps with 768 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   75.178308      4562.1714      5097.081       5405.9994     -331.12501     -8.6597757      512.17102    
+Loop time of 4.9173e-05 on 1 procs for 0 steps with 768 atoms
 
-64.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+61.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -198,7 +200,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.0001927  |            |       |100.00
+Other   |            | 4.917e-05  |            |       |100.00
 
 Nlocal:            768 ave         768 max         768 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -221,7 +223,7 @@ Reading data file ...
   160 atoms
   read_data CPU = 0.003 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -248,6 +250,7 @@ ti=3 tj=3 cut=6.00
 32 atoms in group Sb
 80 atoms in group Te
 16 atoms in group C
+144 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -267,11 +270,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   13.839837    
-Loop time of 5.5214e-05 on 1 procs for 0 steps with 160 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   14.001963      985.71305      4729.1707      1589.5721      3041.6965     -1633.2065     -1222.037     
+Loop time of 4.7629e-05 on 1 procs for 0 steps with 160 atoms
 
-67.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -281,7 +284,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.521e-05  |            |       |100.00
+Other   |            | 4.763e-05  |            |       |100.00
 
 Nlocal:            160 ave         160 max         160 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -302,9 +305,9 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   320 atoms
-  read_data CPU = 0.063 seconds
+  read_data CPU = 0.149 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -331,6 +334,7 @@ ti=3 tj=3 cut=6.00
 64 atoms in group Sb
 160 atoms in group Te
 32 atoms in group C
+288 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -350,11 +354,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   178.61496    
-Loop time of 5.3623e-05 on 1 procs for 0 steps with 320 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   177.23996      82901.118      83771.23       87662.306     -1472.5226      4970.4976      671.6028     
+Loop time of 4.4794e-05 on 1 procs for 0 steps with 320 atoms
 
-102.6% CPU use with 1 MPI tasks x 1 OpenMP threads
+64.7% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -364,7 +368,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.362e-05  |            |       |100.00
+Other   |            | 4.479e-05  |            |       |100.00
 
 Nlocal:            320 ave         320 max         320 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -387,7 +391,7 @@ Reading data file ...
   168 atoms
   read_data CPU = 0.003 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -414,6 +418,7 @@ ti=3 tj=3 cut=6.00
 32 atoms in group Sb
 80 atoms in group Te
 24 atoms in group C
+144 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -433,11 +438,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   20.838351    
-Loop time of 5.2338e-05 on 1 procs for 0 steps with 168 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   20.562216      2265.6991     -705.59178      1529.5532     -560.04456      1910.1471      372.6804     
+Loop time of 4.4564e-05 on 1 procs for 0 steps with 168 atoms
 
-66.9% CPU use with 1 MPI tasks x 1 OpenMP threads
+62.8% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -447,7 +452,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.234e-05  |            |       |100.00
+Other   |            | 4.456e-05  |            |       |100.00
 
 Nlocal:            168 ave         168 max         168 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -470,7 +475,7 @@ Reading data file ...
   176 atoms
   read_data CPU = 0.003 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -497,6 +502,7 @@ ti=3 tj=3 cut=6.00
 32 atoms in group Sb
 80 atoms in group Te
 32 atoms in group C
+144 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -516,11 +522,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   33.617861    
-Loop time of 5.3662e-05 on 1 procs for 0 steps with 176 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   33.021794      1337.78       -317.96761     -6381.9694     -2172.1374      848.28687      827.99335    
+Loop time of 5.314e-05 on 1 procs for 0 steps with 176 atoms
 
-69.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+26.3% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -530,7 +536,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.366e-05  |            |       |100.00
+Other   |            | 5.314e-05  |            |       |100.00
 
 Nlocal:            176 ave         176 max         176 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -553,7 +559,7 @@ Reading data file ...
   698 atoms
   read_data CPU = 0.004 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -580,6 +586,7 @@ ti=3 tj=3 cut=6.00
 154 atoms in group Sb
 384 atoms in group Te
 7 atoms in group C
+691 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -599,11 +606,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0  -82.362694    
-Loop time of 0.000309325 on 1 procs for 0 steps with 698 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0  -82.151209      2189.8528      3720.891       3536.3027      442.34061      344.3141      -277.21504    
+Loop time of 4.7189e-05 on 1 procs for 0 steps with 698 atoms
 
-66.3% CPU use with 1 MPI tasks x 1 OpenMP threads
+63.6% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -613,7 +620,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.0003093  |            |       |100.00
+Other   |            | 4.719e-05  |            |       |100.00
 
 Nlocal:            698 ave         698 max         698 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -636,7 +643,7 @@ Reading data file ...
   146 atoms
   read_data CPU = 0.003 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -663,6 +670,7 @@ ti=3 tj=3 cut=6.00
 32 atoms in group Sb
 80 atoms in group Te
 2 atoms in group C
+144 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -682,11 +690,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0  -10.281124    
-Loop time of 5.3774e-05 on 1 procs for 0 steps with 146 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0  -10.023367      4475.1754      698.37375     -9475.1641     -256.19844     -1964.4432     -443.53056    
+Loop time of 4.5335e-05 on 1 procs for 0 steps with 146 atoms
 
-102.3% CPU use with 1 MPI tasks x 1 OpenMP threads
+0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -696,7 +704,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.377e-05  |            |       |100.00
+Other   |            | 4.533e-05  |            |       |100.00
 
 Nlocal:            146 ave         146 max         146 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -717,9 +725,9 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   292 atoms
-  read_data CPU = 0.003 seconds
+  read_data CPU = 0.004 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -746,6 +754,7 @@ ti=3 tj=3 cut=6.00
 64 atoms in group Sb
 160 atoms in group Te
 4 atoms in group C
+288 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -765,11 +774,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   33.115163    
-Loop time of 5.408e-05 on 1 procs for 0 steps with 292 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   32.725179      3186.8895     -115.49522      300.9774      -1523.4744      718.1705       578.90364    
+Loop time of 4.4794e-05 on 1 procs for 0 steps with 292 atoms
 
-68.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -779,7 +788,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.408e-05  |            |       |100.00
+Other   |            | 4.479e-05  |            |       |100.00
 
 Nlocal:            292 ave         292 max         292 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -800,9 +809,9 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   730 atoms
-  read_data CPU = 0.039 seconds
+  read_data CPU = 0.019 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -829,6 +838,7 @@ ti=3 tj=3 cut=6.00
 154 atoms in group Sb
 384 atoms in group Te
 39 atoms in group C
+691 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -848,11 +858,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   27.188024    
-Loop time of 0.000299757 on 1 procs for 0 steps with 730 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   27.38942       3224.1303      2612.8939      891.67518      294.57939      168.43427      867.24926    
+Loop time of 4.6828e-05 on 1 procs for 0 steps with 730 atoms
 
-67.1% CPU use with 1 MPI tasks x 1 OpenMP threads
+102.5% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -862,7 +872,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.0002998  |            |       |100.00
+Other   |            | 4.683e-05  |            |       |100.00
 
 Nlocal:            730 ave         730 max         730 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -885,7 +895,7 @@ Reading data file ...
   152 atoms
   read_data CPU = 0.003 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -912,6 +922,7 @@ ti=3 tj=3 cut=6.00
 32 atoms in group Sb
 80 atoms in group Te
 8 atoms in group C
+144 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -931,11 +942,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   2.6469098    
-Loop time of 5.353e-05 on 1 procs for 0 steps with 152 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   2.5604031     -4825.9958     -4859.4298      2871.5002     -470.50543      3897.9176     -908.65009    
+Loop time of 4.5626e-05 on 1 procs for 0 steps with 152 atoms
 
-102.7% CPU use with 1 MPI tasks x 1 OpenMP threads
+65.8% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -945,7 +956,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.353e-05  |            |       |100.00
+Other   |            | 4.563e-05  |            |       |100.00
 
 Nlocal:            152 ave         152 max         152 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -968,7 +979,7 @@ Reading data file ...
   304 atoms
   read_data CPU = 0.003 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -995,6 +1006,7 @@ ti=3 tj=3 cut=6.00
 160 atoms in group Sb
 64 atoms in group Te
 16 atoms in group C
+288 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -1014,11 +1026,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   92.358006    
-Loop time of 5.4131e-05 on 1 procs for 0 steps with 304 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   91.45554      -8385.7225     -4418.3876     -6852.0691     -1824.1287     -1751.7186     -1417.4488    
+Loop time of 4.6287e-05 on 1 procs for 0 steps with 304 atoms
 
-103.5% CPU use with 1 MPI tasks x 1 OpenMP threads
+101.5% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -1028,7 +1040,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.413e-05  |            |       |100.00
+Other   |            | 4.629e-05  |            |       |100.00
 
 Nlocal:            304 ave         304 max         304 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -1049,9 +1061,9 @@ Reading data file ...
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   691 atoms
-  read_data CPU = 0.028 seconds
+  read_data CPU = 0.017 seconds
 NequIP/Allegro is using input precision d and output precision d
-NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/run5_ep301.nequip.pt2
+NequIP/Allegro: Loading model from /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
 Type mapping:
 NequIP/Allegro type | NequIP/Allegro name | LAMMPS type | LAMMPS name
 0 | Ge | 1 | Ge
@@ -1078,6 +1090,7 @@ ti=3 tj=3 cut=6.00
 154 atoms in group Sb
 384 atoms in group Te
 0 atoms in group C
+691 atoms in group GST
 WARNING: No fixes with time integration, atoms won't move
 For more information see https://docs.lammps.org/err0028 (src/verlet.cpp:60)
 Neighbor list info ...
@@ -1097,11 +1110,11 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.001
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
-   Step         PotEng    
-         0   77.198907    
-Loop time of 0.000299185 on 1 procs for 0 steps with 691 atoms
+   Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
+         0   80.020267      20345.695      19930.734      19917.83       155.37604     -2385.5894     -448.72262    
+Loop time of 4.5586e-05 on 1 procs for 0 steps with 691 atoms
 
-68.2% CPU use with 1 MPI tasks x 1 OpenMP threads
+68.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -1111,7 +1124,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.0002992  |            |       |100.00
+Other   |            | 4.559e-05  |            |       |100.00
 
 Nlocal:            691 ave         691 max         691 min
 Histogram: 1 0 0 0 0 0 0 0 0 0

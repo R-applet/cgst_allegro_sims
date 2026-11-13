@@ -34,7 +34,7 @@ case $MODEL_ID in
         MODEL_SRC=${MODEL_SRC-}
         TRAIN_DIR=${TRAIN_DIR:-/depot/prism/data/rushik/CGST/nequip_no_zbl}
         CKPT=${CKPT:-$_models_dir/nozbl_paw.ckpt}  # local copy of outputs/2026-11-05/19-04-55/best.ckpt (provenance.md)
-        _dt=0.002   # PROVISIONAL until tests/dt passes for this model
+        _dt=0.002   # tests/dt job 12358691: 2 fs passes (tests/results/nozbl_paw/RESULTS.md)
         ;;
     *)  # a new model: give its paths here (or in the environment) before running anything
         : "${CKPT:?common/model.sh: set CKPT and TRAIN_DIR (and MODEL_SRC if needed) for MODEL_ID=$MODEL_ID}"

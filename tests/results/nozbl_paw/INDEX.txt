@@ -1,0 +1,220 @@
+== am_eos/RESULT.txt  (job 12358733, 2026-11-13 16:25)
+set          formula            n  V0_DFT  V0_mod rho0_DFT rho0_mod  drho%  RMSE_P  bias_P RMSE_Eshape
+                                    A3/at   A3/at     g/cc     g/cc           kbar    kbar      meV/at
+GST_AM_EOS   Ge32Sb32Te80      24  30.844  30.792   6.1421   6.1524   0.17    1.44   -1.40        2.00
+GST_CUB_EOS  Ge32Sb32Te80      24  30.057  30.065   6.3029   6.3011  -0.03    0.58    0.13        0.21
+GST_HEX_EOS  Ge32Sb32Te80      25  29.669  29.823   6.3852   6.3524  -0.51    3.49    3.47        5.08
+C1_AM_EOS    C2Ge32Sb32Te80    24  30.532  30.450   6.1288   6.1452   0.27    1.73   -1.72        2.59
+C1_CUB_EOS   C2Ge32Sb32Te80    24  29.481  29.586   6.3472   6.3248  -0.35    1.11    0.91        1.37
+C1_HEX_EOS   C2Ge32Sb32Te80    25  29.333  29.478   6.3794   6.3479  -0.49    3.37    3.34        4.75
+C5_AM_EOS    C8Ge32Sb32Te80    21  29.297  29.236   6.1618   6.1747   0.21    1.42   -1.41        1.77
+C5_CUB_EOS   C8Ge32Sb32Te80    25  27.960  28.196   6.4566   6.4024  -0.84    2.62    2.28        3.27
+C5_HEX_EOS   C8Ge32Sb32Te80    21  28.735  28.785   6.2823   6.2716  -0.17    2.87    2.68        3.42
+C10_AM_EOS   C16Ge32Sb32Te80   24  28.169  28.122   6.1236   6.1338   0.17    1.51   -1.47        1.85
+C10_CUB_EOS  C16Ge32Sb32Te80   23  26.039  26.439   6.6244   6.5244  -1.51    5.15    4.72        6.04
+C10_HEX_EOS  C16Ge32Sb32Te80   24  29.215  29.043   5.9044   5.9394   0.59    1.77   -0.81        2.00
+C14_AM_EOS   C24Ge32Sb32Te80   22  27.038  26.958   6.1110   6.1293   0.30    1.34   -1.04        1.57
+C18_AM_EOS   C32Ge32Sb32Te80   24  26.198  26.111   6.0550   6.0750   0.33    2.14   -2.12        2.49
+drho% = 100 (rho0_model / rho0_DFT - 1). Static (virial-only) pressures; frames are training data.
+== compile_check/RESULT.txt  (job 12358736, 2026-11-13 16:31)
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+aa8aa24a191dfaf3ccfd49136604f618b6b0c55585e07cc7f5eb619b94c859ca  recompiled.nequip.pt2
+f76aeea05254960c98abd3f4c27dbecc15b628627c0258ff360e24dcfc4e037d  /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2
+== container/RESULT.txt  (job 12358739, 2026-11-13 16:40)
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+debug bench: Performance: 2.907 ns/day, 8.257 hours/ns, 16.822 timesteps/s, 232.541 katom-step/s
+stable bench: Performance: 2.924 ns/day, 8.209 hours/ns, 16.919 timesteps/s, 233.894 katom-step/s
+== density/RESULT.txt  (job 12358734, 2026-11-13 16:40)
+cell x0 T 300 V_A3_per_atom 30.4512 P_bar -1.2 rho_gcc 6.2238
+== dt/RESULT.txt  (job 12358691, 2026-11-13 16:49)
+ dt_fs  T_mean  drift_meV/at/ps  margin  std(Etot)/std(PE)  margin  pass
+   0.5  1562.4          -0.0001   976.4             0.0003    29.6   yes
+   1.0  1569.1          -0.0002   203.2             0.0013     7.8   yes
+   2.0  1557.3           0.0001   361.2             0.0059     1.7   yes
+== glass_relax/RESULT.txt  (job 12358735, 2026-11-13 16:34)
+config_type        n  rho_DFTframe  rho_model_300K  change_%  <P>_bar
+GST_Melt_Quench   12    5.863+-0.319      6.222+-0.035      6.46     -0.1
+AM_GST_runs       12    6.188+-0.155      6.234+-0.027      0.79      7.2
+CUB_GST_runs      12    6.224+-0.094      6.238+-0.015      0.25      1.5
+frames without a result: none
+== model_check/RESULT.txt  (job 12358679, 2026-11-13 16:26)
+ frame     N   nC  dE_meV/at    max|dF|  max|dP|_bar  E-EDFT_meV/at
+     0   144    0    -0.0000   4.80e-12     7.00e-04          10.41 
+   767   768   77    -0.0000   6.65e-12     3.37e-04          -7.02 
+   800   160   16     0.0000   5.12e-12     2.95e-04          -0.24 
+  1003   320   32    -0.0000   3.54e-11     5.47e-03           0.93 
+  1005   168   24     0.0000   5.02e-12     1.41e-04          -5.25 
+  1131   176   32     0.0000   5.24e-12     3.99e-04           4.47 
+  1270   698    7    -0.0000   5.08e-12     2.32e-04          -3.26 
+  1303   146    2     0.0000   3.29e-12     5.91e-04          -7.37 
+  1507   292    4     0.0000   4.82e-12     1.99e-04           6.19 
+  1508   730   39     0.0000   5.16e-12     2.02e-04          -5.63 
+  1541   152    8     0.0000   4.72e-12     3.03e-04          -3.18 
+  1663   304   16     0.0000   5.54e-12     5.24e-04          -2.97 
+  2013   691    0    -0.0000   7.88e-12     1.27e-03          -4.50 
+PASS
+== model_select/RESULT_gilbreth-g000.txt  (job 12358681, 2026-11-13 16:27)
+gilbreth-g000: MODEL=nozbl_paw.G.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== model_select/RESULT_gilbreth-n011.txt  (job 12358681, 2026-11-13 16:29)
+gilbreth-n011: MODEL=nozbl_paw.N.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== mq_analysis/RESULT.txt  (job -, 2026-11-13 16:07)
+PASS  g_GeGe(r) matches the reference  (max|dg| 0.137, peak shift 0.01 A, g(14-15 A) 1.006)
+PASS  g_GeSb(r) matches the reference  (max|dg| 0.058, peak shift 0.11 A, g(14-15 A) 0.998)
+PASS  g_GeTe(r) matches the reference  (max|dg| 0.062, peak shift 0.00 A, g(14-15 A) 0.988)
+PASS  g_SbSb(r) matches the reference  (max|dg| 0.071, peak shift 0.01 A, g(14-15 A) 0.990)
+PASS  g_SbTe(r) matches the reference  (max|dg| 0.074, peak shift 0.01 A, g(14-15 A) 0.984)
+PASS  g_TeTe(r) matches the reference  (max|dg| 0.039, peak shift 0.04 A, g(14-15 A) 0.983)
+PASS  S_NN(q) first two peaks in the a-GST windows  (2.14, 3.26 1/A)
+PASS  Tg of the reference 10 K/ps quench in 500-900 K  (Tg = 675 K from 121 points)
+PASS  rocksalt: every Ge and Sb has Z = 6  (Z=6 for 102/102 Ge, 103/103 Sb)
+PASS  rocksalt: mean Z_Te = 6 (N_Ge + N_Sb) / N_Te  (4.8047 vs 4.8047)
+PASS  rocksalt: Ge bond angles only at 90/180 deg, 180 fraction 0.2  (180 fraction 0.2000)
+PASS  rocksalt: Sb bond angles only at 90/180 deg, 180 fraction 0.2  (180 fraction 0.2000)
+PASS  toy C cell: cluster sizes  ({3: 3, 2: 2, 1: 1})
+PASS  toy C cell: C motifs  ({'C1': 4, 'C2': 1, 'Ge1': 1})
+PASS  toy C cell: one 180 deg C angle (chain middle)
+PASS  mean_std: sample std (ddof 1), NaN for a single value  (std 1, single-value std nan)
+PASS  closest(): lower edge of the first bin with g > 0, per pair; NaN for an absent pair  (Ge-Te 2.30, C-C 0.94, Ge-Ge nan)
+VERDICT: PASS
+== mq_logic/RESULT.txt  (job 12358737, 2026-11-13 16:36)
+PASS  x0: LAMMPS exit status 0  (0)
+PASS  x0: output files
+PASS  x0: 12 quench snapshots  (12)
+PASS  x0: rdf_1500K.dat has one 300-row block  (1 blocks)
+PASS  x0: rdf_300K.dat has one 300-row block  (1 blocks)
+PASS  x0: stages.txt keys in order  (heat_start_ps=2 heat_end_ps=14 quench_start_ps=24 quench_end_ps=36)
+PASS  x0: T at heat_start_ps near 300 K  (294 K)
+PASS  x0: T at heat_end_ps near 1500 K  (1448 K)
+PASS  x0: T at quench_start_ps near 1500 K  (1533 K)
+PASS  x0: T at quench_end_ps near 300 K  (310 K)
+PASS  x0: gate.txt hold_ps 100, passed 1, no gate ERROR  (hold_ps 100 passed 1)
+PASS  x0: mq_summary runs, Z_Ge/Sb/Te finite  (4.26 3.70 2.84)
+PASS  x0: mq_structure runs, S_NN finite  (2 frames)
+PASS  x0: Z from the RDF and from trajectory frames agree within 0.15  (Ge 0.039 Sb 0.056 Te 0.056)
+PASS  x10: LAMMPS exit status 0  (0)
+PASS  x10: output files
+PASS  x10: 12 quench snapshots  (12)
+PASS  x10: rdf_1500K.dat has one 300-row block  (1 blocks)
+PASS  x10: rdf_300K.dat has one 300-row block  (1 blocks)
+PASS  x10: stages.txt keys in order  (heat_start_ps=2 heat_end_ps=14 quench_start_ps=24 quench_end_ps=36)
+PASS  x10: T at heat_start_ps near 300 K  (286 K)
+PASS  x10: T at heat_end_ps near 1500 K  (1514 K)
+PASS  x10: T at quench_start_ps near 1500 K  (1406 K)
+PASS  x10: T at quench_end_ps near 300 K  (306 K)
+PASS  x10: gate.txt hold_ps 100, passed 1, no gate ERROR  (hold_ps 100 passed 1)
+PASS  x10: mq_summary runs, Z_Ge/Sb/Te finite  (4.49 3.53 2.73)
+PASS  x10: mq_structure runs, S_NN finite  (2 frames)
+PASS  x10: Z from the RDF and from trajectory frames agree within 0.15  (Ge 0.017 Sb 0.008 Te 0.029 C 0.017)
+PASS  x10: C motifs and C-C clusters found
+PASS  x0_gatefail: LAMMPS exit status non-zero  (1)
+PASS  x0_gatefail: gate.txt passed 0 and the gate ERROR in log.mq  (passed 0)
+PASS  x0_gatefail: the quench never started  (heat_start_ps heat_end_ps)
+PASS  x0_gatefail: complete_runs skips it and names the failed gate  (x0_gatefail: incomplete (MSD gate failed (gate.txt)), skipped)
+VERDICT: PASS
+== recryst_logic/RESULT.txt  (job 12359106, 2026-11-13 16:45)
+PASS  ramp: exit status 0  (0)
+PASS  ramp: snap_350K ... snap_900K  (12 files)
+PASS  ramp: T follows the programmed schedule (mean deviation < 15 K, scatter < 50 K)  (mean +0.5 K, scatter 18.5 K)
+PASS  ramp: stress.dat has a row for every ramp.dat step  (71 vs 71 rows)
+PASS  anneal: fresh and resumed jobs exit 0  (0 0)
+PASS  anneal: anneal_done.txt at step 24000  (24000)
+PASS  anneal: anneal.dat every 1000 steps, 0-24000, no gap across the resume  (25 rows)
+PASS  anneal: stress.dat every 1000 steps, 4000-24000, across the resume  (21 rows)
+PASS  anneal: restart files every 5000 steps  ([5000, 10000, 15000, 20000])
+PASS  anneal: frames every 2 ps with image flags, continuous across the resume  (11 steps, overlap [10000, 12000, 14000], overlap difference 1e-05 A, largest step 4.04 A)
+PASS  halt: exit status 0  (0)
+PASS  halt: fix halt stopped the hold at its first check (step 5000), xfracGST > 0  (step 5000, xfracGST 0.072)
+PASS  halt: the hold ran with the anisotropic barostat
+PASS  continuation: sbatch --test-only accepts the inherited resource flags  (sbatch: Job 12359031 to start at 2026-11-13T16:54:24 a using 4 processors on nodes gilbreth-g008 in partition a100-40gb )
+PASS  calib: in.calib (x10 glass, x5 rocksalt) and calibrate.py exit 0  (0 0 0)
+PASS  calib: LAMMPS xfracGST = recount over Ge/Sb/Te, xfrac = recount over all (within 2 atoms); they differ  (largest difference 0.0 atoms)
+PASS  calib: calibrate.py reports xfracGST and a suggested XSTOP at 600 K  (best: q_rc 3.8  q_thr 0.7  q_nmin 3  (crystal min 0.809, amorphous max 0.031))
+PASS  calib: calibrate.py suggests --nucleated-size at 300 K = 2 x the recounted largest glass cluster  (recount largest 23 -> 50; printed: suggested --nucleated-size at 300 K: 50  (2 x the largest glass cluster, 23; x10)
+PASS  analysis: ramp() gives finite Tx_H and stress metrics  (Tx_H 591 K, sdev 2.99 -> 1.40 kbar, z -6.5)
+PASS  analysis: hold_start.txt = 4 ps with criterion 3.6/0.5/4; xstop read back (0.8 default, 0 for halt_x0)  ({'hold_start_ps': 4.0, 'q_rc': 3.6, 'q_thr': 0.5, 'q_nmin': 4.0}, 0.8, 0.0)
+PASS  analysis: anneal() gives t_end 20 ps, x_c from xstop, NaN stress metrics for a 20 ps hold  (t_end 20, x_c 0.8 from xstop)
+PASS  analysis: --x-end fixes x_c for every run (over x-crystal and xstop); with --x-crystal it is refused  (x_c 0.3 from x-end; exit 2)
+PASS  analysis: clusters_q3.6_0.5_4.txt has every dumped hold step once, in order, across both jobs' files  (11 frames, 11 distinct dumped hold steps)
+PASS  analysis: clusters from the dumped c_ncb equal clusters from a recount  (largest [12, 5, 5, 7, 11, 7, 7, 6, 4, 10, 26] vs [12, 5, 5, 7, 11, 7, 7, 6, 4, 10, 26])
+PASS  analysis: main() skips an incomplete anneal and still reports the complete one  (anneal_x0_T600_r9: incomplete (no anneal_done.txt), skipped | # MODEL_ID nozbl_paw; runs used: nozbl_paw | # x_c: per ru)
+PASS  analysis: main() --clusters needs --nucleated-size and the criterion, and with them prints the nucleation line with n_base  (without: exit 2/2; with: anneal_x0_T600               nucleation: n_nucleated 0  n_runs 1  J_surv_per_m3_s nan  J_s)
+PASS  analysis: main() header names MODEL_ID, the model the run used and the criterion; warns on another model  (# MODEL_ID nozbl_paw; runs used: nozbl_paw | # x_c: per run (x_c_from); clusters: criterion q_rc 3.6 q_thr 0.5 q_nmin 4,)
+PASS  known answer: load_dat keeps the last row of a repeated step  ([1.0, 9.0, 8.0, 4.0])
+PASS  known answer: ramp() Tx_xfrac at the half-rise, 650 K for a 0.8 and a 0.6 ceiling, NaN without a rise  (650 K, 650 K, nan)
+PASS  known answer: kinetics() v_growth 200 m/s within 2%, t_nuc within one frame of the analytic time  (v 200.0 m/s, t_nuc 4.0 ps (analytic 3.55))
+PASS  known answer: v_growth in a periodic cell, 200 m/s within 3% with the 10-60% window; 10-90% reads low  (10-60%: 199.2 m/s, 10-90%: 180.0 m/s)
+PASS  known answer: single_grain is the fraction of window frames without a second grain: 1, 0, the exact fraction for a second grain in every other frame, NaN without a window  (1.0, 0.0, 0.500, nan)
+PASS  known answer: survival_rate() J = 2 / (1400 ps x 1e5 A^3), 2 of 3 nucleated  (1.429e+34)
+PASS  known answer: smooth() keeps a constant constant at the ends
+PASS  known answer: stress() |z| < 5 on pure noise, z > 10 and sdev_end ~ 2 kbar for a 2 kbar step  (noise z -0.9; step z 16.0, end 2.11 kbar)
+PASS  analysis: group_of strips the replica suffix
+PASS  analysis: MFPT fit recovers n* = 40 and tau_J = 500 ps  (n* 39.98, tau_J 500.1 ps)
+PASS  analysis: MFPT above a 100-atom glass baseline recovers n* = 140 and gives NaN for n* = 40 below it  (n_base 126: n* 139.98, tau_J 500.1 ps; below: n* nan)
+PASS  rate_compare: parses recryst_summary rows and the nucleation line; volume recovered from J_surv  (4 runs, n 3, E 5750 ps, V 4.001e+05 (true 400000))
+PASS  rate_compare: pairwise ratio 4 for equal events at 1/4 the exposure, exact binomial p, Bonferroni x 10  (a (10 events) vs b (10 events): ratio 4 (95% ~1.66-9.61), p = 0.00259, Bonferroni p = 0.0259)
+PASS  rate_compare: glass test p = 1 for identical glasses, ~2/120 when one glass's 3 runs never nucleate  (p 1 and 0.0169)
+VERDICT: PASS
+== scaling/RESULT_size.txt  (job ./scaling/slurm-nozbl_paw_s444_N_g4.out, 2026-11-13 16:53)
+Size test (submit_size.sh), MODEL_ID nozbl_paw, x10, NPT 600 K, ana 1, dt 2 fs; perc A100-40GB; 2026-11-13
+run                          ns/day katom-st/s  peak MiB/GPU job
+nozbl_paw_s333_N_g1           3.120    249.578         19753 12358496
+nozbl_paw_s444_N_g1           1.342    254.455         34321 12358493
+nozbl_paw_s444_G_g1           1.227    232.592         34319 12358497
+nozbl_paw_s444_N_g2           2.588    490.765         23307 12358494
+nozbl_paw_s444_N_g4           4.981    944.455         11951 12358495
+444 scaling vs 1 GPU (N): 2 GPUs 1.93x (96%), 4 GPUs 3.71x (93%). Per atom, 444 = 333 (254 vs 250 katom-step/s).
+One GPU holds 444 x10 with 6.6 GB to spare (600 K solid); production uses NGPU=2 (meltquench/params/nozbl_paw.sh).
+== smoke/RESULT.txt  (job 12358690, 2026-11-13 16:46)
+x0: PASS
+x10: PASS
+PASS
+== stress_parity/RESULT.txt  (job 12358732, 2026-11-13 16:25)
+config_type             n  V/atom    P_DFT  P_model    bias  RMSE_P  MAE_E
+                            (A^3)   (kbar)   (kbar)  (kbar)  (kbar) meV/at
+AM_GST_runs           767   31.12    12.90    12.16   -0.74    1.31   4.99
+CUB_GST_runs          271   30.53     8.11     7.82   -0.29    1.15   3.28
+HEX_GST_runs          249   30.03     6.66     6.21   -0.45    1.32   3.46
+C1_runs               132   30.08    15.16    14.16   -1.00    1.86   6.57
+C5_runs               106   29.03    29.12    27.82   -1.30    2.07   7.28
+C10_runs               88   27.89    31.62    29.86   -1.77    2.71  10.40
+None                   66   28.12     7.36     5.69   -1.67    2.09   5.29
+GST_Melt_Quench        51   32.70    -2.09    -2.99   -0.90    1.40   4.95
+GST_HOMO               50   30.47    -0.09    -0.86   -0.78    1.04   8.13
+GST_HETERO             40   30.46     1.90     1.26   -0.64    0.71   3.26
+C1_HETERO              33   30.16     2.53     1.92   -0.61    0.78   3.97
+C14_runs               32   26.94     5.67     6.23    0.56    2.65   5.60
+C10_Melt_Quench        26   30.02    -0.59    -2.60   -2.01    2.36   3.99
+C14_Melt_Quench        26   29.46    -2.79    -4.70   -1.91    2.27   3.63
+C18_HOMO               26   27.04     1.29    -1.22   -2.51    2.55   2.74
+C1_Melt_Quench         26   32.61    -3.33    -4.18   -0.85    1.31   3.67
+C5_Melt_Quench         26   31.52    -2.84    -4.11   -1.27    1.68   2.97
+C10_HOMO               25   28.86     1.47    -0.23   -1.71    1.91   3.16
+C14_HOMO               25   27.75     1.09    -0.69   -1.78    1.90   4.44
+C18_Melt_Quench        25   28.94    -2.18    -4.16   -1.98    2.24   2.50
+C1_HOMO                25   30.23    -0.64    -1.97   -1.33    1.46   6.39
+C5_HOMO                25   29.57    -0.01    -1.53   -1.52    1.81   4.83
+C18_runs               23   26.12     7.45     7.67    0.22    2.79   7.79
+C10_NPT_am_600         11   29.03    -2.23    -4.46   -2.22    2.28   3.74
+C10_NPT_am_900         11   36.31    -6.79    -7.06   -0.27    0.64   2.96
+C10_NPT_xtal_600       11   29.08    -2.03    -4.96   -2.93    3.01   3.66
+C10_NPT_xtal_900       11   29.97    -1.90    -3.13   -1.23    2.12   3.55
+C10_NVT_2000           11   29.37    17.10    15.61   -1.49    1.58   3.51
+C10_NVT_3000           11   34.95     5.45     5.70    0.25    0.57   3.39
+C14_NPT_am_600         11   28.17    -3.29    -5.71   -2.43    2.52   2.09
+C14_NPT_am_900         11   33.07    -9.16    -9.99   -0.83    1.06   2.09
+C14_NPT_xtal_600       11   27.85    -3.61    -6.40   -2.79    2.88   4.18
+C18_NPT_am_600         11   41.11   -10.55   -11.49   -0.94    1.03   5.19
+C18_NPT_am_900         11   63.27    -7.27    -7.06    0.21    0.34   4.27
+C18_NPT_xtal_900       11   27.50    -2.68    -5.51   -2.82    2.91   6.25
+C18_NVT_2000           11   27.67    15.35    13.60   -1.75    1.82   5.96
+C18_NVT_3000           11   32.86    11.62    11.73    0.11    0.74   3.01
+C1_NVT_2000            11   32.19     8.01     7.07   -0.93    1.07   3.44
+C1_NVT_3000            11   38.30    -5.77    -4.74    1.03    1.16   3.49
+C5_NPT_am_600          11   29.82    -5.11    -7.09   -1.98    2.02   3.97
+C5_NPT_am_900          11   30.83    -4.43    -6.26   -1.83    1.89   3.47
+C5_NPT_xtal_600        11   30.09    -2.09    -3.65   -1.55    2.65   2.40
+C5_NPT_xtal_900        11   30.59    -3.64    -5.47   -1.83    1.98   3.64
+C14_NPT_xtal_900       10   28.44    -4.59    -6.88   -2.29    2.33   4.50
+C18_NPT_xtal_600       10   28.53    -5.74    -9.13   -3.39    3.41   2.11

@@ -38,7 +38,8 @@ bytes, as AOTInductor output depends on the build machine (as for run5_ep301).
 
 First accuracy look (`tests/model_check`, the same 13 DFT test frames, 144–768 atoms, 0–77 C): checkpoint energy vs
 DFT, RMS 5.4 meV/atom (mean |error| 4.7, max 10.4), against 6.3 (5.5, 9.7) for run5_ep301. `stress_parity`, `am_eos`
-and the other tests in `RUNBOOK.md` B give the fuller picture; their results go to `tests/results/nozbl_paw/`.
+and the other tests: `tests/results/nozbl_paw/RESULTS.md` (all pass; pressure RMSE 1.65 vs 2.60 kbar for
+run5_ep301; 2 fs timestep).
 
 ## run5_ep301
 

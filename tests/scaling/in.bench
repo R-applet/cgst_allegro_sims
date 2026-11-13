@@ -1,5 +1,5 @@
-# Tests 1d/1e: throughput of a production-size cell (3x3x3 x10, 13824 atoms) and the cost of on-the-fly analysis.
-# Run with -var ana <0|1>. NPT 600 K from the rocksalt cell: 500 warm-up steps, then a timed 3000-step run.
+# Tests 1d/1e: throughput of a production-size cell (x10; -var size 333 = 13824 atoms by default, 444 = 32768) and the
+# cost of on-the-fly analysis. Run with -var ana <0|1>. NPT 600 K from the rocksalt cell: 500 warm-up steps, then a timed 3000-step run.
 # ana=1 includes common/in.analysis at its production interval (thermo_ps = 1 ps) plus a trajectory dump with
 # the per-atom q4 columns at 5 ps; ana=0 runs the bare potential.
 # Read "Performance:" from the second run of each log.
@@ -10,8 +10,9 @@ boundary        p p p
 
 # model: required, -var model $MODEL (common/defaults.sh picks models/$MODEL_ID[.G|.N].nequip.pt2 per node)
 variable        dt        index 0.002
+variable        size      index 333
 variable        thermo_ps index 1.0
-read_data       ../../structures/333/x10.data
+read_data       ../../structures/${size}/x10.data
 include         ../../common/in.potential
 
 velocity        all create 600.0 87287 mom yes rot yes dist gaussian
