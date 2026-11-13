@@ -16,7 +16,7 @@ cd $SLURM_SUBMIT_DIR
 module load cuda/12.6.0
 source ../../common/defaults.sh             # MODEL; from common/model.sh: SIF, MODEL_SRC, CKPT, TESTSET (exported)
 export NEQUIP_FLOAT64_MODEL_TOL=1e-10
-apptainer exec --nv --bind /depot,/scratch --env PYTHONPATH=$MODEL_SRC/nequip:$MODEL_SRC/allegro $SIF \
+apptainer exec --nv --bind /depot,/scratch --env PYTHONPATH=$MODEL_PYTHONPATH $SIF \
     python model_check.py prepare || exit 1
 ../../common/run_lmp.sh 1 -in in.model_check -log log.model_check -var frames "$(cat frames.txt)" -var model $MODEL || exit 1
 apptainer exec --bind /depot,/scratch $SIF python model_check.py compare | tee RESULT.txt

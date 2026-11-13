@@ -1,5 +1,5 @@
 #!/bin/bash
-# Isothermal anneal grid (RUNBOOK.md, Part 3 steps 3-4): for each Ta in TAS and each composition in CELLS, NREP
+# Isothermal anneal grid (RUNBOOK.md, recryst steps 3-4): for each Ta in TAS and each composition in CELLS, NREP
 # replicas of submit_anneal.sh, with everything else from recryst/params/<MODEL_ID>.sh (criterion, BARO, XSTOP, MAX_NS, RUNTAG).
 #   Phase A (pilot, x0 over the grid):   CELLS=x0 bash scripts/submit_grid.sh [--dry-run]
 #   Phase B (every composition):         bash scripts/submit_grid.sh [--dry-run]         (CELLS default: all five)

@@ -1,6 +1,6 @@
-# Part 3 workflow scripts
+# recryst workflow scripts
 
-Wrappers for the Part 3 steps after calibration, in the order of `../../RUNBOOK.md`. They hold no model's numbers.
+Wrappers for the recrystallization steps after calibration, in the order of `../../RUNBOOK.md`. They hold no model's numbers.
 `common.sh` reads everything from `recryst/params/<MODEL_ID>.sh`, which also sources the generated
 `recryst/calib/<MODEL_ID>/calib_params.sh`: criterion, NUC, XC_\*, GLASS_\*, XSTOP, X_END, TX_GUARD, BARO, RUNTAG,
 TAS, NREP and MAX_NS. The scripts stop if either file is missing. They also refuse to submit or analyse when the

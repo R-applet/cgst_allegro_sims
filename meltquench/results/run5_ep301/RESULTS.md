@@ -1,5 +1,9 @@
 # Part 2 results: run5_ep301
 
+> Since 2026-11-13 the default potential is `nozbl_paw`: to rerun this model's tools or scripts, set
+> `MODEL_ID=run5_ep301` (e.g. `MODEL_ID=run5_ep301 bash scripts/analyze_grid.sh ...`).
+
+
 Melt-quench (`meltquench/README.md`, method) with MODEL_ID run5_ep301, TMELT 1500 K, HOLD_PS 100, 10 K/ps
 (`params/run5_ep301.sh`). Runs in `meltquench/runs/run5_ep301/`, summaries here, figures and write-up in `report/`.
 State at tag `run5_ep301-final`; paths below that name `meltquench/results` or `meltquench/runs` are now the

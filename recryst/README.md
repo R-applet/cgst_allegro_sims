@@ -1,12 +1,12 @@
-# Part 3: Recrystallization
+# Recrystallization (`recryst/`)
 
 This README describes the method. Runs go to `runs/<MODEL_ID>/`, outputs to `results/<MODEL_ID>/`, calibration to
 `calib/<MODEL_ID>/`; every model-specific number comes from `recryst/params/<MODEL_ID>.sh` (and the `calib_params.sh` it
 sources). The order of steps for a new model, with pass criteria, is `../RUNBOOK.md`; run5_ep301's results are in
 `results/run5_ep301/RESULTS.md`, and numbers quoted below for run5_ep301 are examples, not settings.
 
-Starts from the Part 2 glasses (`meltquench/runs/<MODEL_ID>/<cell>_q<QRATE>_r<rep>/amorphous_300K.data`). All runs are
-NPT at 0 bar with the barostat `BARO` (params; see Barostat) and the same damping as Part 2. The steps run in this
+Starts from the melt-quench glasses (`meltquench/runs/<MODEL_ID>/<cell>_q<QRATE>_r<rep>/amorphous_300K.data`). All runs are
+NPT at 0 bar with the barostat `BARO` (params; see Barostat) and the same damping as the melt-quench. The steps run in this
 order, because each one sets parameters for the next.
 
 **Glass vs crystal density.** For run5_ep301 the glass is slightly denser than the model's own crystal, as in its DFT
@@ -23,7 +23,7 @@ ten Wolde's scheme, with l = 4, which suits the octahedral rocksalt environment.
 (`recryst_summary.py --clusters`) from anneal dumps every 2 ps, fine enough for the first-passage times the MFPT
 analysis needs.
 
-**What is counted: Ge/Sb/Te only (`xfracGST`).** Everything in Part 3 (Tx, the halt level, incubation, clusters,
+**What is counted: Ge/Sb/Te only (`xfracGST`).** Everything in recryst (Tx, the halt level, incubation, clusters,
 the calibration) uses `xfracGST`, the crystalline fraction of the Ge/Sb/Te atoms; the `.dat` files also keep
 `xfrac` over all atoms. C does not mark crystallinity reliably: in the minimized x10 rocksalt, with C on lattice
 sites, 55% of C atoms count as crystalline against 98% of Ge/Sb/Te, and in the x10 glass C gives more false
@@ -75,7 +75,7 @@ Ta, but a ns anneal ages the glass, and its ordered patches may grow before a nu
 `n_base` (below) with `--nucleated-size` before trusting `t_nuc`.
 
 **Result, per model:** `calib/<MODEL_ID>/calibrate.out`, and `calib/<MODEL_ID>/calib_params.sh` generated from it
-(criterion, `--nucleated-size`, crystal and glass `xfracGST` per composition and T). Every Part 3 script reads the
+(criterion, `--nucleated-size`, crystal and glass `xfracGST` per composition and T). Every recryst script reads the
 latter through `recryst/params/<MODEL_ID>.sh`, so no criterion or per-T value is typed into a script. run5_ep301: 3.8 Å, 0.6, 4
 (`results/run5_ep301/RESULTS.md` section 1).
 
@@ -133,7 +133,7 @@ the model's Tm. The plan is therefore: homogeneous runs for nucleation, t_inc/t5
 seeded slabs (x0, x1, x2p5; x5 and x10 have no stable crystal) for the full curve and its peak. If the homogeneous
 window turns out narrow for the new model, the seeded slabs become the primary v(Ta) measurement. Compare the two by
 trend: a faceted grain's equivalent-sphere radius is not a planar front's position. Seeded inputs are not written yet
-(`RUNBOOK.md`, Part 3 step 5).
+(`RUNBOOK.md`, recryst step 5).
 
 Replicas: replica r starts from melt-quench glass ((r − 1) mod 3) + 1 with its own velocities, so 3 replicas use the
 3 glasses once each. Nucleation itself is a rare event (one waiting time per run, rate error about 1/√n, 58% for 3
@@ -316,7 +316,7 @@ A synthetic pre-test also showed the first stress statistic could not separate a
 3.8), so it was replaced by the end-versus-start comparison.
 
 ## Budget
-Measured throughput at 13.8k atoms (`tests/RESULTS.md`, 1d; recheck for a new model, RUNBOOK Part 1): 3.35 ns/day per
+Measured throughput at 13.8k atoms (`tests/RESULTS.md`, 1d; recheck for a new model, RUNBOOK B): 3.35 ns/day per
 2-A30 job, about 3.0 ns/day per 1-A100 job.
 - Calibration: 54 jobs × 20 ps, roughly 15–20 min each on one A30.
 - Ramp: one 0.2 K/ps ramp to 900 K, 3,010 ps ≈ 18–22 h on 2 A30s.

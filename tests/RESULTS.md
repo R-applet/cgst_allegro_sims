@@ -1,7 +1,9 @@
-# Part 1 test results: run5_ep301
+# Validation results: run5_ep301
 
-These are run5_ep301's results (tag `run5_ep301-final`). A new model writes its own `tests/RESULTS_<MODEL_ID>.md`
-(`RUNBOOK.md`, Part 1); the tests now take the model from `common/model.sh` and `common/defaults.sh`.
+These are run5_ep301's results (tag `run5_ep301-final`; the RESULT files themselves are saved in
+`tests/results/run5_ep301/`). A later potential writes `tests/results/<MODEL_ID>/RESULTS.md` (`RUNBOOK.md`, B); the
+tests take the potential from `common/model.sh` and `common/defaults.sh`. "Part 2/3" below means the melt-quench and
+recrystallization studies.
 
 Each test directory has a batch script, run from inside that directory with `sbatch`: `submit.sh`, except
 `scaling/submit_all.sh` (plain bash, submits the jobs itself), `env_probe/probe.sh`, and the CPU-only Python checks

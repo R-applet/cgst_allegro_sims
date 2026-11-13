@@ -1,5 +1,9 @@
 # Part 3 results: crystallization of GST + x% C
 
+> Since 2026-11-13 the default potential is `nozbl_paw`: to rerun this model's tools or scripts, set
+> `MODEL_ID=run5_ep301` (e.g. `MODEL_ID=run5_ep301 bash scripts/analyze_grid.sh ...`).
+
+
 **Final status (2026-11-13; tag `run5_ep301-final`):** calibration done; heating ramps done (no crystallization at
 1 K/ps; x0 Tx 571 K at 0.2 K/ps); Phase A done at 600 and 650 K (iso and aniso). Stopped there: the potential is being
 retrained, and Part 3 restarts from Part 1 with the new model (`RUNBOOK.md`). Sections 5 and 6 were not run with

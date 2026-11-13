@@ -24,7 +24,7 @@
 #          Every stage must stay a whole number of ps (e.g. tscale 0.1 works with qrate 10).
 #   hold_ps optional, tmelt hold in ps before tscale (default 100; submit.sh passes HOLD_PS).
 #   tmelt  optional, melt temperature in K, a multiple of 100 (default 1500; submit.sh passes TMELT). Set it from
-#          the model's superheated melting point with margin (RUNBOOK.md, pilot step); the same for every run.
+#          the model's superheated melting point with margin (RUNBOOK.md, meltquench step 1); the same for every run.
 #   gate_A2 optional, MSD gate in A^2 before tscale (default 100; tests raise it to force a gate failure).
 # Thermostat/barostat damping: Tdamp = 100 dt, Pdamp = 1000 dt (LAMMPS-recommended ratios).
 # Outputs in the run directory: mq.dat (every 1 ps; columns in common/in.analysis), log.mq, traj.lammpstrj.gz,

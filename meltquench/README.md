@@ -1,4 +1,4 @@
-# Part 2: Melt-quench
+# Melt-quench (`meltquench/`)
 
 `in.meltquench` takes a 3×3×3 rocksalt cell (`structures/333/<cell>.data`) through melt and quench to an amorphous
 sample at 300 K. Every stage is NPT, isotropic, 0 bar, with Nosé–Hoover damping Tdamp = 100 dt and Pdamp = 1000 dt.
@@ -11,7 +11,7 @@ This README describes the method; results are per model in `results/<MODEL_ID>/`
 (6.29 vs 6.24 g/cc), unlike experiment (glass ~6–7% less dense). It inherits this from its DFT reference
 (`tests/RESULTS.md` 1g, 1k). Whether a retrained model does the same decides how densities, and anything that
 depends on the glass–crystal density difference (crystallization strain, pressure-sensitive kinetics), can be
-reported (`RUNBOOK.md`, Part 1).
+reported (`RUNBOOK.md`, B).
 
 ## Protocol
 
@@ -21,14 +21,14 @@ reported (`RUNBOOK.md`, Part 1).
 | 1 | 300 → `tmelt` (1500 K default) | (tmelt − 300)/10 ps (10 K/ps) | apparent Tm from the enthalpy jump (superheated, an upper bound) |
 | 2 | `tmelt` | `hold_ps` = 100 ps, the same for every run | **MSD gate**, checked 20 ps before the end: every species, C included, must have MSD ≥ 100 Å² within the hold (about 10 Å travelled). This erases memory of the crystal and of the C pattern repeated by the 3×3×3 replication. A run that fails stops with an ERROR before the quench; rerun *every* composition with a longer hold (`HOLD_PS`). Gate result → `gate.txt`. Liquid RDF over the last 20 ps → `rdf_<tmelt>K.dat`, `liquid_<tmelt>K.data` |
 | 3 | `tmelt` → 300 | (tmelt − 300)/qrate ps, in 100 K segments | `snap_<T>K.data` every 100 K down to 300 K |
-| 4 | 300 | 100 ps | 50 ps relaxation, then RDF and coordination averaged over 50 ps → `rdf_300K.dat`, `amorphous_300K.data` (input to Part 3) |
+| 4 | 300 | 100 ps | 50 ps relaxation, then RDF and coordination averaged over 50 ps → `rdf_300K.dat`, `amorphous_300K.data` (input to recryst) |
 
 **Why these choices**
 - **Melt temperature `tmelt` (`TMELT` in params; 1500 K for run5_ep301).** Well above the model's superheated
   melting point, so the liquid is fast. For run5_ep301 the perfect crystal melts at about 1090 K when heated at 2 K/ps
   (reference run `md_npt_cubic_gst`; experiment ~900 K), and at 1500 K MSD grows at 7.5–9 Å²/ps for Ge/Sb/Te
   (reference `md_meltquench`: 380–450 Å² after 50 ps), so the gate is met well within 80 ps. For a new model, set it
-  from that model's own superheating (`RUNBOOK.md`, Part 2). C diffusion is not known in advance, which is why the
+  from that model's own superheating (`RUNBOOK.md`, meltquench). C diffusion is not known in advance, which is why the
   gate includes it.
 - **A fixed hold, not one extended until the gate passes.** An adaptive hold would give a slow composition a
   longer melt than the others, and anything that evolves in the melt (C clustering, for one) would then differ
@@ -86,6 +86,9 @@ points of any stage. Resuming from them needs a hand-edited input that starts at
 - liquid and amorphous density;
 - Tg (bilinear V(T) fit on the quench);
 - the crystalline fraction left at 300 K;
+- the closest approach of any pair in the liquid and the glass (`rmin_l`, `rmin_a`, per pair below the table), with a
+  WARNING below 1.0 Å (close contacts, a risk for potentials without ZBL; run5_ep301: C–C 1.10 Å in the x10 liquid,
+  every other pair ≥ 1.64 Å);
 - the hold length, with a WARNING if the runs do not all share one;
 - partial coordination numbers (CN_ij, j atoms around an i atom) and each species' total coordination Z_i;
 - with `--out`: `<group>_curves.dat`, ρ(T) and H(T) on the heating ramp and the quench, in 10 K bins.
@@ -115,7 +118,7 @@ the job and verifies:
 
 The 12 ps ramps on these small cells make Tm_app, Tg (NaN: under 20 quench points) and the structure numbers
 meaningless; the test checks the logic only. With the uncalibrated default Q4 criterion, the glasses read
-xfrac ≈ 0.1, the false-positive level the Part 3 calibration has to remove.
+xfrac ≈ 0.1, the false-positive level the recryst calibration has to remove.
 
 **`tests/mq_analysis`: PASS.** Independent checks of the analysis code:
 - against Rushik's 10 K/ps reference glass (`md_meltquench`, 7200 atoms): partial g(r) matches his own g(r) from
@@ -125,7 +128,8 @@ xfrac ≈ 0.1, the false-positive level the Part 3 calibration has to remove.
   6 (N_Ge + N_Sb)/N_Te exactly, and bond angles fall only at 90° and 180° (180° fraction 0.2); a toy C cell gives
   the exact cluster sizes, motifs and chain angle. Breaking the bond-vector sign in the angle code fails the toy
   cell check;
-- replica statistics: the sample std (ddof 1) of 1, 2, 3 is 1, and a single value gives NaN.
+- replica statistics: the sample std (ddof 1) of 1, 2, 3 is 1, and a single value gives NaN;
+- closest approach (`rmin_*`): on a synthetic RDF file, the first occupied bin per pair, NaN for an absent pair.
 
 The reference data are frozen copies in `tests/mq_analysis/ref/` (sources and sha256s in `ref/SHA256SUMS`).
 

@@ -1,18 +1,36 @@
-# Ge₂Sb₂Te₅ + x% C: melt-quench and recrystallization with Allegro in LAMMPS
+# Ge–Sb–Te–C with machine-learned potentials: a record of simulations
 
-Compositions: x = 0, 1, 2.5, 5 and 10 at.% C (actual 0, 1.07, 2.54, 5.14 and 9.96), starting from rocksalt cells with C on
-cation-vacancy sites. x = 10 is deliberately the vacancy-free endpoint (every vacancy filled), so it differs from
-the others in vacancy count as well as C content; see `structures/build_supercells.py`.
+LAMMPS simulations of Ge₂Sb₂Te₅ + x% C with machine-learned (Allegro) potentials, kept as one record across
+potentials and studies. Compositions: x = 0, 1, 2.5, 5 and 10 at.% C (actual 0, 1.07, 2.54, 5.14 and 9.96), starting
+from rocksalt cells with C on cation-vacancy sites. x = 10 is deliberately the vacancy-free endpoint (every vacancy
+filled), so it differs from the others in vacancy count as well as C content; see `structures/build_supercells.py`.
 
-The workflow is model-independent. The potential is named by `MODEL_ID` in `common/model.sh`. Its design numbers are
-in `<study>/params/<MODEL_ID>.sh`, and its runs and results live in `<MODEL_ID>/` subdirectories. **`RUNBOOK.md`** is the
-order of steps for a new model, with what each step must show.
+Every potential is registered in `models/provenance.md` under a `MODEL_ID` (`common/model.sh`); every study keeps its
+settings, runs and results per `MODEL_ID`, so potentials never share a directory and can be compared study by study.
+**`RUNBOOK.md`** is the order of steps for a new potential: register it, validate it, then run the studies.
 
-| Part | Directory | run5_ep301 (archived, tag `run5_ep301-final`) | Next model |
-|---|---|---|---|
-| 1. Environment, model, Slurm tests | `env/`, `models/`, `common/`, `tests/` | done (`tests/RESULTS.md`); glass as dense as the crystal, inherited from the DFT reference (1g, 1k) | retrained potential pending; `RUNBOOK.md` Part 0–1 |
-| 2. Melt-quench | `meltquench/` | 15 glasses at 10 K/ps and x0, x10 at 1 K/ps (`meltquench/results/run5_ep301/`) | Part 2 |
-| 3. Recrystallization | `recryst/` | criterion 3.8 Å/0.6/4; ramps; Phase A x0 at 600/650 K (`recryst/results/run5_ep301/RESULTS.md`) | Part 3 |
+## Potentials × studies
+
+| Study | Directory | `run5_ep301` (archived, tag `run5_ep301-final`) | `nozbl_paw` (current default) | second potential |
+|---|---|---|---|---|
+| Validation | `tests/` | done (`tests/RESULTS.md`); glass as dense as the crystal, from the DFT reference (1g, 1k) | staged: compile, gate tests (`RUNBOOK.md`, A–B) | to be provided |
+| Melt-quench | `meltquench/` | 15 glasses at 10 K/ps, x0 and x10 at 1 K/ps (`meltquench/results/run5_ep301/`) | staged: superheating pilot, then production | — |
+| Recrystallization | `recryst/` | criterion 3.8 Å/0.6/4; ramps; x0 anneals at 600/650 K (`recryst/results/run5_ep301/RESULTS.md`) | after the melt-quench | — |
+| Coexistence | `coexistence/` | — | planned | — |
+| Phases | `phases/` | — | planned | — |
+| Cascades | `cascades/` | — | planned | — |
+
+## Study layout
+Each study directory has:
+- `README.md`: the method (no model's numbers except as labelled examples);
+- its LAMMPS inputs and submit scripts, which take everything model-specific from `common/model.sh` /
+  `common/defaults.sh` (the potential, `DT`) and from `params/<MODEL_ID>.sh` (the study's design numbers, each with
+  its source);
+- `runs/<MODEL_ID>/`: raw run directories (not tracked; `*/runs/` in `.gitignore`);
+- `results/<MODEL_ID>/`: summaries and write-ups, starting with `RESULTS.md` (tracked).
+
+To add a study, create the directory with this layout and a section in `RUNBOOK.md`; nothing else changes. To add a
+potential, follow `RUNBOOK.md` A–B, then give each study a `params/<MODEL_ID>.sh`.
 
 ## Layout
 - `structures/`: the original 512-site cells (untouched), `build_supercells.py`, and the cleaned single rocksalt cell
@@ -20,25 +38,23 @@ order of steps for a new model, with what each step must show.
   `x10_512.data` (written by `build_supercells.py --nrep 1`). The builder writes cleaned NxNxN cells to `111/`,
   `222/` and `333/` (production uses 333, 12.4k–13.8k atoms; these directories are not tracked). It also fixes
   the 0.5 Å boundary gap in gst/c1/c2_5 and the missing masses in gst/c10; see its docstring.
-- `models/`: the compiled potentials, one file per node type and model (`<MODEL_ID>[.G|.N].nequip.pt2`, not tracked),
-  their provenance and hashes (`provenance.md`), and `compile_model.sh`.
-- `params/`: one file per model, `<MODEL_ID>.sh`, with every hand-set design number (melt temperature, ramp ceiling and
-  rate, Ta guard, barostat, halt level, grid) and its source. It also sources the generated calibration,
-  `recryst/calib/<MODEL_ID>/calib_params.sh`.
+- `models/`: the model registry (`provenance.md`: every potential, its checkpoint and hashes), the compiled files, one
+  per node type and model (`<MODEL_ID>[.G|.N].nequip.pt2`), local checkpoint copies (neither tracked), and
+  `compile_model.sh`.
 - `common/`:
-  - `model.sh`: `MODEL_ID` and its checkpoint, sources, container and DFT data paths;
-  - `defaults.sh`: the timestep `DT` and the compiled model `MODEL` for this node;
+  - `model.sh`: `MODEL_ID` (default `nozbl_paw`) and its checkpoint, sources, timestep `DT`, container and DFT data;
+  - `defaults.sh`: the compiled model `MODEL` for this node;
   - `run_lmp.sh`: the container launcher, one MPI rank per GPU;
   - the shared LAMMPS includes `in.potential`, `in.analysis` and `in.rdf`.
-- `tests/`: Part 1 tests (run5_ep301's results in `tests/RESULTS.md`), the logic tests of the Part 2/3 inputs
-  (`mq_logic/`, `recryst_logic/`) and the analysis checks (`mq_analysis/`, `dft_glass/`). Each writes a `RESULT.txt`;
-  `tests/collect.sh` prints them all.
-- `meltquench/`, `recryst/`: the Part 2 and Part 3 inputs, submit scripts and method READMEs. Runs go to
-  `runs/<MODEL_ID>/` and results to `results/<MODEL_ID>/`. `recryst/calib/` holds the crystallinity calibration and
-  `recryst/scripts/` the Part 3 workflow.
+- `tests/`: validation of a potential (model, timestep, throughput, physics against DFT), the logic tests of the study
+  inputs (`mq_logic/`, `recryst_logic/`) and the analysis checks (`mq_analysis/`, `dft_glass/`). Each writes a
+  `RESULT*.txt` in place; `tests/collect.sh --save <MODEL_ID>` copies them to `tests/results/<MODEL_ID>/`. Summaries:
+  `tests/RESULTS.md` (run5_ep301), `tests/results/<MODEL_ID>/RESULTS.md` (later models).
+- `meltquench/`, `recryst/`, `coexistence/`, `phases/`, `cascades/`: the studies (layout above). `recryst/calib/`
+  holds the crystallinity calibration and `recryst/scripts/` the recrystallization workflow.
 - `analysis/`: post-processing with `env/`:
-  - Part 2: `mq_summary.py`, `mq_structure.py`;
-  - Part 3: `recryst_summary.py`, `rate_compare.py`;
+  - melt-quench: `mq_summary.py`, `mq_structure.py`;
+  - recrystallization: `recryst_summary.py`, `rate_compare.py`;
   - shared helpers: `runio.py` (run-output readers) and `bondorder.py` (Q4 crystallinity, matching
     `common/in.analysis`);
   - `latent_features.py` (exploratory, `tests/latent_feasibility/`) runs in the container.
@@ -47,8 +63,8 @@ order of steps for a new model, with what each step must show.
 ## Requirements
 This workflow runs on Purdue's **Gilbreth** cluster. It needs read access to **`/depot/prism`**, which holds:
 - the LAMMPS + pair_allegro container;
-- the modified nequip/allegro sources that compile and load the checkpoints;
-- the checkpoints and the DFT training and test sets.
+- the training checkpoints, and for run5_ep301 the modified nequip/allegro sources that compile and load it;
+- the DFT training and test sets.
 
 All of these paths are in `common/model.sh`. Elsewhere, provide equivalents and set them there. Slurm accounts
 `strachan` (A30) and/or `perc` (A100-40GB).

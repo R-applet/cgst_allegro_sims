@@ -15,5 +15,5 @@ cd $SLURM_SUBMIT_DIR
 module load cuda/12.6.0
 source ../../common/model.sh                # CKPT, MODEL_SRC, SIF, TESTSET, DFT_TRAIN (exported into the container)
 export NEQUIP_FLOAT64_MODEL_TOL=1e-10
-apptainer exec --nv --bind /depot,/scratch --env PYTHONPATH=$MODEL_SRC/nequip:$MODEL_SRC/allegro \
+apptainer exec --nv --bind /depot,/scratch --env PYTHONPATH=$MODEL_PYTHONPATH \
     $SIF python eos_check.py

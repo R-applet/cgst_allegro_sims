@@ -1,5 +1,5 @@
 #!/bin/bash
-# Analysis of the anneal grid (submit_grid.sh; RUNBOOK.md, Part 3 steps 3-4), per composition and Ta that has runs.
+# Analysis of the anneal grid (submit_grid.sh; RUNBOOK.md, recryst steps 3-4), per composition and Ta that has runs.
 #   [CELLS="x0"] bash scripts/analyze_grid.sh summary [--dry-run]   checks, fraction summaries, ONE perc cluster job
 #   [CELLS="x0"] bash scripts/analyze_grid.sh verdict                after the cluster job: verdicts and growth table
 # Every number (criterion, NUC, GLASS_<cell>, X_END, XSTOP, MAX_NS, BARO, RUNTAG) is from recryst/params/<MODEL_ID>.sh and its

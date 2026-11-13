@@ -1,6 +1,34 @@
-# Model provenance
+# Model registry and provenance
 
-`run5_ep301.nequip.pt2`: the production potential for every run in this project.
+Every potential this project has run, with the checkpoint it came from and the compiled files per node type
+(`common/model.sh` names them; `common/defaults.sh` picks the file for the node). Compiled `.pt2` files and local
+checkpoint copies are not tracked by git; their hashes are here.
+
+| MODEL_ID | Type | Short range | Training data | Checkpoint (sha256) | Compiled files | Status |
+|---|---|---|---|---|---|---|
+| `run5_ep301` | Allegro (nequip/allegro with per-pair ZBL, `zbl_updated`) | per-pair ZBL | `CGST/cgst_train_paw.xyz` | `run5_ep301.ckpt` (`b6ae59f2…96b1`) | `.pt2`, `.G`, `.N` | archived, tag `run5_ep301-final` |
+| `nozbl_paw` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `CGST/cgst_train_paw.xyz` | `nozbl_paw.ckpt` (`ed645c56…bfcc`) | to be compiled | in progress (default `MODEL_ID`) |
+| (second potential) | — | — | — | — | — | to be provided |
+
+## nozbl_paw
+
+| | |
+|---|---|
+| Source checkpoint | `/depot/prism/data/rushik/CGST/nequip_no_zbl/outputs/2026-11-05/19-04-55/best.ckpt` (saved 2026-11-08 13:37), copied to `models/nozbl_paw.ckpt` on 2026-11-13 so a resumed training run cannot change it |
+| sha256 (checkpoint) | `ed645c56ddeb3311789e12f6d7421462978beb292b0f3b5ce30afdbfaf2bbfcc` |
+| Training config | `.../nequip_no_zbl/config_paw.yaml` (resolved: `outputs/2026-11-05/19-04-55/.hydra/config.yaml`); `allegro.model.AllegroModel`, float64, `cutoff_radius` 6.0 Å, `num_layers` 1, `l_max` 3, 128 scalar / 16 tensor features, energy + force + stress loss, EMA 0.999 |
+| Training data | `../cgst_train_paw.xyz` (the same PAW set as run5_ep301), test set `../cgst_test_paw.xyz` (= `TESTSET`) |
+| Training run | nequip 0.17.1, allegro 0.8.2, torch 2.8.0 (`train.log`); started 2026-11-05 19:04, stopped by `max_time` (2 d 23 h) at epoch ~538 of `max_epochs` 1500. `best.ckpt` = lowest validation metric |
+| Types | `Ge Sb Te C` → LAMMPS types 1–4 (`chemical_symbols` order, as for run5_ep301) |
+| No ZBL | no short-range repulsion term: close contacts in hot liquids are possible; `analysis/mq_summary.py` reports the closest pair distances per run (`rmin_*`) |
+| Compile | the container's own nequip/allegro are the training versions, so `MODEL_SRC` is empty; `TRAIN_DIR` is `.../nequip_no_zbl`, where the checkpoint's relative `../cgst_train_paw.xyz` resolves |
+| Not used | `.../nequip_no_zbl/0718_nequip_no_zbl.nequip.pt2`: compiled 2026-07-18 from an older run on the pre-PAW data (`config.yaml`, `outputs/2026-07-15`) |
+
+Compiled files: to be filled in when built (`RUNBOOK.md`, A): file, node it was compiled on, sha256, validation.
+
+## run5_ep301
+
+`run5_ep301.nequip.pt2` and its G/N copies: the potential of every run up to tag `run5_ep301-final`.
 
 | | |
 |---|---|
@@ -25,7 +53,7 @@ AOTInductor output is not byte-reproducible, so the hash above identifies this s
 
 `tests/model_check` confirms that this file reproduces the checkpoint's energies and forces (see `tests/RESULTS.md`).
 
-## Compiled files per node type
+### Compiled files per node type
 An AOT-compiled model's host code runs only on the CPU type it was compiled on. On other CPUs it dies with
 `Illegal instruction` in the model loader (`tests/RESULTS.md`, environment probe). `common/defaults.sh` picks the
 file from the hostname when a job starts.
@@ -43,7 +71,7 @@ file from the hostname when a job starts.
 - a100-80gb (strachan's k- and i-nodes) has no compatible file yet. Build one there with `compile_model.sh` and add
   it to `common/defaults.sh`.
 
-## Container
+## Container (both models)
 
 | | |
 |---|---|

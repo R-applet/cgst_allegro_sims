@@ -1,4 +1,4 @@
-# Shared setup for the Part 3 workflow scripts (sourced, not run). After sourcing:
+# Shared setup for the recryst workflow scripts (sourced, not run). After sourcing:
 #   ROOT, MODEL_ID      project root; the model (common/model.sh)
 #   cwd = RECRYST       recryst/ (or $RECRYST, a fake tree for tests)
 #   RUNS, RESULTS       runs/$MODEL_ID and results/$MODEL_ID, relative to recryst/ (RESULTS is created)

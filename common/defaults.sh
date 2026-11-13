@@ -1,9 +1,7 @@
-# Production defaults, sourced (not executed) by the Part 2/3 submit scripts and tests/density, tests/model_select.
-# The Part 2/3 logic tests use only MODEL and set dt themselves. Override per job via the environment,
-# e.g. sbatch --export=ALL,DT=0.001 ...  Change a value here only together with the test that justifies it.
-#   DT  timestep (ps). 2 fs passes NVE energy conservation in the hottest, most C-rich state (tests/RESULTS.md, 1c).
-#       Every run in a chain (melt-quench -> ramp/anneal, and anneal resumes) must use the same DT.
-DT=${DT:-0.002}
+# Production defaults, sourced (not executed) by the study submit scripts and the tests that need a compiled model.
+# Override per job via the environment, e.g. sbatch --export=ALL,DT=0.001 ...
+#   DT  timestep (ps), per model in common/model.sh (set by tests/dt for that model). Every run in a chain
+#       (melt-quench -> ramp/anneal, and anneal resumes) must use the same DT.
 
 #   MODEL_ID and the model's paths come from common/model.sh (sourced here).
 #   MODEL  compiled model file models/$MODEL_ID[.G|.N].nequip.pt2 for the node this job runs on, resolved from the hostname when the job starts. An

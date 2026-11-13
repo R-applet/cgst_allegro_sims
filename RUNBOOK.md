@@ -1,60 +1,94 @@
-# Runbook: the full workflow for a new potential
+# Runbook: a new potential, from registration to the studies
 
-This is the order of steps to run everything from scratch with a new (retrained) model, with what each step must
-show before the next one starts. The method behind each step is in the part READMEs; this file only sequences them.
-Every number a step measures goes into `params/<MODEL_ID>.sh` or is generated into
-`recryst/calib/<MODEL_ID>/calib_params.sh`. No script holds a model's values, and no run of one model shares a
-directory with another (`runs/<MODEL_ID>/`, `results/<MODEL_ID>/`, `calib/<MODEL_ID>/`).
+The order of steps for a potential, with what each step must show before the next starts. The method behind each
+step is in the study READMEs; this file only sequences them. Every number a step measures goes into
+`<study>/params/<MODEL_ID>.sh` (or is generated, `recryst/calib/<MODEL_ID>/calib_params.sh`), and every run and result
+of one potential lives under its `MODEL_ID` (`<study>/runs/<MODEL_ID>/`, `<study>/results/<MODEL_ID>/`).
 
-**Requirements.** Gilbreth (Purdue) with read access to `/depot/prism` (container, model sources, DFT data), the
-`strachan` and/or `perc` Slurm accounts, and `env/cgst-ana` for analysis (`README.md`, Running). Every `sbatch` is a
-separate go-ahead: run `--dry-run` first where a script offers it. Heavy analysis (`--clusters`, `mq_structure.py`)
-runs as an `sbatch` job, not on a login node.
+**Requirements.** Gilbreth (Purdue) with read access to `/depot/prism` (container, checkpoints, DFT data), the
+`strachan` (A30) and/or `perc` (A100-40GB) Slurm accounts, and `env/cgst-ana` for analysis (`README.md`, Running).
+Every `sbatch` is a separate go-ahead: run `--dry-run` / `sbatch --test-only` first. Heavy analysis
+(`--clusters`, `mq_structure.py`) runs as an `sbatch` job, not on a login node. Select the potential with `MODEL_ID`
+(default in `common/model.sh`; `MODEL_ID=<id>` before a command or in the shell for another one).
 
-The previous model, run5_ep301, is archived at git tag `run5_ep301-final`. Its outputs are in the `run5_ep301/`
-subdirectories, and its results are in `meltquench/results/run5_ep301/RESULTS.md`,
-`recryst/results/run5_ep301/RESULTS.md` and `tests/RESULTS.md`. Use them for comparison, never as settings.
+Archived: run5_ep301 (tag `run5_ep301-final`; results in `tests/RESULTS.md`, `tests/results/run5_ep301/`,
+`meltquench/results/run5_ep301/`, `recryst/results/run5_ep301/`). Use them for comparison, never as settings.
 
-## Part 0: register the model
-1. In `common/model.sh`, add a `case` block for the new `MODEL_ID` (CKPT, MODEL_SRC, TRAIN_DIR; SIF if the container
-   changes). Then set the default `MODEL_ID` to it, or `export MODEL_ID=...` in every shell and job.
-2. Compile one file per node type, each on a node of that type (`common/defaults.sh` picks by hostname):
-   - b/d-node A30: `cd models && sbatch compile_model.sh $PWD/<MODEL_ID>.nequip.pt2`
-   - g- and n-node A100: `cd tests/a100_model && sbatch --constraint=G --export=ALL,NODE=G submit.sh` (likewise `N`),
-     then copy `<MODEL_ID>.G.nequip.pt2` and `<MODEL_ID>.N.nequip.pt2` to `models/`.
-   Record the sources, sha256s and nodes in `models/provenance.md`.
-3. `cp params/run5_ep301.sh params/<MODEL_ID>.sh`. Mark every value as to-be-measured: each is replaced in the steps
-   below, and a value left from run5_ep301 is wrong until a step confirms it.
+**Status of `nozbl_paw` (2026-11-13):** registered (A1, A3 done); everything from A2 on is staged below with the exact
+commands, not submitted.
 
-**Pass:** `source common/defaults.sh` resolves `MODEL` on each node type (`tests/model_select`, both constraints).
+## A. Register the potential
+1. In `common/model.sh`, add a `case` block for the new `MODEL_ID`: `CKPT` (copy the checkpoint into `models/` so a
+   resumed training run cannot change it), `TRAIN_DIR` (where the checkpoint's relative dataset path resolves),
+   `MODEL_SRC` only if the model needs sources other than the container's, and a provisional `DT`. Register it in
+   `models/provenance.md` (checkpoint hash, config, training versions).
+2. Compile one file per node type, each on a node of that type (`common/defaults.sh` picks by hostname). The A30
+   queue was ~4 days on 2026-11-13 while perc started at once, so the A100 files come first and the A30 file is only
+   needed before running on the A30s (`P` = the perc resources):
+   ```
+   P="-A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1"
+   cd models && sbatch $P --constraint=G compile_model.sh $PWD/nozbl_paw.G.nequip.pt2     # g-nodes
+   cd models && sbatch $P --constraint=N compile_model.sh $PWD/nozbl_paw.N.nequip.pt2     # n-nodes
+   cd models && sbatch --constraint=B compile_model.sh $PWD/nozbl_paw.nequip.pt2          # A30 b/d-nodes, later
+   ```
+   Each prints the file's sha256 in its `slurm-*.out`; record file, node and hash in `models/provenance.md`.
+   (`tests/a100_model` also compiles G/N and compares with `tests/model_check/lammps_energies.txt`; that file holds
+   run5_ep301's energies until B1 has run for the new potential, so don't use it before.)
+3. Give each study you will run a `params/<MODEL_ID>.sh`, copied from run5_ep301's and marked PROVISIONAL: each value
+   is replaced by the study's pilot, and a value left from another potential is wrong until a step confirms it.
+   (`nozbl_paw`: `meltquench/params/nozbl_paw.sh`.)
 
-## Part 1: model and environment tests (`tests/`)
-The Part 1 records will be overwritten in place (`RESULT.txt` in each directory; run5_ep301's are at the tag).
-Write this model's summary to `tests/RESULTS_<MODEL_ID>.md`, in the format of `tests/RESULTS.md`.
-1. Correctness: `model_check` (compiled vs checkpoint energies and forces), `compile_check`, `smoke`, `container`.
-   **Pass:** energy agreement at 1e-6 eV/atom; smoke runs finish on x0 and x10.
-2. Timestep: `dt` (NVE drift at 0.5/1/2 fs in the 1500 K x10 liquid). **Pass:** 2 fs conserves energy, otherwise set
-   `DT` in `common/defaults.sh` and note it.
-3. Throughput: `scaling`. Update the Budget sections if ns/day changed.
-4. Physics against DFT: `stress_parity`, `am_eos`, `density`, `glass_relax`. For `dft_glass` (1k), first make this
-   model's own 10 K/ps glass (Part 2) and pass it as `MODEL_GLASS`. **Decide here** how the glass density compares
-   with the crystal's (run5_ep301: glass denser, from its DFT reference); this sets the caveats of everything after.
-5. Logic tests of the inputs: `tests/mq_logic` and `tests/recryst_logic` (GPU, short). These also cover the new
-   `tmelt` and `tmax` inputs and `ramp_done.txt`, which no GPU job has exercised yet. **Pass:** `VERDICT: PASS` in both.
+**Pass:** `tests/model_select` resolves and runs `MODEL` on both A100 node types
+(`cd tests/model_select && sbatch --constraint=G submit.sh; sbatch --constraint=N submit.sh`), with energies equal to
+B1's; for the A30 file, B1 and B2 on `--constraint=B` (and smoke on `D`) once it exists.
 
-## Part 2: melt-quench (`meltquench/`)
-1. **Superheating pilot (sets `TMELT`).** The melt must be far above the model's superheated melting point. For
-   run5_ep301 the crystal melted at ~1090 K at 2 K/ps, and Tm_app on the 10 K/ps heat was 984–1129 K. Run one x0 and
-   one x10 melt-quench (`sbatch --array=0,12 submit.sh`) and read Tm_app from `analysis/mq_summary.py`.
-   **Pass:** `TMELT` (a multiple of 100) is at least ~300 K above the highest Tm_app, and the MSD gate passes. If not,
-   raise `TMELT` or `HOLD_PS` in params and rerun those two.
-2. Production: `sbatch --array=0-14 submit.sh` (5 compositions × 3 replicas at `QRATE`). **Pass:** all 15 pass the
-   MSD gate with one `HOLD_PS`.
-3. Analysis (sbatch for `mq_structure.py`), outputs in `meltquench/results/<MODEL_ID>/`. Record density, Tm_app, Tg and
-   `xfracGST` per composition in `meltquench/results/<MODEL_ID>/RESULTS.md`. Optional 1 K/ps sensitivity runs
-   (`--array=0,12 --export=ALL,QRATE=1`): run5_ep301's partially crystallized, which is why Part 3 uses 10 K/ps.
+## B. Validate the potential (`tests/`)
+Tests rewrite their `RESULT*.txt` in place. Save the previous potential's first (`tests/collect.sh --save <old ID>`;
+run5_ep301's are saved), and this one's when done (`--save <MODEL_ID>`), with a summary in
+`tests/results/<MODEL_ID>/RESULTS.md` in the format of `tests/RESULTS.md`.
 
-## Part 3: recrystallization (`recryst/`)
+**Gate before any study (minimal), on perc with the G/N files from A2:**
+1. `model_check`: compiled file vs checkpoint, energies and forces on the DFT test frames; it also writes the
+   reference energies the other builds are compared with.
+   `cd tests/model_check && sbatch $P --constraint=G submit.sh`. **Pass:** agreement at 1e-6 eV/atom (`RESULT.txt`);
+   the checkpoint-vs-DFT errors there are the first look at this potential's accuracy.
+2. `smoke`: `cd tests/smoke && sbatch $P --constraint=G submit.sh`. **Pass:** x0 and x10 finish.
+3. `dt`: NVE energy drift at 0.5/1/2 fs in the 1500 K x10 liquid. `cd tests/dt && sbatch $P submit.sh`.
+   **Pass:** 2 fs conserves energy as well as for run5_ep301 (`tests/RESULTS.md` 1c). Critical without ZBL: a close
+   contact in the hot liquid shows up here as a drift or a crash. Otherwise set a smaller `DT` in this model's
+   `common/model.sh` block and rerun.
+4. `model_select` on G and N (A2 Pass).
+
+**Alongside (not gating):** `stress_parity`, `am_eos`, `density`, `glass_relax`, `compile_check`, `scaling` (update
+the Budget sections if ns/day changed). `dft_glass` (1k) needs this potential's own 10 K/ps x0 glass: after the
+melt-quench, `MODEL_GLASS=<npz> python check.py`. **Decide there** how the glass density compares with the crystal's
+(run5_ep301: glass denser, from its DFT reference); it sets the caveats of every study after.
+**Logic tests** (`tests/mq_logic`, `tests/recryst_logic`, short GPU jobs) cover `tmelt`, `tmax` and `ramp_done.txt`,
+which no GPU job has run yet: run them before the first production job of each study. **Pass:** `VERDICT: PASS`.
+
+## meltquench: melt-quench (`meltquench/`)
+1. **Superheating pilot (sets `TMELT`, `HOLD_PS`).** x0 r1 and x10 r1, which are also production runs (same seeds):
+   ```
+   cd meltquench && sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1 --array=0,12 submit.sh
+   python ../analysis/mq_summary.py --out results/nozbl_paw runs/nozbl_paw/*_q10_r1        # env/cgst-ana
+   ```
+   **Pass:** the MSD gate passes (`gate.txt`); `TMELT` (a multiple of 100) is at least ~300 K above the higher
+   Tm_app (run5_ep301: 984–1129 K); no close-contact WARNING and per-pair `rmin_*` close to run5_ep301's (x10
+   liquid: C–C 1.10 Å, Ge–C 1.64 Å, every other pair ≥ 1.80 Å; `mq_summary.py` prints them per pair); no lost atoms or errors in `log.mq`. Then record the values and their source in
+   `meltquench/params/<MODEL_ID>.sh` (no longer PROVISIONAL). If it fails, change `TMELT`/`HOLD_PS`, delete
+   `runs/<MODEL_ID>/{x0,x10}_q10_r1` and rerun the pilot.
+2. **Production:** the remaining 13 runs with the pilot's settings.
+   ```
+   cd meltquench && sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1 --array=1-11,13-14 submit.sh
+   ```
+   (or on the A30s: `sbatch --array=1-11,13-14 submit.sh`). **Pass:** all 15 pass the MSD gate with one `HOLD_PS`.
+3. **Analysis:** `mq_summary.py` on the login node, `mq_structure.py` as an sbatch job, both `--out
+   results/<MODEL_ID> runs/<MODEL_ID>/*_q*_r*`. Record density, Tm_app, Tg, `xfracGST`, `rmin_*` and the structure per
+   composition in `meltquench/results/<MODEL_ID>/RESULTS.md`, compared with run5_ep301. Optional 1 K/ps sensitivity
+   runs (`--array=0,12 --export=ALL,QRATE=1`): run5_ep301's partially crystallized, which is why recryst uses 10 K/ps.
+
+## recryst: recrystallization (`recryst/`)
+Needs the melt-quench glasses of the same potential and `recryst/params/<MODEL_ID>.sh` (copy run5_ep301's, PROVISIONAL).
 1. **Calibration (generates the criterion and per-T tables).** `cd recryst/calib && sbatch --array=0-53 submit.sh`,
    then `sbatch submit_calibrate.sh`. Read `calib/<MODEL_ID>/calibrate.out` and `calib.png`. If the best criterion
    is not clearly better than a neighbour, rerun with `--export=ALL,CALIB_ARGS="--choose RC THR NMIN"`.
@@ -62,7 +96,7 @@ Write this model's summary to `tests/RESULTS_<MODEL_ID>.md`, in the format of `t
    edge-of-grid warning, and `calib_params.sh` covering every temperature you will anneal at.
 2. **Ramp (sets `TX_GUARD` and centres the grid).** `cd recryst && sbatch --array=0 submit_ramp.sh` (x0 r1 at
    `HRATE` 0.2 K/ps to `TMAX`; on the A30s, since it exceeds 24 h on one A100). `TMAX` must stay below the
-   superheated melting point from Part 2. Then `bash scripts/analyze_ramps.sh`. **Read:** whether and where x0
+   superheated melting point from the melt-quench. Then `bash scripts/analyze_ramps.sh`. **Read:** whether and where x0
    crystallizes (Tx_xfrac). Set `TX_GUARD` to a Tx measured at a heating rate comparable to the anneals' 10 K/ps
    heat, or to `TMAX` if none exists (run5_ep301: 900). The slow-ramp Tx is not the guard. If nothing crystallizes by
    `TMAX` even at 0.2 K/ps, expect the anneal grid to be TOO COLD and plan the seeded slabs (step 5) as the main
@@ -99,5 +133,5 @@ Write this model's summary to `tests/RESULTS_<MODEL_ID>.md`, in the format of `t
 ## What carries over, and what does not
 - Carries over: the inputs, scripts, analysis code and their tests; the Q4 criterion *form* (Ge/Sb/Te only); the
   10–60% v_growth window (a geometric result); the 1/√n error estimates.
-- Remeasured for every model: everything in `params/<MODEL_ID>.sh` and `calib_params.sh`, plus the timestep, the
+- Remeasured for every model: everything in each study's `params/<MODEL_ID>.sh` and `calib_params.sh`, plus the timestep, the
   throughput, and the glass-vs-crystal density relation.

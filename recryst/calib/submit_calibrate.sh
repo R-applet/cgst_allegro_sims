@@ -23,4 +23,4 @@ source $ROOT/common/model.sh                # MODEL_ID
 cd $MODEL_ID
 $ROOT/env/cgst-ana/bin/python ../calibrate.py --crystal crys_*.lammpstrj.gz --amorphous amor_*.lammpstrj.gz \
     ${CALIB_ARGS:-} > calibrate.out 2>&1
-$ROOT/env/cgst-ana/bin/python ../make_params.py .        # -> calib_params.sh, which every Part 3 script reads
+$ROOT/env/cgst-ana/bin/python ../make_params.py .        # -> calib_params.sh, which every recryst script reads

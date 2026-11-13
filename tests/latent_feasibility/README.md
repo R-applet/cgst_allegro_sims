@@ -1,6 +1,6 @@
 # Feasibility: Allegro latent features vs Q4 for crystallinity
 
-Exploratory, not a Part 3 gate. Question: do the model's per-atom latents separate crystal from glass, compared
+Exploratory, not a recryst gate. Question: do the model's per-atom latents separate crystal from glass, compared
 with the Q4 criterion, and do they transfer across composition?
 
 ## What was run (2026-11-06)
@@ -51,7 +51,7 @@ The train/test split is by frame.
 - **E_i alone is not a crystallinity descriptor** (AUC ≈ 0.55 for Ge/Sb), so the latent adds real information
   beyond the energy.
 - **Unsupervised clustering fails** (accuracy 0.57–0.79). The dominant variation in latent space is not the phase,
-  so the latent needs labelled references, which the Part 3 calibration states provide.
+  so the latent needs labelled references, which the recryst calibration states provide.
 - **It does not transfer to x10.** On the just-minimized x10 rocksalt, Q4 says 98% crystalline and the
   x0-trained latent says 72%. That is the composition confound expected a priori: C neighbours move Ge/Sb/Te
   latents out of the x0 crystal distribution. (Step 0 is also a minimized, about 0 K structure, while training was
@@ -65,7 +65,7 @@ The train/test split is by frame.
   no sign of it, but this set cannot rule it out.
 
 ## If pursued
-- Rerun with the Part 3 calibration references (all compositions, 300–700 K, real 10 K/ps glasses).
+- Rerun with the recryst calibration references (all compositions, 300–700 K, real 10 K/ps glasses).
 - Train per composition, and report a train-on-x / test-on-y transfer matrix next to Q4.
 - Compare both descriptors on the anneal trajectories (xfrac(t), first detection of a growing nucleus,
   per-atom disagreement maps).

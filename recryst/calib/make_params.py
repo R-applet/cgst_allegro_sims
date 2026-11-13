@@ -1,4 +1,4 @@
-"""calibrate.out -> calib_params.sh: the calibrated values every Part 3 script reads, as bash.
+"""calibrate.out -> calib_params.sh: the calibrated values every recryst script reads, as bash.
 
 Usage: python make_params.py <calib/MODEL_ID dir>   (submit_calibrate.sh runs it after calibrate.py)
 Reads <dir>/calibrate.out and writes <dir>/calib_params.sh with
