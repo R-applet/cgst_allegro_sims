@@ -27,7 +27,7 @@ import mq_structure as ms  # noqa: E402
 DFT = Path(os.environ.get("DFT_TRAIN", "/depot/prism/data/rapplet/cgst-vasp-data/xyz_files/train")) / "GST_Melt_Quench_Eform_train.xyz"
 MODEL = Path(os.environ.get("MODEL_GLASS", HERE.parent / "mq_analysis/ref/model_glass_300K.npz"))
 # default: the frozen run5_ep301 glass (source, sha256: ref/SHA256SUMS); for another model, set MODEL_GLASS to its own
-# 10 K/ps glass npz (RUNBOOK.md)
+# 10 K/ps glass npz (RUNBOOK.md), written from its x0 melt-quench run by make_model_glass.py
 AMU_A3_TO_GCC = 1.66053907
 MASS_PER_ATOM = (2 * 72.63 + 2 * 121.76 + 5 * 127.6) / 9         # Ge2Sb2Te5, amu
 KBAR = 1602.1766

@@ -61,7 +61,8 @@ run5_ep301's are saved), and this one's when done (`--save <MODEL_ID>`), with a 
 
 **Alongside (not gating):** `stress_parity`, `am_eos`, `density`, `glass_relax`, `compile_check`, `scaling` (update
 the Budget sections if ns/day changed). `dft_glass` (1k) needs this potential's own 10 K/ps x0 glass: after the
-melt-quench, `MODEL_GLASS=<npz> python check.py`. **Decide there** how the glass density compares with the crystal's
+melt-quench: `python make_model_glass.py meltquench/runs/<MODEL_ID>/x0_q10_r1 <npz>`, then
+`MODEL_GLASS=<npz> python check.py` (in `tests/dft_glass`). **Decide there** how the glass density compares with the crystal's
 (run5_ep301: glass denser, from its DFT reference); it sets the caveats of every study after.
 **Logic tests** (`tests/mq_logic`, `tests/recryst_logic`, short GPU jobs) cover `tmelt`, `tmax` and `ramp_done.txt`,
 which no GPU job has run yet: run them before the first production job of each study. **Pass:** `VERDICT: PASS`.
