@@ -21,7 +21,7 @@ less dense.
 | 1i `am_eos` (12358733) | 14 DFT EOS sets: mean \|Δρ0\| 0.42% (max 1.51%, C10 cubic), mean pressure RMSE 2.2 kbar | 0.56% (1.61%), 4.4 |
 | 1g `density` (12358734) | x0 rocksalt 3×3×3 at 300 K, 0 bar: 30.451 Å³/atom, 6.224 g/cc | 30.381, 6.238 |
 | `glass_relax` (12358735, N) | DFT melt-quench glasses (5.86 g/cc) relaxed at 300 K, 0 bar: 6.222 g/cc (+6.5%); DFT amorphous 6.234 (+0.8%), cubic 6.238 (+0.3%) | 6.273 (+7.3%), 6.292, 6.272 |
-| 1k `dft_glass` | not run yet: needs this potential's own 10 K/ps glass (melt-quench) | CONSISTENT |
+| 1k `dft_glass` (CPU, x0 r1 glass of job 12359216, `make_model_glass.py`) | **CONSISTENT**: model glass 6.236 g/cc vs DFT coldest-20 frames 6.235 (+0.01%), max \|ΔZ\| 0.14 (Z_Sb 3.80 vs 3.93; criterion 0.15) | CONSISTENT, +0.85%, 0.07 |
 | `mq_logic` (12358737) | melt-quench input logic incl. `tmelt`, MSD gate and the gate failure: PASS (33 checks) | PASS |
 | `recryst_logic` (12359106) | ramp, **ramp restart** (stop at 600 K, resume to 900 K, resume after the last restart: no gap in `ramp.dat`/`stress.dat`, restarts every 50 K, own trajectory file, read as complete), anneal + resume, halt, calibration, analysis: PASS (46 checks; the job's FAIL was the new check misreading `ramp.<T>K.restart` names, fixed and rechecked on its outputs) | PASS |
 | `mq_analysis` (CPU) | analysis code known answers incl. the closest-approach check: PASS | PASS |
@@ -30,7 +30,8 @@ less dense.
 Not rerun (environment, not the potential): `env_probe`, `tuning`; `a100_model` (superseded by compiling the G and
 N files directly, `models/provenance.md`).
 
-**Density of glass vs crystal.** The model's own glass density comes from the melt-quench study
-(`meltquench/results/nozbl_paw/`). `glass_relax` already shows the trend: DFT's
-melt-quenched glasses relax to 6.22 g/cc, the crystal's density (6.224), where run5_ep301 took them past its
-crystal (6.273 vs 6.238). Recheck with `dft_glass` once the 10 K/ps glass exists.
+**Density of glass vs crystal (decided here, RUNBOOK B).** This potential's 10 K/ps x0 glass is 6.239 g/cc
+(`meltquench/results/nozbl_paw/`), its rocksalt crystal 6.224 g/cc: the glass is as dense as the crystal (+0.2%),
+where run5_ep301's was denser (6.292 vs 6.238). Both differ from experiment (glass 6–7% lighter); `dft_glass` shows
+that this matches the DFT reference's own cold glass, so it is a property of the reference. Report densities and
+anything sensitive to the glass–crystal density difference (crystallization strain) with that caveat.
