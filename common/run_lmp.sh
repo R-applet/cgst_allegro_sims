@@ -21,5 +21,7 @@ unset SLURM_TRES_PER_TASK
 # reference copy of the input, its includes, the command and the provenance (lmp_inputs/<log>/; never stops a run)
 source "$(dirname "$(realpath "$0")")/record_inputs.sh"
 record_inputs $NGPU "$@" || echo "run_lmp.sh: could not record the inputs (lmp_inputs/); running anyway" >&2
-srun --ntasks=$NGPU --cpus-per-task=$OMP_NUM_THREADS apptainer run --nv --bind /depot,/scratch --env OMP_NUM_THREADS=$OMP_NUM_THREADS $SIF \
+# exec: bash never reads this file again once LAMMPS starts, so editing it during a run cannot break the job (bash
+# reads scripts as it goes; an edit during job 12359216_0 made it fail with a syntax error after LAMMPS had finished).
+exec srun --ntasks=$NGPU --cpus-per-task=$OMP_NUM_THREADS apptainer run --nv --bind /depot,/scratch --env OMP_NUM_THREADS=$OMP_NUM_THREADS $SIF \
     -k on g $NGPU -sf kk -pk kokkos newton on neigh half "$@"
