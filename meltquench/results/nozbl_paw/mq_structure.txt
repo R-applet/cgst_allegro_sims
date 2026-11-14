@@ -1,0 +1,15 @@
+x0_q10_r1          frames  11  Z_Ge 4.430  Z_Sb 3.799  Z_Te 2.989
+x0_q10_r2          frames  11  Z_Ge 4.412  Z_Sb 3.798  Z_Te 2.977
+x0_q10_r3          frames  11  Z_Ge 4.410  Z_Sb 3.820  Z_Te 2.992
+x10_q10_r1         frames  11  Z_Ge 4.377  Z_Sb 3.711  Z_Te 2.837  Z_C 3.038  C in C-C clusters (size > 1) 0.871
+x10_q10_r2         frames  11  Z_Ge 4.362  Z_Sb 3.729  Z_Te 2.836  Z_C 3.051  C in C-C clusters (size > 1) 0.858
+x10_q10_r3         frames  11  Z_Ge 4.370  Z_Sb 3.730  Z_Te 2.846  Z_C 3.030  C in C-C clusters (size > 1) 0.866
+x1_q10_r1          frames  11  Z_Ge 4.409  Z_Sb 3.784  Z_Te 2.944  Z_C 3.767  C in C-C clusters (size > 1) 0.253
+x1_q10_r2          frames  11  Z_Ge 4.406  Z_Sb 3.785  Z_Te 2.943  Z_C 3.721  C in C-C clusters (size > 1) 0.269
+x1_q10_r3          frames  11  Z_Ge 4.415  Z_Sb 3.778  Z_Te 2.944  Z_C 3.797  C in C-C clusters (size > 1) 0.194
+x2p5_q10_r1        frames  11  Z_Ge 4.402  Z_Sb 3.766  Z_Te 2.909  Z_C 3.451  C in C-C clusters (size > 1) 0.493
+x2p5_q10_r2        frames  11  Z_Ge 4.394  Z_Sb 3.770  Z_Te 2.919  Z_C 3.445  C in C-C clusters (size > 1) 0.517
+x2p5_q10_r3        frames  11  Z_Ge 4.417  Z_Sb 3.771  Z_Te 2.913  Z_C 3.417  C in C-C clusters (size > 1) 0.521
+x5_q10_r1          frames  11  Z_Ge 4.390  Z_Sb 3.754  Z_Te 2.876  Z_C 3.198  C in C-C clusters (size > 1) 0.706
+x5_q10_r2          frames  11  Z_Ge 4.383  Z_Sb 3.751  Z_Te 2.873  Z_C 3.180  C in C-C clusters (size > 1) 0.707
+x5_q10_r3          frames  11  Z_Ge 4.400  Z_Sb 3.742  Z_Te 2.878  Z_C 3.202  C in C-C clusters (size > 1) 0.694

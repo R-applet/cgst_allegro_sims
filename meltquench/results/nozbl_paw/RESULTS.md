@@ -4,10 +4,50 @@ Method: `meltquench/README.md`. Settings: `meltquench/params/nozbl_paw.sh` (4×4
 1500 K, 100 ps hold, 10 K/ps quench; 2 A100s per run). Runs in `meltquench/runs/nozbl_paw/`, each with its input
 record in `lmp_inputs/log.mq/`.
 
-**Status (2026-11-13 22:20):** superheating pilot done and passed (x0 r1, x10 r1); the other 13 production runs
-submitted (job array 12363504). The full table per composition follows when they finish.
+**Status (2026-11-14):** done. All 15 runs (5 compositions × 3 replicas at 10 K/ps; pilot job 12359216, production
+job array 12363504, 3.6–4.9 h each on 2 A100s) passed the MSD gate, with no errors. Analysis: `mq_summary.txt`
+(`analysis/mq_summary.py`), `mq_structure.txt` and the per-group `.dat` tables (`analysis/mq_structure.py`, job
+12375697). run5_ep301's values (3×3×3, same protocol) in brackets.
+
+## Properties against C content (mean ± sample std, 3 replicas)
+
+| C (at.%) | ρ liquid, 1500 K (g/cc) | ρ glass, 300 K (g/cc) | Tm_app (K) | Tg (K) | xfracGST, 300 K | MSD gate (Å², min of 3) |
+|---|---|---|---|---|---|---|
+| 0 | 5.472 ± 0.001 (5.524) | 6.239 ± 0.002 (6.289) | 1139 ± 5 (1129) | 765 ± 22 (807) | 0.142 ± 0.008 (0.155) | 648 |
+| 1.07 | 5.470 ± 0.001 (5.524) | 6.231 ± 0.002 (6.277) | 1138 ± 5 (1128) | 802 ± 19 (780) | 0.132 ± 0.001 (0.144) | 419 |
+| 2.54 | 5.463 ± 0.001 (5.514) | 6.213 ± 0.002 (6.260) | 1112 ± 3 (1117) | 778 ± 15 (833) | 0.128 ± 0.001 (0.139) | 438 |
+| 5.14 | 5.442 ± 0.000 (5.493) | 6.174 ± 0.001 (6.221) | 1069 ± 20 (1077) | 787 ± 10 (757) | 0.123 ± 0.003 (0.133) | 397 |
+| 9.96 | 5.388 ± 0.000 (5.444) | 6.094 ± 0.002 (6.148) | 978 ± 5 (984) | 760 ± 5 (815) | 0.129 ± 0.006 (0.143) | 349 |
+
+- **Density falls with C** by the same relative amount as with run5_ep301: −1.5% in the liquid and −2.3% in the glass
+  from 0 to 10% C (run5_ep301: −1.4%, −2.2%). Every value sits ~0.9% (liquid ~1%) below run5_ep301's.
+- **The apparent melting point** matches run5_ep301 within the replica spread: flat to 1% C, then falling to 978 K at
+  10% C. It is a superheating limit on a 10 K/ps ramp, an upper bound on the model's Tm.
+- **Tg is not resolved**: 760–802 K with 5–22 K scatter and no trend with C.
+- **Crystal-like order** (`xfracGST`, Ge/Sb/Te only, default criterion 3.6/0.5/4, final 50 ps) is ~0.01 lower than
+  run5_ep301's at every composition and falls slightly with C to 5%.
+- **Closest approach** (`mq_summary.txt`, per pair, liquid / glass): Ge/Sb/Te pairs ≥ 1.98 Å in every liquid; Ge–C
+  1.62–1.64 / 1.78–1.84 Å, Te–C 1.72–1.80 / 1.88–1.98 Å, C–C 1.08–1.12 / 1.16–1.20 Å at every C content (run5_ep301
+  x10: Ge–C 1.64 / 1.80, Te–C 1.80 / 1.92, C–C 1.10 / 1.18). No close contacts without ZBL.
+
+## Structure of the glass (`mq_structure.txt`, final 50 ps at 300 K)
+
+| C (at.%) | Z_Ge | Z_Sb | Z_Te | Z_C | C bonded to C |
+|---|---|---|---|---|---|
+| 0 | 4.42 (4.49) | 3.81 (3.86) | 2.99 (3.03) | — | — |
+| 1.07 | 4.41 | 3.78 | 2.94 | 3.76 (3.70) | 0.24 (0.30) |
+| 2.54 | 4.40 | 3.77 | 2.91 | 3.44 | 0.51 (0.63) |
+| 5.14 | 4.39 | 3.75 | 2.88 | 3.19 | 0.70 (0.80) |
+| 9.96 | 4.37 (4.43) | 3.72 (3.80) | 2.84 (2.90) | 3.04 (3.02) | 0.86 (0.91) |
+
+(± ≤ 0.01 over replicas for Z_Ge/Sb/Te, ≤ 0.04 for Z_C and the C–C fraction.) Coordination falls with C as with
+run5_ep301, each species ~0.05–0.08 lower, consistent with the slightly lighter glass. C clusters at every content,
+but less than with run5_ep301 (86% vs 91% of C bonded to C at 10% C). Angles, S(q), C motifs and C-cluster size
+distributions: the per-group `.dat` files.
 
 ## Superheating pilot (job 12359216; x0 r1 and x10 r1, also production runs)
+
+How `TMELT` and `HOLD_PS` were confirmed before the production runs.
 
 `mq_summary_pilot.txt` (`analysis/mq_summary.py`); run5_ep301's same runs (3×3×3) in brackets:
 

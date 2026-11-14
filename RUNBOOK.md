@@ -14,9 +14,9 @@ Every `sbatch` is a separate go-ahead: run `--dry-run` / `sbatch --test-only` fi
 Archived: run5_ep301 (tag `run5_ep301-final`; results in `tests/RESULTS.md`, `tests/results/run5_ep301/`,
 `meltquench/results/run5_ep301/`, `recryst/results/run5_ep301/`). Use them for comparison, never as settings.
 
-**Status of `nozbl_paw` (2026-11-13 22:20):** A done (G/N files; A30 file queued); B done, all pass
-(`tests/results/nozbl_paw/RESULTS.md`); meltquench step 1 (pilot) passed, step 2 (production, job array 12363504)
-running.
+**Status of `nozbl_paw` (2026-11-14):** A done (G/N files; A30 file queued); B done, all pass
+(`tests/results/nozbl_paw/RESULTS.md`); meltquench done (15 runs, analysis in
+`meltquench/results/nozbl_paw/`); next: recryst (calibration first).
 
 ## A. Register the potential
 1. In `common/model.sh`, add a `case` block for the new `MODEL_ID`: `CKPT` (copy the checkpoint into `models/` so a
