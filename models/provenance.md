@@ -24,7 +24,7 @@ checkpoint copies are not tracked by git; their hashes are here.
 | Compile | the container's own nequip/allegro are the training versions, so `MODEL_SRC` is empty; `TRAIN_DIR` is `.../nequip_no_zbl`, where the checkpoint's relative `../cgst_train_paw.xyz` resolves |
 | Not used | `.../nequip_no_zbl/0718_nequip_no_zbl.nequip.pt2`: compiled 2026-07-18 from an older run on the pre-PAW data (`config.yaml`, `outputs/2026-07-15`) |
 
-Compiled files (`models/compile_model.sh` on perc, from `models/nozbl_paw.ckpt`; the logs, `models/slurm-<job>.out`,
+Compiled files (`models/compile_model.sh` on a node of each type, from `models/nozbl_paw.ckpt`; the logs, `models/slurm-<job>.out`,
 print the hash):
 
 | file | compiled on | used on | sha256 | validated |
@@ -86,8 +86,7 @@ file from the hostname when a job starts.
   AOTInductor output depends on the build machine.
 - All were compiled from the same checkpoint with `compile_model.sh`. G and N copies are from `tests/a100_model/`;
   the hashes were checked against those copies.
-- a100-80gb (strachan's k- and i-nodes) has no compatible file yet. Build one there with `compile_model.sh` and add
-  it to `common/defaults.sh`.
+- a100-80gb (k- and i-nodes) has no run5_ep301 file. nozbl_paw has one for the k-nodes (`.K`, above).
 
 ## Container (both models)
 

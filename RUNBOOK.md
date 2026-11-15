@@ -6,7 +6,7 @@ step is in the study READMEs; this file only sequences them. Every number a step
 of one potential lives under its `MODEL_ID` (`<study>/runs/<MODEL_ID>/`, `<study>/results/<MODEL_ID>/`).
 
 **Requirements.** Gilbreth (Purdue) with read access to `/depot/prism` (container, checkpoints, DFT data), the
-`strachan` (A30) and/or `perc` (A100-40GB) Slurm accounts, and `env/cgst-ana` for analysis (`README.md`, Running).
+`strachan` (A30), `perc` (A100-40GB) and/or `alta` (A100-80GB) Slurm accounts, and `env/cgst-ana` for analysis (`README.md`, Running).
 Every `sbatch` is a separate go-ahead: run `--dry-run` / `sbatch --test-only` first. Heavy analysis
 (`--clusters`, `mq_structure.py`) runs as an `sbatch` job, not on a login node. Select the potential with `MODEL_ID`
 (default in `common/model.sh`; `MODEL_ID=<id>` before a command or in the shell for another one).
@@ -14,9 +14,10 @@ Every `sbatch` is a separate go-ahead: run `--dry-run` / `sbatch --test-only` fi
 Archived: run5_ep301 (tag `run5_ep301-final`; results in `tests/RESULTS.md`, `tests/results/run5_ep301/`,
 `meltquench/results/run5_ep301/`, `recryst/results/run5_ep301/`). Use them for comparison, never as settings.
 
-**Status of `nozbl_paw` (2026-11-14):** A done (G/N files; A30 file queued); B done, all pass
-(`tests/results/nozbl_paw/RESULTS.md`); meltquench done (15 runs, analysis in
-`meltquench/results/nozbl_paw/`); next: recryst (calibration first).
+**Status of `nozbl_paw` (2026-11-15):** A done (A30, G, N and K files); B done, all pass
+(`tests/results/nozbl_paw/RESULTS.md`); meltquench done (15 runs at 10 K/ps, analysis in
+`meltquench/results/nozbl_paw/`; x0/x10 at 5 K/ps done, at 1 K/ps running); recryst: calibration done (criterion
+3.9/0.6/4), x0 ramp and Phase A running.
 
 ## A. Register the potential
 1. In `common/model.sh`, add a `case` block for the new `MODEL_ID`: `CKPT` (copy the checkpoint into `models/` so a
@@ -31,6 +32,7 @@ Archived: run5_ep301 (tag `run5_ep301-final`; results in `tests/RESULTS.md`, `te
    cd models && sbatch $P --constraint=G compile_model.sh $PWD/nozbl_paw.G.nequip.pt2     # g-nodes
    cd models && sbatch $P --constraint=N compile_model.sh $PWD/nozbl_paw.N.nequip.pt2     # n-nodes
    cd models && sbatch --constraint=B compile_model.sh $PWD/nozbl_paw.nequip.pt2          # A30 b/d-nodes, later
+   cd models && sbatch -A alta -p a100-80gb --constraint=K compile_model.sh $PWD/nozbl_paw.K.nequip.pt2  # k-nodes
    ```
    Each prints the file's sha256 in its `slurm-*.out`; record file, node and hash in `models/provenance.md`.
    (`tests/a100_model` also compiles G/N and compares with `tests/model_check/lammps_energies.txt`; that file holds
@@ -65,8 +67,8 @@ the Budget sections if ns/day changed). `dft_glass` (1k) needs this potential's 
 melt-quench: `python make_model_glass.py meltquench/runs/<MODEL_ID>/x0_q10_r1 <npz>`, then
 `MODEL_GLASS=<npz> python check.py` (in `tests/dft_glass`). **Decide there** how the glass density compares with the crystal's
 (run5_ep301: glass denser, from its DFT reference); it sets the caveats of every study after.
-**Logic tests** (`tests/mq_logic`, `tests/recryst_logic`, short GPU jobs) cover `tmelt`, `tmax` and `ramp_done.txt`,
-which no GPU job has run yet: run them before the first production job of each study. **Pass:** `VERDICT: PASS`.
+**Logic tests** (`tests/mq_logic`, `tests/recryst_logic`, short GPU jobs) cover `tmelt`, `tmax`, `ramp_done.txt` and the
+ramp restart: run them for each potential before the first production job of each study (nozbl_paw: both PASS). **Pass:** `VERDICT: PASS`.
 
 ## meltquench: melt-quench (`meltquench/`)
 1. **Superheating pilot (sets `TMELT`, `HOLD_PS`).** At the params' `SIZE` (444 for nozbl_paw; build the cells with
@@ -84,8 +86,9 @@ which no GPU job has run yet: run them before the first production job of each s
    ```
    cd meltquench && sbatch -A perc -p a100-40gb --gpus-per-node=2 --ntasks-per-node=2 --array=1-11,13-14 submit.sh
    ```
-   (`NGPU` = 2 in params: the submit script refuses another rank count; ~5 h per run at 444 on 2 A100s; on 2
-   A30s `sbatch --array=1-11,13-14 submit.sh`, ~2× slower). **Pass:** all 15 pass the MSD gate with one `HOLD_PS`.
+   (`NGPU` = 2 in params: the submit script refuses a job whose rank count differs; 3.6–4.9 h per run at 444 on 2
+   A100s. On the A30s (24 GB) use 3 per run, `sbatch --constraint=B --gpus-per-node=3 --ntasks-per-node=3
+   --export=ALL,NGPU=3 ...`, as the 5 K/ps runs did; 2 A30s are untested at 444, which needs 23.3 GB per GPU on 2.) **Pass:** all 15 pass the MSD gate with one `HOLD_PS`.
 3. **Analysis:** `mq_summary.py` on the login node, `mq_structure.py` as an sbatch job, both `--out
    results/<MODEL_ID> runs/<MODEL_ID>/*_q*_r*`. Record density, Tm_app, Tg, `xfracGST`, `rmin_*` and the structure per
    composition in `meltquench/results/<MODEL_ID>/RESULTS.md`, compared with run5_ep301. Optional 1 K/ps sensitivity

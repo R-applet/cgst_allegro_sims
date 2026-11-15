@@ -14,7 +14,9 @@
 #   all cells x 3 replicas:            sbatch --array=0-14 submit.sh
 #   1 K/ps sensitivity (x0, x10, r1):  sbatch --array=0,12 --export=ALL,QRATE=1 submit.sh
 #   longer melt hold for every run (after an MSD-gate ERROR): --export=ALL,HOLD_PS=150
-# SIZE, NGPU (checked against the job's ranks), QRATE, HOLD_PS and TMELT come from meltquench/params/<MODEL_ID>.sh; QRATE and HOLD_PS set in the environment override it.
+#   444 on 3 A30s (24 GB each):       sbatch --constraint=B --gpus-per-node=3 --ntasks-per-node=3 --export=ALL,NGPU=3 ...
+# SIZE, NGPU (checked against the job's ranks), QRATE, HOLD_PS and TMELT come from meltquench/params/<MODEL_ID>.sh;
+# QRATE and HOLD_PS set in the environment override it, and NGPU too where the params allow (NGPU=${NGPU:-2}).
 # Array index i -> cell CELLS[i / 3], replica r = i % 3 + 1.
 # Run directory: runs/<MODEL_ID>/<cell>_q<QRATE>_r<r>/ (MODEL_ID: common/model.sh).
 # Velocity seed = 10007*(i+1) + QRATE, so every run has a different seed.

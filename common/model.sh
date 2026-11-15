@@ -1,7 +1,7 @@
 # The potential this project runs with, in one place. Sourced (not executed) by common/defaults.sh,
 # common/run_lmp.sh, models/compile_model.sh and the tests; Python tools read the exported variables.
 # To add a model (RUNBOOK.md, A): add a block below with its checkpoint and sources, compile
-# models/$MODEL_ID{,.G,.N}.nequip.pt2 (one per node type, common/defaults.sh), and register it in
+# models/$MODEL_ID{,.G,.N,.K}.nequip.pt2 (one per node type, common/defaults.sh), and register it in
 # models/provenance.md. Every run and result directory is named by MODEL_ID (<study>/runs/$MODEL_ID/,
 # <study>/results/$MODEL_ID/), so runs of different models never share a directory. Select another registered model
 # for one shell or job with MODEL_ID=<id> (e.g. MODEL_ID=run5_ep301 for the archived model's tools).

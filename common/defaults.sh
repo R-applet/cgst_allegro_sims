@@ -4,9 +4,9 @@
 #       (melt-quench -> ramp/anneal, and anneal resumes) must use the same DT.
 
 #   MODEL_ID and the model's paths come from common/model.sh (sourced here).
-#   MODEL  compiled model file models/$MODEL_ID[.G|.N].nequip.pt2 for the node this job runs on, resolved from the hostname when the job starts. An
+#   MODEL  compiled model file models/$MODEL_ID[.G|.N|.K].nequip.pt2 for the node this job runs on, resolved from the hostname when the job starts. An
 #          AOT-compiled model's host code only runs on the CPU type it was compiled on; elsewhere it dies with
-#          'Illegal instruction' in the model loader (tests/RESULTS.md, environment probe). All three files are the
+#          'Illegal instruction' in the model loader (tests/RESULTS.md, environment probe). All of a model's files are the
 #          same model (identical energies on the model_check frames), so a chain may switch node types, e.g. an
 #          anneal resumed on another partition. Pass it to LAMMPS as -var model $MODEL. Override with MODEL=<file>.
 #          Nodes with no compatible file abort here, before LAMMPS starts.

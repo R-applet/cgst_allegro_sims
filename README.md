@@ -15,7 +15,7 @@ settings, runs and results per `MODEL_ID`, so potentials never share a directory
 |---|---|---|---|---|
 | Validation | `tests/` | done (`tests/RESULTS.md`); glass as dense as the crystal, from the DFT reference (1g, 1k) | done: all gate and physics tests pass, better than run5_ep301 vs DFT; glass as dense as the crystal (`tests/results/nozbl_paw/RESULTS.md`) | to be provided |
 | Melt-quench | `meltquench/` | 15 glasses at 10 K/ps, x0 and x10 at 1 K/ps (`meltquench/results/run5_ep301/`) | done: 15 glasses at 10 K/ps (4×4×4), all past the MSD gate; same C trends as run5_ep301, ~0.9% lighter (`meltquench/results/nozbl_paw/`) | — |
-| Recrystallization | `recryst/` | criterion 3.8 Å/0.6/4; ramps; x0 anneals at 600/650 K (`recryst/results/run5_ep301/RESULTS.md`) | after the melt-quench | — |
+| Recrystallization | `recryst/` | criterion 3.8 Å/0.6/4; ramps; x0 anneals at 600/650 K (`recryst/results/run5_ep301/RESULTS.md`) | calibration done, criterion 3.9 Å/0.6/4 (`recryst/calib/nozbl_paw/`); x0 ramp and Phase A anneals running | — |
 | Coexistence | `coexistence/` | — | planned | — |
 | Phases | `phases/` | — | planned | — |
 | Cascades | `cascades/` | — | planned | — |
@@ -41,7 +41,7 @@ potential, follow `RUNBOOK.md` A–B, then give each study a `params/<MODEL_ID>.
   writes NxNxN cells to `NNN/` (not tracked; 4×4×4 chosen for the melt-quench and recrystallization from nozbl_paw on, 3×3×3
   for run5_ep301); the original ASE-written inputs are in `original/`. See `structures/README.md`.
 - `models/`: the model registry (`provenance.md`: every potential, its checkpoint and hashes), the compiled files, one
-  per node type and model (`<MODEL_ID>[.G|.N].nequip.pt2`), local checkpoint copies (neither tracked), and
+  per node type and model (`<MODEL_ID>[.G|.N|.K].nequip.pt2`), local checkpoint copies (neither tracked), and
   `compile_model.sh`.
 - `common/`:
   - `model.sh`: `MODEL_ID` (default `nozbl_paw`) and its checkpoint, sources, timestep `DT`, container and DFT data;
@@ -69,15 +69,15 @@ This workflow runs on Purdue's **Gilbreth** cluster. It needs read access to **`
 - the DFT training and test sets.
 
 All of these paths are in `common/model.sh`. Elsewhere, provide equivalents and set them there. Slurm accounts
-`strachan` (A30) and/or `perc` (A100-40GB).
+`strachan` (A30), `perc` (A100-40GB) and/or `alta` (A100-80GB).
 
 ## Running
 All jobs run through `common/run_lmp.sh NGPU -in ... -log ...`, with the compiled model chosen per node type by
 `common/defaults.sh` (`MODEL`; see `models/provenance.md`). Usable GPUs:
 - `a30` with account `strachan` (submit-script default; 6 A30s shared by the group);
-- `a100-40gb` with account `perc` (10 A100s, about 1.8× faster per GPU): `sbatch -A perc -p a100-40gb ...`.
-
-`a100-80gb` needs its own model build first.
+- `a100-40gb` with account `perc` (10 A100s, about 1.8× faster per GPU): `sbatch -A perc -p a100-40gb ...`;
+- `a100-80gb` with account `alta` (36 A100-80GBs): `sbatch -A alta -p a100-80gb --constraint=K ...`. Only the
+  k-nodes have a compiled file (`.K`); the i-nodes have none.
 
 Analysis environment (the package cache must be on scratch, because the home quota is small):
 ```

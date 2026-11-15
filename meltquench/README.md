@@ -11,7 +11,8 @@ This README describes the method; results are per model in `results/<MODEL_ID>/`
 (6.29 vs 6.24 g/cc), unlike experiment (glass ~6–7% less dense). It inherits this from its DFT reference
 (`tests/RESULTS.md` 1g, 1k). Whether a retrained model does the same decides how densities, and anything that
 depends on the glass–crystal density difference (crystallization strain, pressure-sensitive kinetics), can be
-reported (`RUNBOOK.md`, B).
+reported (`RUNBOOK.md`, B). nozbl_paw: the glass is as dense as its crystal (6.239 vs 6.224 g/cc,
+`tests/results/nozbl_paw/RESULTS.md`).
 
 ## Protocol
 
@@ -19,7 +20,7 @@ reported (`RUNBOOK.md`, B).
 |---|---|---|---|
 | 0 | minimize, then 300 | 20 ps | equilibrate the crystal |
 | 1 | 300 → `tmelt` (1500 K default) | (tmelt − 300)/10 ps (10 K/ps) | apparent Tm from the enthalpy jump (superheated, an upper bound) |
-| 2 | `tmelt` | `hold_ps` = 100 ps, the same for every run | **MSD gate**, checked 20 ps before the end: every species, C included, must have MSD ≥ 100 Å² within the hold (about 10 Å travelled). This erases memory of the crystal and of the C pattern repeated by the 3×3×3 replication. A run that fails stops with an ERROR before the quench; rerun *every* composition with a longer hold (`HOLD_PS`). Gate result → `gate.txt`. Liquid RDF over the last 20 ps → `rdf_<tmelt>K.dat`, `liquid_<tmelt>K.data` |
+| 2 | `tmelt` | `hold_ps` = 100 ps, the same for every run | **MSD gate**, checked 20 ps before the end: every species, C included, must have MSD ≥ 100 Å² within the hold (about 10 Å travelled). This erases memory of the crystal and of the C pattern repeated by the N×N×N replication. A run that fails stops with an ERROR before the quench; rerun *every* composition with a longer hold (`HOLD_PS`). Gate result → `gate.txt`. Liquid RDF over the last 20 ps → `rdf_<tmelt>K.dat`, `liquid_<tmelt>K.data` |
 | 3 | `tmelt` → 300 | (tmelt − 300)/qrate ps, in 100 K segments | `snap_<T>K.data` every 100 K down to 300 K |
 | 4 | 300 | 100 ps | 50 ps relaxation, then RDF and coordination averaged over 50 ps → `rdf_300K.dat`, `amorphous_300K.data` (input to recryst) |
 
@@ -67,23 +68,25 @@ Per-atom coordination is not dumped. One `coord/atom` cutoff cannot serve both b
 cd meltquench
 sbatch --array=0-14 submit.sh                         # QRATE from params (10 K/ps): 5 cells x 3 replicas
 sbatch --array=0,12 --export=ALL,QRATE=1 submit.sh    # optional 1 K/ps sensitivity: x0 r1, x10 r1
-# the same on one perc A100-40GB per run instead of 2 A30s (sbatch options override the #SBATCH lines):
-sbatch -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1 --array=0-14 submit.sh
-M=run5_ep301                                          # = MODEL_ID
+# on perc A100-40GBs instead of 2 A30s, NGPU (params) per run (sbatch options override the #SBATCH lines):
+sbatch -A perc -p a100-40gb --gpus-per-node=2 --ntasks-per-node=2 --array=0-14 submit.sh
+# 444 on the A30s (24 GB each): 3 per run
+sbatch --constraint=B --gpus-per-node=3 --ntasks-per-node=3 --export=ALL,NGPU=3 --array=0-14 submit.sh
+M=nozbl_paw                                           # = MODEL_ID
 python ../analysis/mq_summary.py --out results/$M runs/$M/*_q*_r*      # with env/cgst-ana active
 python ../analysis/mq_structure.py --out results/$M runs/$M/*_q*_r*    # heavy: an sbatch job
 ```
 Array index i → cell `(x0 x1 x2p5 x5 x10)[i/3]`, replica `i%3+1`; runs go to `runs/<MODEL_ID>/<cell>_q<qrate>_r<rep>/`.
-strachan's 6-GPU A30 cap runs at most 3 of these jobs at once. One A100 gives 2.9–3.1 ns/day, close to the 3.35
-ns/day of 2 A30s (`tests/RESULTS.md` 1d), so the perc queue roughly doubles throughput. `common/defaults.sh`
-picks the right compiled model on either node type, and `submit.sh` passes `$SLURM_NTASKS` GPUs to LAMMPS.
-Each run fits in one wall-time window: about 3–5 h at 10 K/ps and 11–13 h at 1 K/ps for 13.8k atoms (333) on 2 A30s; a
-444 cell (32.8k atoms) costs about 2.4× that (`tests/scaling/submit_size.sh`)
-(3.35 ns/day, `tests/RESULTS.md` 1d), against a 1-day limit. So a failed run is normally rerun from scratch. For
+strachan's 6-GPU A30 cap runs at most 3 two-GPU jobs at once. At 333, one A100 gives 2.9–3.1 ns/day, close to the
+3.35 ns/day of 2 A30s (`tests/RESULTS.md` 1d); at 444 (32.8k atoms), 2 A100s give 2.59 ns/day
+(`tests/scaling/submit_size.sh`). `common/defaults.sh` picks the right compiled model on each node type, and
+`submit.sh` passes `$SLURM_NTASKS` GPUs to LAMMPS. Each run fits in the 1-day wall-time limit: at 333 on 2 A30s about
+3–5 h at 10 K/ps and 11–13 h at 1 K/ps; at 444 on 2 A100s 3.6–4.9 h at 10 K/ps. So a failed run is normally rerun from scratch. For
 manual recovery, `snap_<T>K.data` marks each 100 K of the quench, and `mq.restart.a/b` hold the last two 50 ps
 points of any stage. Resuming from them needs a hand-edited input that starts at the right stage.
 
-`analysis/mq_summary.py` reports, per run and as replica mean ± sample std (NaN for a single replica):
+`analysis/mq_summary.py` reports, per run, and as replica mean ± sample std for each (cell, qrate) group with two or
+more replicas:
 - apparent Tm;
 - liquid and amorphous density;
 - Tg (bilinear V(T) fit on the quench);
@@ -94,7 +97,8 @@ points of any stage. Resuming from them needs a hand-edited input that starts at
   every other pair ≥ 1.64 Å);
 - the hold length, with a WARNING if the runs do not all share one;
 - partial coordination numbers (CN_ij, j atoms around an i atom) and each species' total coordination Z_i;
-- with `--out`: `<group>_curves.dat`, ρ(T) and H(T) on the heating ramp and the quench, in 10 K bins.
+- with `--out`: `<group>_curves.dat`, ρ(T) and H(T) on the heating ramp and the quench, in 10 K bins (std NaN for a
+  single replica).
 
 `analysis/mq_structure.py` analyses the trajectory frames of the final 50 ps at 300 K and writes, per group, the
 replica mean ± sample std of:
@@ -107,7 +111,7 @@ replica mean ± sample std of:
 ## Validation
 Both tests write a `RESULT.txt` with one PASS/FAIL line per check (`tests/collect.sh` prints them).
 
-**`tests/mq_logic`: PASS** (job 12278869, with the `xfracGST` column). The full input runs on the 1×1×1 x0 (461 atoms) and x10 (512) cells with
+**`tests/mq_logic`: PASS** (nozbl_paw: job 12358737; run5_ep301: job 12278869). The full input runs on the 1×1×1 x0 (461 atoms) and x10 (512) cells with
 every duration ×0.1, plus `x0_gatefail`: x0 with an unreachable gate (`gate_A2 1e9`). `check.py` runs at the end of
 the job and verifies:
 - every output file, including both restart files;
@@ -136,8 +140,9 @@ xfrac ≈ 0.1, the false-positive level the recryst calibration has to remove.
 
 The reference data are frozen copies in `tests/mq_analysis/ref/` (sources and sha256s in `ref/SHA256SUMS`).
 
-**`tests/dft_glass`: CONSISTENT for run5_ep301** (`tests/RESULTS.md` 1k; rerun per model with `MODEL_GLASS`). The model glass against DFT's own cold melt-quenched glass,
-with the same code: density +0.85%, every mean Z within 0.08.
+**`tests/dft_glass`: CONSISTENT** for both models (rerun per model with `MODEL_GLASS`). The model glass against
+DFT's own cold melt-quenched glass, with the same code: run5_ep301 density +0.85%, every mean Z within 0.08
+(`tests/RESULTS.md` 1k); nozbl_paw +0.01%, within 0.14 (`tests/results/nozbl_paw/RESULTS.md`).
 
 **Bugs this test has caught (all fixed):** the MSD-gate `min()`; first-minimum CNs (Te–Te ≈ 10, and Sb–Te ≈ 7 in
 x10; now fixed cutoffs); repeated `mq.dat` rows breaking `np.gradient`; stage windows computed from the schedule

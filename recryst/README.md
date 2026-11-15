@@ -11,7 +11,8 @@ order, because each one sets parameters for the next.
 
 **Glass vs crystal density.** For run5_ep301 the glass is slightly denser than the model's own crystal, as in its DFT
 reference (`tests/RESULTS.md` 1g, 1k), so crystallization expands the cell: the opposite sign to experiment. Check
-this for every model. `recryst_summary.py`'s Tx_rho is sign-agnostic (max |dρ/dt|), with `drho_x` giving the sign.
+this for every model: for nozbl_paw the glass is as dense as its crystal (6.239 vs 6.224 g/cc,
+`tests/results/nozbl_paw/RESULTS.md`). `recryst_summary.py`'s Tx_rho is sign-agnostic (max |dρ/dt|), with `drho_x` giving the sign.
 Report Tx from the crystalline fraction and the enthalpy release, with Tx_rho as a cross-check.
 
 ## 1. Crystallinity criterion (`calib/`)
@@ -77,7 +78,7 @@ Ta, but a ns anneal ages the glass, and its ordered patches may grow before a nu
 **Result, per model:** `calib/<MODEL_ID>/calibrate.out`, and `calib/<MODEL_ID>/calib_params.sh` generated from it
 (criterion, `--nucleated-size`, crystal and glass `xfracGST` per composition and T). Every recryst script reads the
 latter through `recryst/params/<MODEL_ID>.sh`, so no criterion or per-T value is typed into a script. run5_ep301: 3.8 Å, 0.6, 4
-(`results/run5_ep301/RESULTS.md` section 1).
+(`results/run5_ep301/RESULTS.md` section 1); nozbl_paw: 3.9 Å, 0.6, 4 (margin 0.716).
 
 ## 2. Heating ramp, Tx (`in.ramp`, `submit_ramp.sh`)
 | Stage | T (K) | Duration |
@@ -230,8 +231,8 @@ the `.dat` value uses the run's criterion only; `Tx_H` is criterion-free and is 
 **Continuation.** A hold can be longer than one wall-time window (run5_ep301: 5 ns of a 13k-atom cell, about 1.5 days on
 2 A30s; nozbl_paw: 2 ns at 444 on 2 A100s, about 19 h, within one). Each array task queues its own `afterany` continuation (at most `MAXCHAIN`, default 4). The
 continuation resumes from the newest restart file and appends to `anneal.dat` and `stress.dat`, or exits at once if
-`anneal_done.txt` exists. It inherits the job's account, partition, QoS and GPU layout, so a chain started on the
-perc A100s stays there. A continuation that finds no newer restart than its predecessor started from stops the chain
+`anneal_done.txt` exists. It inherits the job's account, partition, QoS, node constraint and GPU layout, so a chain
+started on the perc A100s, or on alta's k-nodes, stays there. A continuation that finds no newer restart than its predecessor started from stops the chain
 with an error (the predecessor made no progress, e.g. a bad input) instead of queueing more doomed jobs.
 - Restart files carry the thermostat and barostat state.
 - They do not carry the MSD reference, so the MSD columns restart from zero in each job. Crystallinity is unaffected.
@@ -265,17 +266,17 @@ python ../analysis/rate_compare.py results/<MODEL_ID>/grid_*_T600_clusters.txt  
 `submit_anneal.sh` maps array index i to (cell `(x0 x1 x2p5 x5 x10)[i / NREP]`, replica `i % NREP + 1`), as
 `meltquench/submit.sh` does for NREP 3. The timestep comes from `common/defaults.sh` (override with
 `--export=ALL,DT=...`). Settings read from params can be overridden per submission with `--export=ALL,NAME=value`:
-`HRATE` (ramp); `XSTOP`, `MAX_NS` (anneal); also `TA` (required), `NREP`, `MAXCHAIN` (default 4) and `EXTRA_VARS`
+`HRATE` (ramp); `XSTOP`, `MAX_NS` (anneal); also `TA` (required), `NREP`, `MAXCHAIN` (default 4 for anneals, 3 for ramps) and `EXTRA_VARS`
 (further LAMMPS `-var` options; the criterion and barostat are always passed from params).
 
 ## Validation
-**`tests/recryst_logic`: PASS** (job 12290193; `check.py` writes `RESULT.txt`; after the nucleation-threshold
-change, `calibrate.py` and `check.py` were rerun on that job's outputs, since no LAMMPS input changed; 42 checks
-since the fractional `single_grain`, the required criterion and the model header). `in.ramp`'s `tmax`/`ramp_done.txt`
-and `in.meltquench`'s `tmelt` came after this job: the logic tests are the first step of the rerun (`RUNBOOK.md`). On the 1×1×1 x0 glass (461 atoms)
-from `tests/mq_logic`, dt 1 fs:
+**`tests/recryst_logic`: PASS** (nozbl_paw: job 12359106, 46 checks; run5_ep301: job 12290193; `check.py` writes
+`RESULT.txt`). On the 1×1×1 x0 glass (461 atoms) from `tests/mq_logic`, dt 1 fs:
 - **Ramp** (10 K/ps): exit 0; `snap_350K` … `snap_900K`; T follows the programmed schedule (mean deviation +1.2 K);
   `stress.dat` has a row for every `ramp.dat` step.
+- **Ramp restart** (`ramp_resume`): a ramp stopped at 600 K resumes to 900 K, and a resume after the last restart is
+  read as complete; `ramp.dat` and `stress.dat` continue with no gap; restarts every 50 K; each resumed job dumps
+  its own trajectory file.
 - **Anneal with resume** (tscale 0.1): both jobs exit 0; the hold ends at the programmed step 24000; `anneal.dat`
   (0–24000) and `stress.dat` (4000–24000) continue across the resume with no gap; restarts every 5000 steps;
   trajectory frames every 2 ps, the two jobs' files overlapping at 10000–14000 and agreeing there in unwrapped
@@ -329,10 +330,11 @@ each), hence `NGPU` = 2 per 444 run.
 - Ramp: 0.2 K/ps to 900 K is 3,010 ps: ≈ 22 h on 2 A30s at 333, ≈ 28 h at 444 on 2 A100s, i.e. two chained jobs.
 - Anneals (nozbl_paw, 444, `MAX_NS` 2, 2 A100s): a hold that never halts is ≈ 19 h, one job. The full grid (5
   compositions × 5 Ta × 3 replicas) is 75 runs ≈ 2,900 GPU-hours if nothing halts, about 12 days on 10 perc GPUs (5
-  runs at a time); `fix halt` cuts this where runs crystallize, and Phase A decides where Phase B is worth running.
+  runs at a time), about 3.5 days on alta's 36 (18 at a time, when free); `fix halt` cuts this where runs crystallize, and Phase A decides where Phase B is worth running.
   Nucleation exposure per run (volume × time) is 2.37 × 2 ns ≈ 4.7 ns of a 333 cell, about run5_ep301's 5 ns.
 - Disk (gzipped dumps, about 0.25 MB per 13.8k-atom frame, ≈ 0.6 MB at 444): up to 1,000 frames ≈ 0.6 GB per 2 ns run,
   ≈ 45 GB for the grid. All on `/scratch` (200 TB quota).
 
 GPUs: strachan's A30 cap is 6 GPUs shared with other members, often only 2 free, so 1–3 two-GPU jobs at a time.
-perc adds 10 A100-40GB, so 5 two-GPU jobs. **Every submission is a separate go-ahead.**
+perc adds 10 A100-40GB, so 5 two-GPU jobs; alta 36 A100-80GB (k-nodes, `--constraint=K`), so up to 18. **Every
+submission is a separate go-ahead.**

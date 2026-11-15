@@ -13,7 +13,7 @@
 # Crystallinity calibration references (in.calib), one array task per (state, T):
 #   tasks  0-23: rocksalt crystal x0 x1 x2p5 x5 (structures/<SIZE>, the melt-quench cell size, minimized) at 300 500 550 600 650 700 K
 #   tasks 24-53: amorphous x0 x1 x2p5 x5 x10 (meltquench/runs/<MODEL_ID>/<cell>_q10_r1) at the same temperatures
-# (550-650 K are the planned anneal temperatures, so XSTOP and --x-crystal come from references at Ta.)
+# (500-700 K is the anneal grid, TAS in params, so XSTOP and --x-crystal come from references at Ta.)
 # x10 rocksalt is excluded: it disorders within ps at 600 K (tests/RESULTS.md, 1a), so it is not a crystal reference.
 #   sbatch --array=0-53 submit.sh     (after the 10 K/ps melt-quench runs exist; with NGPU set in params, request that
 #                                      many GPUs, e.g. -A perc -p a100-40gb --gpus-per-node=2 --ntasks-per-node=2); then
