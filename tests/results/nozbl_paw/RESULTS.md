@@ -12,7 +12,7 @@ less dense.
 | Test | Result | run5_ep301 |
 |---|---|---|
 | 1b `model_check` (job 12358679, G) | compiled vs checkpoint: max \|ΔE\| 0.0000 meV/atom, max \|ΔF\| 3.5e-11 eV/Å, max \|ΔP\| 0.005 bar: PASS. Checkpoint vs DFT on 13 frames: RMS 5.4 meV/atom, max 10.4 | RMS 6.3, max 9.7 |
-| `model_select` (12358680 G, 12358681 N) | each node type picks its own file; G and N energies identical (max \|ΔE\| 0): PASS | PASS |
+| `model_select` (12358680 G, 12358681 N; 12383792 K, alta) | each node type picks its own file; G, N and K energies identical (max \|ΔE\| 0): PASS | PASS |
 | `compile_check` (12358736, G) | a fresh recompile gives identical energies (max \|ΔE\| 0); bytes differ, as expected for AOTInductor: PASS | PASS |
 | 1f `container` (12358739, G) | stable vs debug image: identical energies; 2.92 vs 2.91 ns/day at 333 on 1 A100: PASS | PASS |
 | 1a `smoke` (12358690, G) | x0 and x10 1×1×1 finish, no lost atoms, finite output: PASS (after fixing the checker's column count, 13 → 14 since `xfracGST`; the job's outputs unchanged) | PASS |
