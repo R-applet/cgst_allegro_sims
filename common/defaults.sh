@@ -18,6 +18,7 @@ if [ -z "${MODEL:-}" ]; then
         gilbreth-d*) MODEL=$_models/$MODEL_ID.nequip.pt2 ;;      # a30 d-nodes (ran there: tests/RESULTS.md, 1d)
         gilbreth-g*) MODEL=$_models/$MODEL_ID.G.nequip.pt2 ;;    # a100-40gb g-nodes, AMD EPYC 7662
         gilbreth-n*) MODEL=$_models/$MODEL_ID.N.nequip.pt2 ;;    # a100-40gb n-nodes, AMD EPYC 7413
+        gilbreth-k*) MODEL=$_models/$MODEL_ID.K.nequip.pt2 ;;    # a100-80gb k-nodes (alta account)
         *) echo "common/defaults.sh: no compiled model for node $(hostname -s); build one there with" \
                 "models/compile_model.sh and add it here" >&2
            return 1 ;;
