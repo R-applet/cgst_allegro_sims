@@ -16,7 +16,7 @@ Archived: run5_ep301 (tag `run5_ep301-final`; results in `tests/RESULTS.md`, `te
 
 **Status of `nozbl_paw` (2026-11-15):** A done (A30, G, N and K files); B done, all pass
 (`tests/results/nozbl_paw/RESULTS.md`); meltquench done (15 runs at 10 K/ps, analysis in
-`meltquench/results/nozbl_paw/`; x0/x10 at 5 K/ps done, at 1 K/ps running); recryst: calibration done (criterion
+`meltquench/results/nozbl_paw/`; x0/x10 at 5 and 1 K/ps done; report in `report/`); recryst: calibration done (criterion
 3.9/0.6/4), x0 ramp and Phase A running.
 
 ## A. Register the potential

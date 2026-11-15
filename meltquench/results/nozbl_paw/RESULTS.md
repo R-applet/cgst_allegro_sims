@@ -4,7 +4,8 @@ Method: `meltquench/README.md`. Settings: `meltquench/params/nozbl_paw.sh` (4×4
 1500 K, 100 ps hold, 10 K/ps quench; 2 A100s per run). Runs in `meltquench/runs/nozbl_paw/`, each with its input
 record in `lmp_inputs/log.mq/`.
 
-**Status (2026-11-14):** done. All 15 runs (5 compositions × 3 replicas at 10 K/ps; pilot job 12359216, production
+**Status (2026-11-15):** done, including the 5 and 1 K/ps rate runs (Quench rate, below) and the report
+(`report/`). All 15 runs (5 compositions × 3 replicas at 10 K/ps; pilot job 12359216, production
 job array 12363504, 3.6–4.9 h each on 2 A100s) passed the MSD gate, with no errors. Analysis: `mq_summary.txt`
 (`analysis/mq_summary.py`), `mq_structure.txt` and the per-group `.dat` tables (`analysis/mq_structure.py`, job
 12375697). run5_ep301's values (3×3×3, same protocol) in brackets.
@@ -45,6 +46,38 @@ job array 12363504, 3.6–4.9 h each on 2 A100s) passed the MSD gate, with no er
 run5_ep301, each species ~0.05–0.08 lower, consistent with the slightly lighter glass. C clusters at every content,
 but less than with run5_ep301 (86% vs 91% of C bonded to C at 10% C). Angles, S(q), C motifs and C-cluster size
 distributions: the per-group `.dat` files.
+
+## Quench rate (x0 and x10, one replica each at 5 and 1 K/ps)
+
+5 K/ps: job array 12384205 on 3 A30s (`NGPU=3`), 5.4 h (x0) and 6.8 h (x10). 1 K/ps: job array 12383793 on 2
+A100-80GBs (alta), 11.0 h and 13.5 h. All four passed the MSD gate (≥ 347 Å²), with no errors. Analysis:
+`mq_summary_q5.txt`, `mq_summary_rates.txt` (every x0/x10 run), `mq_structure_q5.txt`, `mq_structure_q1.txt` and the
+`x0_q5_*`, `x10_q5_*`, `x0_q1_*`, `x10_q1_*` tables (jobs 12388565, 12388566). 10 K/ps: mean ± std of 3 replicas.
+
+| | xfracGST 300 K | ρ glass (g/cc) | Tg (K) | Z_Ge / Z_Sb / Z_Te | C bonded to C (in clusters ≥ 10; largest) |
+|---|---|---|---|---|---|
+| x0, 10 K/ps | 0.142 ± 0.008 | 6.239 ± 0.002 | 765 ± 22 | 4.42 / 3.81 / 2.99 | — |
+| x0, 5 K/ps | 0.159 | 6.239 | 805 | 4.43 / 3.81 / 3.01 | — |
+| x0, 1 K/ps | **0.298** | 6.239 | 790 | 4.52 / 3.88 / 3.10 | — |
+| x10, 10 K/ps | 0.129 ± 0.006 | 6.094 ± 0.002 | 760 ± 5 | 4.37 / 3.72 / 2.84 | 0.87 (0.53; 69) |
+| x10, 5 K/ps | 0.144 | 6.100 | 765 | 4.40 / 3.74 / 2.85 | 0.87 (0.60; 58) |
+| x10, 1 K/ps | **0.214** | 6.104 | 775 | 4.42 / 3.80 / 2.93 | 0.94 (0.89; 223) |
+
+- **1 K/ps partially crystallizes the glass**, as with run5_ep301 (0.28 and 0.26): xfracGST rises during the quench
+  below ~650 K (x0 mostly by 450 K), and the x0 slab shows ordered domains (`report/figures/render_crystal_like`).
+  Coordination moves toward the octahedral crystal. C slows it: x10 ends lower. Recryst keeps the 10 K/ps glasses.
+- **5 K/ps barely changes the glass**: xfracGST +0.015–0.017 (about two replica std, one run each), no ordered domains;
+  density and coordination within 0.1% and 0.03.
+- Density does not depend on rate (x0 identical; x10 +0.16% at 1 K/ps). Slower quenching coarsens the C network and
+  turns C bond angles planar (1 K/ps: 51% between 115 and 130°, vs 44% at 10 K/ps). No close contacts at any rate
+  (C–C ≥ 1.10 Å in the liquid).
+
+## Report
+
+`report/`: `meltquench_report.pdf` (from `meltquench_report.tex`) and `meltquench_slides.pptx` (from `build_deck.js`),
+with figures from `make_figures.py` and `render_structures.py` (both with `env/cgst-ana`; see each file's header).
+They compare every result with run5_ep301 and add the no-ZBL close-contact check and the bond-cutoff check on this
+model's 10% C glasses.
 
 ## Superheating pilot (job 12359216; x0 r1 and x10 r1, also production runs)
 

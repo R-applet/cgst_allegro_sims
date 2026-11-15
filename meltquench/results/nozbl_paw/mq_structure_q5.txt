@@ -1,0 +1,2 @@
+x0_q5_r1           frames  11  Z_Ge 4.427  Z_Sb 3.810  Z_Te 3.007
+x10_q5_r1          frames  11  Z_Ge 4.396  Z_Sb 3.735  Z_Te 2.845  Z_C 3.087  C in C-C clusters (size > 1) 0.871

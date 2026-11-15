@@ -14,4 +14,6 @@ TMELT=1500          # K. Pilot: Tm_app 1139 K (x0) and 983 K (x10) on the 10 K/p
                     #   higher; closest approach in the 1500 K liquid >= 2.06 A for Ge/Sb/Te pairs, C-C 1.08 A (x10;
                     #   run5_ep301 1.10), no pair below 1.0 A despite no ZBL.
 HOLD_PS=100         # ps at TMELT. Pilot: smallest per-species MSD in the hold 651 A^2 (x0), 354 A^2 (x10), gate 100.
-QRATE=10            # K/ps. Kept from run5_ep301 (1 K/ps partially crystallized its glasses).
+QRATE=10            # K/ps. Kept from run5_ep301, and confirmed for this model: 1 K/ps partially crystallizes the
+                    #   glass (xfracGST 0.30 at x0 vs 0.14 at 10 K/ps), 5 K/ps barely changes it (0.16)
+                    #   (results/nozbl_paw/RESULTS.md, Quench rate).

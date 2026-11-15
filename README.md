@@ -14,7 +14,7 @@ settings, runs and results per `MODEL_ID`, so potentials never share a directory
 | Study | Directory | `run5_ep301` (archived, tag `run5_ep301-final`) | `nozbl_paw` (current default) | second potential |
 |---|---|---|---|---|
 | Validation | `tests/` | done (`tests/RESULTS.md`); glass as dense as the crystal, from the DFT reference (1g, 1k) | done: all gate and physics tests pass, better than run5_ep301 vs DFT; glass as dense as the crystal (`tests/results/nozbl_paw/RESULTS.md`) | to be provided |
-| Melt-quench | `meltquench/` | 15 glasses at 10 K/ps, x0 and x10 at 1 K/ps (`meltquench/results/run5_ep301/`) | done: 15 glasses at 10 K/ps (4×4×4), all past the MSD gate; same C trends as run5_ep301, ~0.9% lighter (`meltquench/results/nozbl_paw/`) | — |
+| Melt-quench | `meltquench/` | 15 glasses at 10 K/ps, x0 and x10 at 1 K/ps (`meltquench/results/run5_ep301/`) | done: 15 glasses at 10 K/ps (4×4×4), x0 and x10 at 5 and 1 K/ps (1 K/ps partially crystallizes); same C trends as run5_ep301, ~0.9% lighter; report and slides (`meltquench/results/nozbl_paw/`) | — |
 | Recrystallization | `recryst/` | criterion 3.8 Å/0.6/4; ramps; x0 anneals at 600/650 K (`recryst/results/run5_ep301/RESULTS.md`) | calibration done, criterion 3.9 Å/0.6/4 (`recryst/calib/nozbl_paw/`); x0 ramp and Phase A anneals running | — |
 | Coexistence | `coexistence/` | — | planned | — |
 | Phases | `phases/` | — | planned | — |

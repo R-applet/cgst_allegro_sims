@@ -1,0 +1,16 @@
+# 1 replica(s): x0_q1_r1
+# fraction of atoms of each species with total coordination Z
+Z Ge_mean Ge_std Sb_mean Sb_std Te_mean Te_std
+0 0.00000 nan 0.00000 nan 0.00006 nan
+1 0.00000 nan 0.00061 nan 0.00765 nan
+2 0.00125 nan 0.02977 nan 0.18064 nan
+3 0.09676 nan 0.34383 nan 0.55134 nan
+4 0.41536 nan 0.38390 nan 0.22173 nan
+5 0.35043 nan 0.19445 nan 0.03582 nan
+6 0.13575 nan 0.04737 nan 0.00276 nan
+7 0.00045 nan 0.00007 nan 0.00000 nan
+8 0.00000 nan 0.00000 nan 0.00000 nan
+9 0.00000 nan 0.00000 nan 0.00000 nan
+10 0.00000 nan 0.00000 nan 0.00000 nan
+11 0.00000 nan 0.00000 nan 0.00000 nan
+12 0.00000 nan 0.00000 nan 0.00000 nan
