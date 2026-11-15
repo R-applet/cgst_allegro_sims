@@ -24,7 +24,7 @@
 # runs, same seeds and glasses); MAXCHAIN (jobs per ramp, default 3); DT and MODEL come from common/defaults.sh.
 # Continuation, as in submit_anneal.sh: each task exits if ramp_done.txt exists; otherwise it resumes from the newest
 # ramp.<T>K.restart (written at every 50 K boundary by in.ramp), first queueing its own continuation (afterany, same
-# array index, the same account/partition/QoS/GPU layout) unless MAXCHAIN is reached; a continuation that finds no
+# array index, the same account/partition/QoS/constraint/GPU layout) unless MAXCHAIN is reached; a continuation that finds no
 # newer restart than its predecessor started from stops the chain (chain_progress.txt). Old restart files are pruned
 # (the newest two are kept while running, the newest one when done). Job N > 1 logs to log.ramp.<N>.
 set -euo pipefail
@@ -58,8 +58,11 @@ if [ $CHAIN -gt 1 ] && [ "${latest:-none}" = "$(cat chain_progress.txt 2>/dev/nu
 fi
 echo "${latest:-none}" > chain_progress.txt
 if [ $CHAIN -lt $MAXCHAIN ]; then
+    # keep the node type (e.g. --constraint=K on alta's a100-80gb: i-nodes there have no compiled model)
+    feat=$(squeue -h -j $SLURM_JOB_ID -o %f 2>/dev/null | head -1); cons=""
+    [ -n "$feat" ] && [ "$feat" != "(null)" ] && cons="--constraint=$feat"
     (cd $SLURM_SUBMIT_DIR && sbatch --array=$i --dependency=afterany:${SLURM_ARRAY_JOB_ID}_${i} \
-        -A $SLURM_JOB_ACCOUNT -p $SLURM_JOB_PARTITION --qos=$SLURM_JOB_QOS \
+        -A $SLURM_JOB_ACCOUNT -p $SLURM_JOB_PARTITION --qos=$SLURM_JOB_QOS $cons \
         --gpus-per-node=$SLURM_GPUS_ON_NODE --ntasks-per-node=$SLURM_NTASKS_PER_NODE \
         --export=ALL,HRATE=$HRATE,DT=$DT,CHAIN=$((CHAIN + 1)),MAXCHAIN=$MAXCHAIN submit_ramp.sh)
 fi

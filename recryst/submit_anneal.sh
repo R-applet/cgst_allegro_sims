@@ -28,7 +28,7 @@
 # restart than its predecessor started from (chain_progress.txt: the predecessor made no progress); otherwise
 # records the newest restart, queues its own continuation (afterany, same array index) and runs, resuming from that
 # restart. At most MAXCHAIN jobs per task. Old restart files are deleted (see prune below).
-# The continuation inherits this job's account, partition, QoS and GPU layout, so a chain started with command-line
+# The continuation inherits this job's account, partition, QoS, node constraint and GPU layout, so a chain started with command-line
 # overrides (e.g. -A perc -p a100-40gb --gpus-per-node=1 --ntasks-per-node=1) stays on those resources.
 set -euo pipefail
 cd $SLURM_SUBMIT_DIR
@@ -70,8 +70,11 @@ if [ $CHAIN -gt 1 ] && [ "${latest:-none}" = "$(cat chain_progress.txt 2>/dev/nu
 fi
 echo "${latest:-none}" > chain_progress.txt
 if [ $CHAIN -lt $MAXCHAIN ]; then
+    # keep the node type (e.g. --constraint=K on alta's a100-80gb: i-nodes there have no compiled model)
+    feat=$(squeue -h -j $SLURM_JOB_ID -o %f 2>/dev/null | head -1); cons=""
+    [ -n "$feat" ] && [ "$feat" != "(null)" ] && cons="--constraint=$feat"
     (cd $SLURM_SUBMIT_DIR && sbatch --array=$i --dependency=afterany:${SLURM_ARRAY_JOB_ID}_${i} \
-        -A $SLURM_JOB_ACCOUNT -p $SLURM_JOB_PARTITION --qos=$SLURM_JOB_QOS \
+        -A $SLURM_JOB_ACCOUNT -p $SLURM_JOB_PARTITION --qos=$SLURM_JOB_QOS $cons \
         --gpus-per-node=$SLURM_GPUS_ON_NODE --ntasks-per-node=$SLURM_NTASKS_PER_NODE \
         --export=ALL,TA=$TA,NREP=$NREP,MAX_NS=$MAX_NS,XSTOP=$XSTOP,DT=$DT,CHAIN=$((CHAIN + 1)),MAXCHAIN=$MAXCHAIN \
         submit_anneal.sh)
