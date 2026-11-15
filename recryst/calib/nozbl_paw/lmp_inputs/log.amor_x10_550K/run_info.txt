@@ -1,0 +1,10 @@
+date        2026-11-14 22:11:35 EST
+host        gilbreth-n009
+slurm_job   12385432 (array 12383702_50)
+git_commit  00fc39d6d680a7a3428cdcbc0381e56affa0678f (0 modified tracked files outside tests/)
+MODEL_ID    nozbl_paw
+model       /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.N.nequip.pt2 sha256 a9933e81fcce76eccefb0223bf316df89d58021e254d5678d84a5c7e955dcf5f
+container   /depot/prism/data/rushik/lammps_wallegro/lammps_debug.sif
+ngpu        2
+input       /scratch/gilbreth/rapplet/cgst_allegro_sims/recryst/calib/in.calib
+workdir     /scratch/gilbreth/rapplet/cgst_allegro_sims/recryst/calib/nozbl_paw
