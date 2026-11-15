@@ -24,7 +24,8 @@ job array 12363504, 3.6–4.9 h each on 2 A100s) passed the MSD gate, with no er
 - **The apparent melting point** matches run5_ep301 within the replica spread: flat to 1% C, then falling to 978 K at
   10% C. It is a superheating limit on a 10 K/ps ramp, an upper bound on the model's Tm.
 - **Tg is not resolved**: 760–802 K with 5–22 K scatter and no trend with C.
-- **Crystal-like order** (`xfracGST`, Ge/Sb/Te only, default criterion 3.6/0.5/4, final 50 ps) is ~0.01 lower than
+- **Crystal-like order** (`xfracGST`, Ge/Sb/Te only, default criterion 3.6/0.5/4, final 50 ps; `xfracGST_a` in
+  `mq_summary.txt`) is ~0.01 lower than
   run5_ep301's at every composition and falls slightly with C to 5%.
 - **Closest approach** (`mq_summary.txt`, per pair, liquid / glass): Ge/Sb/Te pairs ≥ 1.98 Å in every liquid; Ge–C
   1.62–1.64 / 1.78–1.84 Å, Te–C 1.72–1.80 / 1.88–1.98 Å, C–C 1.08–1.12 / 1.16–1.20 Å at every C content (run5_ep301

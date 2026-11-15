@@ -87,7 +87,8 @@ points of any stage. Resuming from them needs a hand-edited input that starts at
 - apparent Tm;
 - liquid and amorphous density;
 - Tg (bilinear V(T) fit on the quench);
-- the crystalline fraction left at 300 K;
+- the crystalline fraction left at 300 K, over all atoms (`xfrac_a`) and over Ge/Sb/Te only (`xfracGST_a`, the one to
+  report: C false positives inflate `xfrac_a` at high C);
 - the closest approach of any pair in the liquid and the glass (`rmin_l`, `rmin_a`, per pair below the table), with a
   WARNING below 1.0 Å (close contacts, a risk for potentials without ZBL; run5_ep301: C–C 1.10 Å in the x10 liquid,
   every other pair ≥ 1.64 Å);

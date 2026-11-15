@@ -10,6 +10,8 @@ Per run directory (mq.dat, gate.txt, stages.txt, rdf_300K.dat, amorphous_300K.da
             scanned over 400-1300 K; NaN if the quench has fewer than 20 points
   xfrac_a   crystalline fraction at 300 K. Not ~0: a 10 K/ps glass reads ~0.15, persistent crystal-like patches
             (recryst/README.md, "Crystal-like order already in the glass"); compare runs against that baseline
+  xfracGST_a  the same over Ge/Sb/Te atoms only (the fraction recryst and the reports use; C false positives
+            inflate xfrac_a at high C), mean over the final 50 ps; NaN for runs whose mq.dat has no xfracGST column
   CN_ij     partial coordination at 300 K: mean number of j atoms within the bond cutoff of an i atom (rdf_300K.dat)
   Z_i       total coordination of species i, summed over all partners (needs amorphous_300K.data for the counts)
   rmin_l, rmin_a  closest approach (A) of any atom pair in the liquid (rdf_<tmelt>K.dat, last 20 ps of the hold) and
@@ -138,6 +140,7 @@ def summarize(run, tscale=1.0, rc=None):
     final = t >= t_end - 50 * tscale
     res["rho_a"] = d["rho_gcc"][final].mean()
     res["xfrac_a"] = d["xfrac"][final].mean()
+    res["xfracGST_a"] = d["xfracGST"][final].mean() if "xfracGST" in d else np.nan
     quench = (t > t_q0) & (t <= t_q1)
     res["Tg"] = bilinear_tg(T[quench], d["V_A3_per_atom"][quench]) if quench.sum() > 20 else np.nan
     res["_curves"] = {s: [binned(T[m], d[c][m]) for c in ("rho_gcc", "H_eV_per_atom")]
@@ -174,12 +177,13 @@ def main(runs, tscale, rc, out=None):
     if not runs:
         raise SystemExit("no complete runs")
     rows = [summarize(r, tscale, rc) for r in runs]
-    keys = ["Tm_app", "rho_l", "rho_a", "Tg", "xfrac_a", "rmin_l", "rmin_a", "hold_ps"]
+    keys = ["Tm_app", "rho_l", "rho_a", "Tg", "xfrac_a", "xfracGST_a", "rmin_l", "rmin_a", "hold_ps"]
     keys += sorted({k for r in rows for k in r if k.startswith("CN_")})
     keys += [f"Z_{s}" for s in SPECIES if any(f"Z_{s}" in r for r in rows)]
-    print("run".ljust(18) + "".join(k.rjust(9) for k in keys))
+    w = [max(9, len(k) + 1) for k in keys]                        # every column wider than its name
+    print("run".ljust(18) + "".join(k.rjust(n) for k, n in zip(keys, w)))
     for r in rows:
-        print(r["run"].ljust(18) + "".join(f"{r.get(k, np.nan):9.3f}" for k in keys))
+        print(r["run"].ljust(18) + "".join(f"{r.get(k, np.nan):{n}.3f}" for k, n in zip(keys, w)))
     names = [f"{SPECIES[i]}-{SPECIES[j]}" for i, j in PAIRS]
     print("\nclosest approach per pair (A), liquid / glass; nan: pair absent")
     print("run".ljust(18) + "".join(n.rjust(12) for n in names))
@@ -207,8 +211,8 @@ def main(runs, tscale, rc, out=None):
         print("\nmean +- sample std (ddof = 1) over replicas")
         for g, rs in sorted(groups.items()):
             m, s = mean_std([[x.get(k, np.nan) for k in keys] for x in rs])
-            print(f"{g:14s}n={len(rs)} " + "".join(f"{v:9.3f}" for v in m) + "\n" + " " * 18
-                  + "".join(f"{v:9.3f}" for v in s))
+            print(f"{g:14s}n={len(rs)} " + "".join(f"{v:{n}.3f}" for v, n in zip(m, w)) + "\n" + " " * 18
+                  + "".join(f"{v:{n}.3f}" for v, n in zip(s, w)))
 
 
 if __name__ == "__main__":
