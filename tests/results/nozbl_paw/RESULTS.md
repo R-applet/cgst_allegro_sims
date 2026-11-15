@@ -1,7 +1,7 @@
 # Validation results: nozbl_paw
 
 Allegro without ZBL, PAW data (`models/provenance.md`). All jobs on perc A100-40GB, 2026-11-13, with the G and N
-compiled files (the A30 file is not built yet, so nothing here ran on an A30). The machine-written verdicts are the
+compiled files, except the later `model_select` checks of the K (alta) and A30 files. The machine-written verdicts are the
 `*.txt` files next to this one (`INDEX.txt`: job and time of each); run5_ep301's are in `../run5_ep301/` and its
 summary in `../../RESULTS.md`, whose section numbers are used below.
 
@@ -12,7 +12,7 @@ less dense.
 | Test | Result | run5_ep301 |
 |---|---|---|
 | 1b `model_check` (job 12358679, G) | compiled vs checkpoint: max \|ΔE\| 0.0000 meV/atom, max \|ΔF\| 3.5e-11 eV/Å, max \|ΔP\| 0.005 bar: PASS. Checkpoint vs DFT on 13 frames: RMS 5.4 meV/atom, max 10.4 | RMS 6.3, max 9.7 |
-| `model_select` (12358680 G, 12358681 N; 12383792 K, alta) | each node type picks its own file; G, N and K energies identical (max \|ΔE\| 0): PASS | PASS |
+| `model_select` (12358680 G, 12358681 N; 12383792 K, alta; 12384204 A30 b-node) | each node type picks its own file; A30, G, N and K energies identical (max \|ΔE\| 0): PASS | PASS |
 | `compile_check` (12358736, G) | a fresh recompile gives identical energies (max \|ΔE\| 0); bytes differ, as expected for AOTInductor: PASS | PASS |
 | 1f `container` (12358739, G) | stable vs debug image: identical energies; 2.92 vs 2.91 ns/day at 333 on 1 A100: PASS | PASS |
 | 1a `smoke` (12358690, G) | x0 and x10 1×1×1 finish, no lost atoms, finite output: PASS (after fixing the checker's column count, 13 → 14 since `xfracGST`; the job's outputs unchanged) | PASS |

@@ -7,7 +7,7 @@ checkpoint copies are not tracked by git; their hashes are here.
 | MODEL_ID | Type | Short range | Training data | Checkpoint (sha256) | Compiled files | Status |
 |---|---|---|---|---|---|---|
 | `run5_ep301` | Allegro (nequip/allegro with per-pair ZBL, `zbl_updated`) | per-pair ZBL | `CGST/cgst_train_paw.xyz` | `run5_ep301.ckpt` (`b6ae59f2…96b1`) | `.pt2`, `.G`, `.N` | archived, tag `run5_ep301-final` |
-| `nozbl_paw` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `CGST/cgst_train_paw.xyz` | `nozbl_paw.ckpt` (`ed645c56…bfcc`) | `.G`, `.N`, `.K` (validated; A30 file not yet built) | in progress (default `MODEL_ID`) |
+| `nozbl_paw` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `CGST/cgst_train_paw.xyz` | `nozbl_paw.ckpt` (`ed645c56…bfcc`) | A30, `.G`, `.N`, `.K` (validated; A30 on b-nodes only) | in progress (default `MODEL_ID`) |
 | (second potential) | — | — | — | — | — | to be provided |
 
 ## nozbl_paw
@@ -32,9 +32,9 @@ print the hash):
 | `nozbl_paw.G.nequip.pt2` | a100-40gb gilbreth-g008, 2026-11-13 (job 12358491) | a100-40gb g-nodes | `f76aeea05254960c98abd3f4c27dbecc15b628627c0258ff360e24dcfc4e037d` | `tests/model_check` (job 12358679, g000): vs checkpoint max \|ΔE\| 0.0000 meV/atom, max \|ΔF\| 3.5e-11 eV/Å, max \|ΔP\| 0.005 bar; `tests/model_select` (job 12358680, g000): selected and \|ΔE\| = 0 |
 | `nozbl_paw.N.nequip.pt2` | a100-40gb gilbreth-n006, 2026-11-13 (job 12358492) | a100-40gb n-nodes | `a9933e81fcce76eccefb0223bf316df89d58021e254d5678d84a5c7e955dcf5f` | `tests/model_select` (job 12358681, n011): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
 | `nozbl_paw.K.nequip.pt2` | a100-80gb gilbreth-k050, 2026-11-14 (job 12383791, account `alta`) | a100-80gb k-nodes | `d78970fd7c54059a5622f453723bb3082135218db2df332061b42ad14ec57fea` | `tests/model_select` (job 12383792, k050): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
-| `nozbl_paw.nequip.pt2` | — | a30 b- and d-nodes | — | not built (A30 queue, job 12359234; RUNBOOK A2) |
+| `nozbl_paw.nequip.pt2` | a30 gilbreth-b013, 2026-11-13 (job 12359234, account `strachan`) | a30 b-nodes (d-nodes: same file, not yet checked there) | `6e90500833de32ac1c3bfdb6512ab0ea6ec922aeee416775687432c1cd8943e5` | `tests/model_select` (job 12384204, b003): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
 
-All three A100 files (G, N, K) are the same model: identical energies (max |ΔE| = 0) on the 13 model_check frames.
+All four files (A30, G, N, K) are the same model: identical energies (max |ΔE| = 0) on the 13 model_check frames.
 The K file serves the a100-80gb k-nodes of the `alta` account (36 GPUs; no a100-40gb), where the A30 build died with
 `Illegal instruction` in Part 1; i-nodes (also a100-80gb) still have no file. They differ in
 bytes, as AOTInductor output depends on the build machine (as for run5_ep301).
