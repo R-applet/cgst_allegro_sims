@@ -1,0 +1,4 @@
+rdf.txt           /depot/prism/data/rapplet/CGST_ALLEGRO/AllegroMD/phases/hex/c1/coordination/c1_hex_dft_rdf.txt  sha256 6961135b83aa6579282b842abc5f78d7cf3fc4d3df0276ebd64608bfcf1b39b4
+adf.txt           /depot/prism/data/rapplet/CGST_ALLEGRO/AllegroMD/phases/hex/c1/coordination/c1_hex_dft_adf.txt  sha256 d04648e38aa915a45d93602a4ace1732f04b054b9fc3ebf4dd956a1c85a56972
+dospt_input.txt   /depot/prism/data/rapplet/CGST_ALLEGRO/AllegroMD/phases/hex/c1/vibdos/input  sha256 130f342f601c8fcece518e143b097779c1e8625f869e2c97e2929c86c7b2cfd3
+vdos (reduced)    /depot/prism/data/rapplet/CGST_ALLEGRO/AllegroMD/phases/hex/c1/vibdos/c1_hex_dft_dos  sha256 fc846ea823bf01c7e090a18a3765536faf7a227aabc489bcf104658f9437d879

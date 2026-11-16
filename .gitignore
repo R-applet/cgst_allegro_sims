@@ -19,6 +19,8 @@ tests/**/*.data
 # conda env
 env/cgst-ana/
 env/create.log
+# DoSPT build tree (analysis/build_dospt.sh)
+env/dospt/
 # vendored skill files
 skills/
 # python bytecode

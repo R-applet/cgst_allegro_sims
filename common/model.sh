@@ -15,6 +15,7 @@
 #   SIF         LAMMPS + libtorch container that runs the compiled model (the compile must use the same libtorch)
 #   TESTSET     held-out DFT test set (tests/model_check, stress_parity, glass_relax)
 #   DFT_TRAIN   DFT training xyz folder (tests/am_eos, tests/dft_glass)
+#   DFT_PHASES  300 K DFT-MD cells and their RDF/ADF/VDOS outputs (phases/structures, phases/dft); not model-specific
 MODEL_ID=${MODEL_ID:-nozbl_paw}
 # Values exported by an earlier source for another model must not leak into this one (CKPT=${CKPT:-...} would keep
 # them); environment overrides still apply to the model they were set for.
@@ -49,4 +50,5 @@ MODEL_PYTHONPATH=${MODEL_SRC:+$MODEL_SRC/nequip:$MODEL_SRC/allegro}
 SIF=${SIF:-/depot/prism/data/rushik/lammps_wallegro/lammps_debug.sif}
 TESTSET=${TESTSET:-/depot/prism/data/rushik/CGST/cgst_test_paw.xyz}
 DFT_TRAIN=${DFT_TRAIN:-/depot/prism/data/rapplet/cgst-vasp-data/xyz_files/train}
-export MODEL_ID MODEL_LOADED MODEL_SRC MODEL_PYTHONPATH TRAIN_DIR CKPT DT SIF TESTSET DFT_TRAIN
+DFT_PHASES=${DFT_PHASES:-/depot/prism/data/rapplet/CGST_ALLEGRO/AllegroMD/phases}
+export MODEL_ID MODEL_LOADED MODEL_SRC MODEL_PYTHONPATH TRAIN_DIR CKPT DT SIF TESTSET DFT_TRAIN DFT_PHASES

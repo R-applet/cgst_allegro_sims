@@ -1,0 +1,46 @@
+# NVT MD of one DFT-sized phase cell at fixed volume (the DFT cell, phases/structures/<phase>.data), for RDF, ADF and
+# vibrational DOS compared with DFT-MD of the same cell (phases/README.md).
+#   1. velocities at temp (seed), Nose-Hoover NVT, eq_ps of equilibration (no output but thermo)
+#   2. prod_ps more, every step dumped to traj.lammpstrj: id type xu yu zu vx vy vz, sorted by id, 8 decimals.
+#      Unwrapped positions, so DoSPT's finite-difference velocities never see a periodic jump; 8 decimals because at
+#      1 fs a Te atom moves ~0.002 A per step (dump's default 6 significant digits would add ~5% velocity noise).
+#      Velocities (A/ps) are dumped too, to check DoSPT's estimated velocities against the exact ones.
+# The dump holds prod_ps/dt frames, timesteps eq+1 .. eq+prod (dump_modify delay), the window DFT used
+# (phases/dft/<phase>/dospt_input.txt: points 20000, tau 20 ps at 1 fs).
+#
+# Variables (-var on the command line; submit.sh passes them from phases/params/<MODEL_ID>.sh):
+#   phase   am_gst | am_c1 | am_c5 | am_c10 | cub_gst | cub_c1 | hex_gst | hex_c1
+#   root    project root (absolute path)
+#   model   compiled model file for this node (common/defaults.sh)
+#   dt      timestep in ps
+#   seed    velocity seed
+#   temp    K;  eq_ps, prod_ps  durations (ps);  tdamp_ps  thermostat damping (ps)
+# Outputs in the run directory: log.phases, thermo.dat (every 100 steps: time T PE P Econserve), traj.lammpstrj,
+# final.data.
+
+units           metal
+atom_style      atomic
+boundary        p p p
+
+read_data       ${root}/phases/structures/${phase}.data
+include         ${root}/common/in.potential
+
+variable        neq   equal round(${eq_ps}/${dt})
+variable        nprod equal round(${prod_ps}/${dt})
+
+velocity        all create ${temp} ${seed} mom yes rot no dist gaussian loop geom
+fix             nvt all nvt temp ${temp} ${temp} ${tdamp_ps}
+
+thermo_style    custom step time temp pe ke etotal press ecouple econserve
+thermo          1000
+fix             th all print 100 "$(time) $(temp) $(pe/atoms) $(press) $(econserve/atoms)" file thermo.dat &
+                screen no title "time_ps T_K PE_eV_per_atom P_bar Econserve_eV_per_atom"
+
+run             ${neq}
+
+dump            traj all custom 1 traj.lammpstrj id type xu yu zu vx vy vz
+dump_modify     traj sort id delay $(v_neq + 1) format line "%d %d %.8f %.8f %.8f %.8f %.8f %.8f"
+run             ${nprod}
+
+write_data      final.data
+print           "phases: ${phase} done, $(v_nprod) frames in traj.lammpstrj"

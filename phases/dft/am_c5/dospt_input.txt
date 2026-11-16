@@ -1,0 +1,16 @@
+# Number of points in the trajectory (5001)
+points = 20000
+# Trajectory period in ps (20)
+tau = 20
+# Size of the box in nm
+cell = 1.637 0.0 0.0 0.0 1.637 0.0 0.0 0.0 1.637
+# Temperature in K
+temperature = 300
+# Trajectory info
+format = xyz
+# Estimate velocities from positions
+estimate_velocities = .true.
+# hs_formalism
+hs_formalism = "lin"
+#f_opt
+f_opt = .false.
