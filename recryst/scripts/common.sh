@@ -55,7 +55,7 @@ check_anneal_set() {
         [ -e $l ] || { check "$l missing"; continue; }
         if [ $BARO = aniso ]; then grep -q ' aniso 0.0 0.0' $l && ! grep -q ' iso 0.0 0.0' $l
         else grep -q ' iso 0.0 0.0' $l && ! grep -q ' aniso 0.0 0.0' $l; fi || check "$l: barostat is not $BARO"
-        grep -Eq "^pair_coeff +\* \* \S*/$MODEL_ID(\.[GN])?\.nequip\.pt2 " $l || check "$l: model is not $MODEL_ID"
+        grep -Eq "^pair_coeff +\* \* \S*/$MODEL_ID(\.[GNK])?\.nequip\.pt2 " $l || check "$l: model is not $MODEL_ID"
     done
     echo "$c T$T: $d of $n finished, criterion $crit, $stops, $BARO, $MODEL_ID"
 }

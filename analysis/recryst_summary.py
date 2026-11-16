@@ -274,7 +274,7 @@ def mfpt(tracks, volume, t_base=20.0):
 
 
 def model_of(run):
-    """Stem of the compiled model a run used (models/<MODEL_ID>[.G|.N].nequip.pt2 -> MODEL_ID), from the substituted
+    """Stem of the compiled model a run used (models/<MODEL_ID>[.G|.N|.K].nequip.pt2 -> MODEL_ID), from the substituted
     pair_coeff line of its first LAMMPS log; None if no log names one."""
     for log in sorted(run.glob("log.*")):
         m = re.search(r"^pair_coeff\s+\*\s+\*\s+(\S+\.pt2)\s", log.read_text(errors="replace"), re.M)

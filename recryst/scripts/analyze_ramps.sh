@@ -21,7 +21,7 @@ for r in $RUNS/$G; do
     grep -l -i 'error\|nan' $l && check "$l mentions error/nan: read it before trusting its row"
     grep -q "cutoff $Q_RC components" $l && grep -q "orientorder q4 $Q_THR\$" $l && grep -q "c_ncb>=$Q_NMIN\$" $l \
         || check "$r: criterion is not $Q_RC/$Q_THR/$Q_NMIN"
-    grep -Eq "^pair_coeff +\* \* \S*/$MODEL_ID(\.[GN])?\.nequip\.pt2 " $l || check "$r: model is not $MODEL_ID"
+    grep -Eq "^pair_coeff +\* \* \S*/$MODEL_ID(\.[GNK])?\.nequip\.pt2 " $l || check "$r: model is not $MODEL_ID"
 done
 
 # 1. One row per run, then mean +- sample std per group. CAUTION: group means skip NaN (a replica that did not

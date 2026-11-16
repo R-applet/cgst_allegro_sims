@@ -1,6 +1,6 @@
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
