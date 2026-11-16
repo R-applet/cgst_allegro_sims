@@ -18,7 +18,8 @@ for r in $RUNS/$G; do
     l=$r/log.ramp
     [ -e $r/ramp_done.txt ] || { [ -e $r/snap_900K.data ] && ! grep -q tmax $l; } \
         || check "$r: not finished (no ramp_done.txt; ramps from before tmax end with snap_900K.data)"
-    grep -l -i 'error\|nan' $l && check "$l mentions error/nan: read it before trusting its row"
+    # Skip the echoed input guards (in.ramp: if ... "print 'ERROR: ...'"); a guard that fires prints its ERROR line alone.
+    grep -v '^ *if ' $l | grep -i 'error\|nan' && check "$l mentions error/nan: read it before trusting its row"
     grep -q "cutoff $Q_RC components" $l && grep -q "orientorder q4 $Q_THR\$" $l && grep -q "c_ncb>=$Q_NMIN\$" $l \
         || check "$r: criterion is not $Q_RC/$Q_THR/$Q_NMIN"
     grep -Eq "^pair_coeff +\* \* \S*/$MODEL_ID(\.[GNK])?\.nequip\.pt2 " $l || check "$r: model is not $MODEL_ID"
