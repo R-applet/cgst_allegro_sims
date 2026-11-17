@@ -1,0 +1,44 @@
+[2026-11-13 14:11:21,254][nequip.scripts.train][INFO] - [rank: 0] Starting fresh training ...
+[2026-11-13 14:11:21,257][nequip.utils.versions.package_versions][INFO] - [rank: 0] Version Information:
+[2026-11-13 14:11:21,257][nequip.utils.versions.package_versions][INFO] - [rank: 0] torch 2.12.1+cu130
+[2026-11-13 14:11:21,257][nequip.utils.versions.package_versions][INFO] - [rank: 0] e3nn 0.6.0
+[2026-11-13 14:11:21,257][nequip.utils.versions.package_versions][INFO] - [rank: 0] nequip 0.18.0
+[2026-11-13 14:11:21,257][nequip.utils.versions.package_versions][INFO] - [rank: 0] allegro 0.8.3
+[2026-11-13 14:11:21,257][nequip.scripts.train][INFO] - [rank: 0] This `nequip-train` run will perform the following tasks: ['train', 'val', 'test']
+[2026-11-13 14:11:21,257][nequip.scripts.train][INFO] - [rank: 0] and use the output directory provided by Hydra: /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/outputs/2026-11-13/14-11-21
+[2026-11-13 14:11:24,731][nequip.scripts.train][INFO] - [rank: 0] Building datamodule ...
+[2026-11-13 14:11:24,739][nequip.data.datamodule._base_datamodule][INFO] - [rank: 0] Found 1 training dataset(s), 1 validation dataset(s), 1 test dataset(s), and 0 predict dataset(s).
+[2026-11-13 14:11:25,385][pytorch_lightning.utilities.rank_zero][INFO] - GPU available: True (cuda), using: 2 GPUs (cuda)
+[2026-11-13 14:11:25,385][pytorch_lightning.utilities.rank_zero][INFO] - TPU available: False, using: 0 TPU cores
+[2026-11-13 14:11:25,385][pytorch_lightning.utilities.rank_zero][INFO] - HPU available: False, using: 0 HPUs
+[2026-11-13 14:11:25,386][pytorch_lightning.utilities.rank_zero][INFO] - 💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+[2026-11-13 14:12:59,670][nequip.data.stats_manager][INFO] - [rank: 0] Computed data statistics:
+[2026-11-13 14:12:59,671][nequip.data.stats_manager][INFO] - [rank: 0] num_neighbors_mean: 29.86057854873739
+[2026-11-13 14:12:59,671][nequip.data.stats_manager][INFO] - [rank: 0] per_type_num_neighbors_mean_Ge: 28.94671457989789
+[2026-11-13 14:12:59,671][nequip.data.stats_manager][INFO] - [rank: 0] per_type_num_neighbors_mean_Sb: 27.23128906086896
+[2026-11-13 14:12:59,671][nequip.data.stats_manager][INFO] - [rank: 0] per_type_num_neighbors_mean_Te: 27.23571150981763
+[2026-11-13 14:12:59,671][nequip.data.stats_manager][INFO] - [rank: 0] per_type_num_neighbors_mean_C: 60.2332166770538
+[2026-11-13 14:12:59,671][nequip.data.stats_manager][INFO] - [rank: 0] per_atom_energy_mean: 0.23695471692825174
+[2026-11-13 14:12:59,671][nequip.data.stats_manager][INFO] - [rank: 0] forces_rms: 0.8839411769890646
+[2026-11-13 14:12:59,672][nequip.data.stats_manager][INFO] - [rank: 0] per_type_forces_rms_Ge: 0.6989488298831164
+[2026-11-13 14:12:59,672][nequip.data.stats_manager][INFO] - [rank: 0] per_type_forces_rms_Sb: 0.7894764041258028
+[2026-11-13 14:12:59,672][nequip.data.stats_manager][INFO] - [rank: 0] per_type_forces_rms_Te: 0.7944268986466869
+[2026-11-13 14:12:59,672][nequip.data.stats_manager][INFO] - [rank: 0] per_type_forces_rms_C: 1.8231280276490547
+[2026-11-13 14:12:59,677][nequip.scripts.train][INFO] - [rank: 0] Building model and training_module from scratch ...
+[2026-11-13 14:13:01,280][nequip.scripts.train][INFO] - [rank: 0] TRAIN RUN START
+[2026-11-13 14:13:01,336][pytorch_lightning.utilities.rank_zero][INFO] - You are using a CUDA device ('NVIDIA A100 80GB PCIe') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+[2026-11-13 14:13:02,910][pytorch_lightning.utilities.rank_zero][INFO] - ----------------------------------------------------------------------------------------------------
+distributed_backend=nccl
+All distributed processes registered. Starting with 2 processes
+----------------------------------------------------------------------------------------------------
+
+[2026-11-16 13:13:47,360][pytorch_lightning.utilities.rank_zero][INFO] - Time limit reached. Elapsed time is 2 days, 23:00:00. Signaling Trainer to stop.
+[2026-11-16 13:14:25,059][nequip.scripts.train][INFO] - [rank: 0] TRAIN RUN END
+[2026-11-16 13:14:25,059][nequip.scripts.train][INFO] - [rank: 0] VAL RUN START
+[2026-11-16 13:14:41,382][pytorch_lightning.utilities.rank_zero][INFO] - Restoring states from the checkpoint path at /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/outputs/2026-11-13/14-11-21/best.ckpt
+[2026-11-16 13:14:41,459][pytorch_lightning.utilities.rank_zero][INFO] - Loaded model weights from the checkpoint at /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/outputs/2026-11-13/14-11-21/best.ckpt
+[2026-11-16 13:15:19,658][nequip.scripts.train][INFO] - [rank: 0] VAL RUN END
+[2026-11-16 13:15:19,658][nequip.scripts.train][INFO] - [rank: 0] TEST RUN START
+[2026-11-16 13:15:22,091][pytorch_lightning.utilities.rank_zero][INFO] - Restoring states from the checkpoint path at /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/outputs/2026-11-13/14-11-21/best.ckpt
+[2026-11-16 13:15:22,123][pytorch_lightning.utilities.rank_zero][INFO] - Loaded model weights from the checkpoint at /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/outputs/2026-11-13/14-11-21/best.ckpt
+[2026-11-16 13:15:50,166][nequip.scripts.train][INFO] - [rank: 0] TEST RUN END
