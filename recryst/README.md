@@ -2,17 +2,18 @@
 
 This README describes the method. Runs go to `runs/<MODEL_ID>/`, outputs to `results/<MODEL_ID>/`, calibration to
 `calib/<MODEL_ID>/`; every model-specific number comes from `recryst/params/<MODEL_ID>.sh` (and the `calib_params.sh` it
-sources). The order of steps for a new model, with pass criteria, is `../RUNBOOK.md`; run5_ep301's results are in
-`results/run5_ep301/RESULTS.md`, and numbers quoted below for run5_ep301 are examples, not settings.
+sources). The order of steps for a new model, with pass criteria, is `../RUNBOOK.md`; numbers quoted below are nozbl_paw's
+unless labelled otherwise, as examples, not settings. Values labelled "run5_ep301, historical" were measured only
+for that archived potential (`results/run5_ep301/RESULTS.md`) and not yet for the current ones.
 
 Starts from the melt-quench glasses (`meltquench/runs/<MODEL_ID>/<cell>_q<QRATE>_r<rep>/amorphous_300K.data`). All runs are
 NPT at 0 bar with the barostat `BARO` (params; see Barostat) and the same damping as the melt-quench. The steps run in this
 order, because each one sets parameters for the next.
 
-**Glass vs crystal density.** For run5_ep301 the glass is slightly denser than the model's own crystal, as in its DFT
-reference (`tests/RESULTS.md` 1g, 1k), so crystallization expands the cell: the opposite sign to experiment. Check
-this for every model: for nozbl_paw the glass is as dense as its crystal (6.239 vs 6.224 g/cc,
-`tests/results/nozbl_paw/RESULTS.md`). `recryst_summary.py`'s Tx_rho is sign-agnostic (max |dρ/dt|), with `drho_x` giving the sign.
+**Glass vs crystal density.** For nozbl_paw the glass is as dense as its crystal (6.239 vs 6.224 g/cc,
+`tests/results/nozbl_paw/RESULTS.md`), so crystallization barely changes the volume, where in experiment it shrinks
+the cell (run5_ep301, historical: glass slightly denser, so crystallization expanded the cell). Check this for every
+model. `recryst_summary.py`'s Tx_rho is sign-agnostic (max |dρ/dt|), with `drho_x` giving the sign.
 Report Tx from the crystalline fraction and the enthalpy release, with Tx_rho as a cross-check.
 
 ## 1. Crystallinity criterion (`calib/`)
@@ -56,8 +57,8 @@ a bias in the same direction as the expected effect of C.
    `recryst_summary.py --clusters`: 2 × the largest glass cluster over all compositions at that T, rounded up to a
    multiple of 10. It is one value per temperature, so every composition is held to the same threshold.
 
-**Crystal-like order already in the glass.** The 10 K/ps glasses are not free of "crystalline" atoms. Measured with
-run5_ep301 on the first eight production glasses (x0, x1, x2p5; final 50 ps at 300 K; default criterion):
+**Crystal-like order already in the glass.** The 10 K/ps glasses are not free of "crystalline" atoms. Measured
+(run5_ep301, historical) on the first eight production glasses (x0, x1, x2p5; final 50 ps at 300 K; default criterion):
 - `xfracGST` is 0.13–0.16, against 0.015 in the 1500 K liquid of the same runs. The stricter logic-test optimum
   (3.7, 0.7, 3) still gives 0.09–0.12.
 - These atoms form clusters: the largest holds 83–314 atoms (up to 9 clusters of ≥ 50 per frame), against 13–15
@@ -77,8 +78,8 @@ Ta, but a ns anneal ages the glass, and its ordered patches may grow before a nu
 
 **Result, per model:** `calib/<MODEL_ID>/calibrate.out`, and `calib/<MODEL_ID>/calib_params.sh` generated from it
 (criterion, `--nucleated-size`, crystal and glass `xfracGST` per composition and T). Every recryst script reads the
-latter through `recryst/params/<MODEL_ID>.sh`, so no criterion or per-T value is typed into a script. run5_ep301: 3.8 Å, 0.6, 4
-(`results/run5_ep301/RESULTS.md` section 1); nozbl_paw: 3.9 Å, 0.6, 4 (margin 0.716).
+latter through `recryst/params/<MODEL_ID>.sh`, so no criterion or per-T value is typed into a script. nozbl_paw: 3.9 Å,
+0.6, 4 (margin 0.716); run5_ep301, historical: 3.8 Å, 0.6, 4 (`results/run5_ep301/RESULTS.md` section 1).
 
 ## 2. Heating ramp, Tx (`in.ramp`, `submit_ramp.sh`)
 | Stage | T (K) | Duration |
@@ -86,8 +87,9 @@ latter through `recryst/params/<MODEL_ID>.sh`, so no criterion or per-T value is
 | fresh velocities | 300 | 10 ps |
 | ramp, 50 K segments, `snap_<T>K.data` at each boundary | 300 → `tmax` | (tmax − 300)/hrate ps |
 
-- `HRATE` and `TMAX` from params: 0.2 K/ps and 900 K for run5_ep301, whose 1 K/ps ramps crystallized nothing by
-  900 K while 0.2 K/ps crystallized x0 at 571 K. Start with x0 r1 (`sbatch --array=0 submit_ramp.sh`); add replicas
+- `HRATE` and `TMAX` from params: 0.2 K/ps and 900 K, chosen for run5_ep301 (historical), whose 1 K/ps ramps
+  crystallized nothing by 900 K while 0.2 K/ps crystallized x0 at 571 K; at 0.2 K/ps nozbl_paw's x0 crystallizes at
+  583 K. Start with x0 r1 (`sbatch --array=0 submit_ramp.sh`); add replicas
   and compositions where needed. The ramp locates where crystallization is fast, to centre the anneal grid; it is not
   the Ta guard (`TX_GUARD`, below). MD rates are about 10¹⁰ times faster than DSC, so only the **trend of Tx with C
   content** compares with experiment.
@@ -96,7 +98,7 @@ latter through `recryst/params/<MODEL_ID>.sh`, so no criterion or per-T value is
   newest restart, `MAXCHAIN` default 3, stop on no progress). A killed job loses at most one segment (250 ps at
   0.2 K/ps). `ramp.dat` and `stress.dat` are appended across jobs; each resumed job dumps its own
   `traj.<first step>.lammpstrj.gz`.
-- `tmax` must stay below the model's superheated melting point (run5_ep301: about 1090 K at 2 K/ps). A complete ramp
+- `tmax` must stay below the model's superheated melting point (nozbl_paw: Tm_app 1139 K for x0, 983 K for x10, on the 10 K/ps heat). A complete ramp
   writes `ramp_done.txt` last.
 - The trajectory is dumped every 5 K; `stress.dat` records the pressure tensor every 1 ps (see Barostat).
 - `analysis/recryst_summary.py` reports three estimates of Tx: the T where `xfracGST` has made half its rise from
@@ -112,15 +114,15 @@ latter through `recryst/params/<MODEL_ID>.sh`, so no criterion or per-T value is
 |---|---|---|
 | fresh velocities | 300 | 10 ps |
 | heat | 300 → Ta | (Ta−300)/10 ps |
-| hold | Ta | up to `MAX_NS` (params: 5 ns for run5_ep301, 2 ns for nozbl_paw); `fix halt` once xfracGST > `XSTOP` (params) |
+| hold | Ta | up to `MAX_NS` (params: 2 ns for nozbl_paw; 5 ns for run5_ep301, historical); `fix halt` once xfracGST > `XSTOP` (params) |
 
 **Temperature grid and replicas.** The goal is the growth velocity `v_growth` as a function of Ta for each
 composition, homogeneous recrystallization (nuclei form during the anneal): v(Ta) should peak, falling at low Ta
 (slow atoms) and toward the melting point (small driving force). So the anneals run on a grid of temperatures
 rather than at one Ta. The grid `TAS` must be calibration temperatures (each has `--nucleated-size`, crystal and
-glass references in `calib_params.sh`; 500–700 K in 50 K steps for run5_ep301), and every Ta must lie below
-`TX_GUARD` − 25 K: a Tx at a heating rate comparable to the anneal's 10 K/ps heat (run5_ep301: none below 900 K at
-1 K/ps). The per-run check that the heat did not crystallize the sample is `analyze_grid.sh`'s TOO HOT verdict.
+glass references in `calib_params.sh`; 500–700 K in 50 K steps for nozbl_paw), and every Ta must lie below
+`TX_GUARD` − 25 K: a Tx at a heating rate comparable to the anneal's 10 K/ps heat (nozbl_paw: 900 K, from run5_ep301's
+1 K/ps ramps, which crystallized nothing below 900 K; not re-measured). The per-run check that the heat did not crystallize the sample is `analyze_grid.sh`'s TOO HOT verdict.
 Homogeneous runs give `v_growth` only where a nucleus forms within the `MAX_NS` hold; a missing point means "no
 nucleus", not v = 0.
 1. **Phase A, x0** (`CELLS=x0 scripts/submit_grid.sh`, then `scripts/analyze_grid.sh`): `NREP` replicas per Ta. Shows
@@ -145,16 +147,16 @@ runs); rates from these runs are by-products with that error, not the target.
 
 **Halt level and the crystalline end point.** A perfect x0 crystal reads ≈ 0.95 at 600 K under the final criterion,
 but a crystal grown in an anneal (grain boundaries, defects) reads much less: the Phase A x0 runs at 600 K plateaued
-at `xfracGST` ≈ 0.71 (run5_ep301). The first halt levels, 0.85 × the lowest crystal-reference `xfracGST`
+at `xfracGST` ≈ 0.71 (run5_ep301, historical; not re-measured). The first halt levels, 0.85 × the lowest crystal-reference `xfracGST`
 (`calibrate.py`'s suggestion: 0.72 at 600 K, 0.70 at 650 K), sat at or just above that plateau, so 600 K runs kept
 going for 1–2 ns after crystallizing. Hence **`XSTOP` comes from the grown crystal's plateau in Phase A, not from
-the perfect-crystal reference**: set it below that plateau in `recryst/params/<MODEL_ID>.sh` (0.65 for run5_ep301), one value
+the perfect-crystal reference**: set it below that plateau in `recryst/params/<MODEL_ID>.sh` (0.65 for nozbl_paw, kept from run5_ep301), one value
 for every Ta. `analyze_grid.sh` accepts one `XSTOP` per set, ≥ `X_END`.
 The normalized fraction X = (xfracGST − x_a)/(x_c − x_a) needs an end point x_c. `recryst_summary.py` picks, first
 that applies: `--x-end` (one value for every run); the run's own plateau; `--x-crystal` (the composition's crystal
 reference at Ta, from `calibrate.py`); the run's `XSTOP`; `x_c_from` says which. Without `--x-end`, runs of one set
 mixed sources (plateau 0.71 in some, reference 0.95 in others), so t50 meant `xfracGST` ≈ 0.40 in one run and ≈ 0.52
-in the next. **The analysis scripts therefore pass `--x-end X_END`** (params; 0.65 for run5_ep301): t_inc and t50
+in the next. **The analysis scripts therefore pass `--x-end X_END`** (params; 0.65 for nozbl_paw): t_inc and t50
 are measured toward the same `xfracGST` in every run, at every Ta, reached by every run that halts at `XSTOP` ≥ `X_END`. `v_growth` does not use
 x_c. (`--x-end` and `--x-crystal` are alternatives; passing both is refused.) x10 has no crystal reference (its
 rocksalt disorders), which `--x-end` sidesteps.
@@ -194,7 +196,7 @@ Ge/Sb/Te cluster and the number of such clusters of at least `--nucleus-min` ato
   homogeneous and seeded (planar-front) velocities are compared by trend, not one-to-one;
 - `single_grain`: the fraction of that window's frames in which no second cluster has `--nucleated-size` atoms
   (1: one grain throughout). Below 0.8 (a second grain in over 20% of the frames) the radius mixes grains and
-  `v_growth` is an upper bound. It is a fraction because every run5_ep301 anneal showed a short-lived second cluster
+  `v_growth` is an upper bound. It is a fraction because every run5_ep301 anneal (historical) showed a short-lived second cluster
   in a frame or two, which an all-or-nothing flag marked as multi-grain.
 
 Per (composition, Ta) group, two nucleation rates:
@@ -228,8 +230,8 @@ own `clusters_q…` file); its `--nucleated-size` must come from `calibrate.py` 
 the criterion matches the run's own (`hold_start.txt`), the dumped `c_ncb` is used instead of recomputing q4. For Tx,
 the `.dat` value uses the run's criterion only; `Tx_H` is criterion-free and is the cross-check.
 
-**Continuation.** A hold can be longer than one wall-time window (run5_ep301: 5 ns of a 13k-atom cell, about 1.5 days on
-2 A30s; nozbl_paw: 2 ns at 444 on 2 A100s, about 19 h, within one). Each array task queues its own `afterany` continuation (at most `MAXCHAIN`, default 4). The
+**Continuation.** A hold can be longer than one wall-time window (nozbl_paw: 2 ns at 444 on 2 A100s, about 19 h, within
+one; run5_ep301, historical: 5 ns of a 13k-atom cell, about 1.5 days on 2 A30s). Each array task queues its own `afterany` continuation (at most `MAXCHAIN`, default 4). The
 continuation resumes from the newest restart file and appends to `anneal.dat` and `stress.dat`, or exits at once if
 `anneal_done.txt` exists. It inherits the job's account, partition, QoS, node constraint and GPU layout, so a chain
 started on the perc A100s, or on alta's k-nodes, stays there. A continuation that finds no newer restart than its predecessor started from stops the chain
@@ -241,11 +243,11 @@ with an error (the predecessor made no progress, e.g. a bad input) instead of qu
 that persists after growth and could slow its own growth. `stress.dat` records the tensor. `recryst_summary.py`
 averages the components over 10 ps blocks (so thermal noise does not add a positive bias) and compares the deviatoric
 stress of the last blocks with the first: `sdev_base`, `sdev_end`, and `sdev_z`, their difference in standard errors.
-With run5_ep301 every iso anneal that crystallized ended with `sdev_z` 5–20, while iso and aniso pairs gave the same
+With run5_ep301 (historical; not re-measured for the current potentials) every iso anneal that crystallized ended with `sdev_z` 5–20, while iso and aniso pairs gave the same
 t_inc, t50 and v_growth; aniso relieved more of it, so the workflow defaults to `BARO=aniso`
 (`results/run5_ep301/RESULTS.md` section 4). Keep `baro` the same within one continuation chain and within everything
 that is compared. `TAG` (`RUNTAG` in params) gives a variant its own directories
-(`runs/<MODEL_ID>/anneal_<cell>_<TAG>_T<Ta>_r<rep>`) with the same seeds and glasses; run5_ep301 uses it because its
+(`runs/<MODEL_ID>/anneal_<cell>_<TAG>_T<Ta>_r<rep>`) with the same seeds and glasses; run5_ep301 (historical) used it because its
 iso and aniso sets sit side by side. On synthetic production-level noise, `tests/recryst_logic` gives z = −0.9 for
 pure noise and z = 16 for a 2 kbar deviatoric step.
 
@@ -322,16 +324,15 @@ A synthetic pre-test also showed the first stress statistic could not separate a
 3.8), so it was replaced by the end-versus-start comparison.
 
 ## Budget
-Measured throughput (`tests/scaling`): run5_ep301 at 333 (13.8k atoms; `tests/RESULTS.md` 1d), 3.35 ns/day per 2-A30
-job, about 3.0 per 1-A100 job. nozbl_paw (`tests/scaling/submit_size.sh`, x10): 3.12 ns/day at 333 on 1 A100 (the same
-as run5_ep301); at 444 (32.8k atoms) 1.34 ns/day on 1 A100 (34.3 of 41 GB GPU memory) and 2.59 on 2 (1.93×, 23.3 GB
+Measured throughput (`tests/scaling`), nozbl_paw (`tests/scaling/submit_size.sh`, x10): 3.12 ns/day at 333 on 1 A100;
+at 444 (32.8k atoms) 1.34 ns/day on 1 A100 (34.3 of 41 GB GPU memory) and 2.59 on 2 (1.93×, 23.3 GB
 each), hence `NGPU` = 2 per 444 run.
 - Calibration: 54 jobs × 20 ps (references at the melt-quench `SIZE`), minutes each.
-- Ramp: 0.2 K/ps to 900 K is 3,010 ps: ≈ 22 h on 2 A30s at 333, ≈ 28 h at 444 on 2 A100s, i.e. two chained jobs.
+- Ramp: 0.2 K/ps to 900 K is 3,010 ps: ≈ 28 h at 444 on 2 A100s, i.e. two chained jobs.
 - Anneals (nozbl_paw, 444, `MAX_NS` 2, 2 A100s): a hold that never halts is ≈ 19 h, one job. The full grid (5
   compositions × 5 Ta × 3 replicas) is 75 runs ≈ 2,900 GPU-hours if nothing halts, about 12 days on 10 perc GPUs (5
   runs at a time), about 3.5 days on alta's 36 (18 at a time, when free); `fix halt` cuts this where runs crystallize, and Phase A decides where Phase B is worth running.
-  Nucleation exposure per run (volume × time) is 2.37 × 2 ns ≈ 4.7 ns of a 333 cell, about run5_ep301's 5 ns.
+  Nucleation exposure per run (volume × time) is 2.37 × 2 ns ≈ 4.7 ns of a 333 cell (run5_ep301, historical: 5 ns).
 - Disk (gzipped dumps, about 0.25 MB per 13.8k-atom frame, ≈ 0.6 MB at 444): up to 1,000 frames ≈ 0.6 GB per 2 ns run,
   ≈ 45 GB for the grid. All on `/scratch` (200 TB quota).
 

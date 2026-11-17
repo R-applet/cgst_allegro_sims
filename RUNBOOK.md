@@ -11,8 +11,10 @@ Every `sbatch` is a separate go-ahead: run `--dry-run` / `sbatch --test-only` fi
 (`--clusters`, `mq_structure.py`) runs as an `sbatch` job, not on a login node. Select the potential with `MODEL_ID`
 (default in `common/model.sh`; `MODEL_ID=<id>` before a command or in the shell for another one).
 
-Archived: run5_ep301 (tag `run5_ep301-final`; results in `tests/RESULTS.md`, `tests/results/run5_ep301/`,
-`meltquench/results/run5_ep301/`, `recryst/results/run5_ep301/`). Use them for comparison, never as settings.
+**Current comparison: `nozbl_paw` vs `zbl_paw`** (same training data, without and with per-pair ZBL); each result is
+compared with DFT and with the other potential's. Historical: run5_ep301 (tag `run5_ep301-final`; results in
+`tests/RESULTS.md`, `tests/results/run5_ep301/`, `meltquench/results/run5_ep301/`, `recryst/results/run5_ep301/`),
+kept for reference only, never as settings or pass benchmarks. The examples and benchmarks below are nozbl_paw's.
 
 **Status of `nozbl_paw` (2026-11-16):** A done (A30, G, N and K files); B done, all pass
 (`tests/results/nozbl_paw/RESULTS.md`); meltquench done (15 runs at 10 K/ps, analysis in
@@ -48,8 +50,8 @@ otherwise runs is harmless.
    ```
    Each prints the file's sha256 in its `slurm-*.out`; record file, node and hash in `models/provenance.md`.
    (`tests/a100_model` also compiles G/N and compares with `tests/model_check/lammps_energies.txt`; that file holds
-   run5_ep301's energies until B1 has run for the new potential, so don't use it before.)
-3. Give each study you will run a `params/<MODEL_ID>.sh`, copied from run5_ep301's and marked PROVISIONAL: each value
+   the energies of the last potential B1 ran for, so don't use it before B1 has run for the new one.)
+3. Give each study you will run a `params/<MODEL_ID>.sh`, copied from nozbl_paw's and marked PROVISIONAL: each value
    is replaced by the study's pilot, and a value left from another potential is wrong until a step confirms it.
    (`nozbl_paw`: `meltquench/params/nozbl_paw.sh`.)
 
@@ -59,7 +61,7 @@ B1's; for the A30 file, B1 and B2 on `--constraint=B` (and smoke on `D`) once it
 
 ## B. Validate the potential (`tests/`)
 Tests rewrite their `RESULT*.txt` in place. Save the previous potential's first (`tests/collect.sh --save <old ID>`;
-run5_ep301's are saved), and this one's when done (`--save <MODEL_ID>`), with a summary in
+run5_ep301's, nozbl_paw's and zbl_paw's gate are saved), and this one's when done (`--save <MODEL_ID>`), with a summary in
 `tests/results/<MODEL_ID>/RESULTS.md` in the format of `tests/RESULTS.md`.
 
 **Gate before any study (minimal), on perc with the G/N files from A2:**
@@ -69,7 +71,8 @@ run5_ep301's are saved), and this one's when done (`--save <MODEL_ID>`), with a 
    the checkpoint-vs-DFT errors there are the first look at this potential's accuracy.
 2. `smoke`: `cd tests/smoke && sbatch $P --constraint=G submit.sh`. **Pass:** x0 and x10 finish.
 3. `dt`: NVE energy drift at 0.5/1/2 fs in the 1500 K x10 liquid. `cd tests/dt && sbatch $P submit.sh`.
-   **Pass:** 2 fs conserves energy as well as for run5_ep301 (`tests/RESULTS.md` 1c). Critical without ZBL: a close
+   **Pass:** 2 fs conserves energy as well as for nozbl_paw (`tests/results/nozbl_paw/RESULTS.md`, 1c: |drift| ≤ 0.0002
+   meV/atom/ps at 0.5, 1 and 2 fs). Critical without ZBL: a close
    contact in the hot liquid shows up here as a drift or a crash. Otherwise set a smaller `DT` in this model's
    `common/model.sh` block and rerun.
 4. `model_select` on G and N (A2 Pass).
@@ -78,7 +81,7 @@ run5_ep301's are saved), and this one's when done (`--save <MODEL_ID>`), with a 
 the Budget sections if ns/day changed). `dft_glass` (1k) needs this potential's own 10 K/ps x0 glass: after the
 melt-quench: `python make_model_glass.py meltquench/runs/<MODEL_ID>/x0_q10_r1 <npz>`, then
 `MODEL_GLASS=<npz> python check.py` (in `tests/dft_glass`). **Decide there** how the glass density compares with the crystal's
-(run5_ep301: glass denser, from its DFT reference); it sets the caveats of every study after.
+(nozbl_paw: glass as dense as its crystal; run5_ep301, historical: denser); it sets the caveats of every study after.
 **Logic tests** (`tests/mq_logic`, `tests/recryst_logic`, short GPU jobs) cover `tmelt`, `tmax`, `ramp_done.txt` and the
 ramp restart: run them for each potential before the first production job of each study (nozbl_paw: both PASS). **Pass:** `VERDICT: PASS`.
 
@@ -90,8 +93,9 @@ ramp restart: run them for each potential before the first production job of eac
    python ../analysis/mq_summary.py --out results/nozbl_paw runs/nozbl_paw/*_q10_r1        # env/cgst-ana
    ```
    **Pass:** the MSD gate passes (`gate.txt`); `TMELT` (a multiple of 100) is at least ~300 K above the higher
-   Tm_app (run5_ep301: 984–1129 K); no close-contact WARNING and per-pair `rmin_*` close to run5_ep301's (x10
-   liquid: C–C 1.10 Å, Ge–C 1.64 Å, every other pair ≥ 1.80 Å; `mq_summary.py` prints them per pair); no lost atoms or errors in `log.mq`. Then record the values and their source in
+   Tm_app (nozbl_paw pilot: 1139 K for x0, 983 K for x10); no close-contact WARNING and per-pair `rmin_*` close to
+   nozbl_paw's (x10 liquid: C–C 1.08 Å, Ge–C 1.62 Å, Te–C 1.72 Å, Ge/Sb/Te pairs ≥ 1.98 Å; `mq_summary.py` prints
+   them per pair); no lost atoms or errors in `log.mq`. Then record the values and their source in
    `meltquench/params/<MODEL_ID>.sh` (no longer PROVISIONAL). If it fails, change `TMELT`/`HOLD_PS`, delete
    `runs/<MODEL_ID>/{x0,x10}_q10_r1` and rerun the pilot.
 2. **Production:** the remaining 13 runs with the pilot's settings.
@@ -103,15 +107,16 @@ ramp restart: run them for each potential before the first production job of eac
    --export=ALL,NGPU=3 ...`, as the 5 K/ps runs did; 2 A30s are untested at 444, which needs 23.3 GB per GPU on 2.) **Pass:** all 15 pass the MSD gate with one `HOLD_PS`.
 3. **Analysis:** `mq_summary.py` on the login node, `mq_structure.py` as an sbatch job, both `--out
    results/<MODEL_ID> runs/<MODEL_ID>/*_q*_r*`. Record density, Tm_app, Tg, `xfracGST`, `rmin_*` and the structure per
-   composition in `meltquench/results/<MODEL_ID>/RESULTS.md`, compared with run5_ep301. Optional 1 K/ps sensitivity
-   runs (`--array=0,12 --export=ALL,QRATE=1`): run5_ep301's partially crystallized, which is why recryst uses 10 K/ps.
+   composition in `meltquench/results/<MODEL_ID>/RESULTS.md`, compared with the other current potential (nozbl_paw ↔
+   zbl_paw). Optional 1 K/ps sensitivity runs (`--array=0,12 --export=ALL,QRATE=1`): nozbl_paw's partially
+   crystallized (x0 `xfracGST` 0.30 against 0.14 at 10 K/ps), which is why recryst uses 10 K/ps.
 
 ## recryst: recrystallization (`recryst/`)
-Needs the melt-quench glasses of the same potential and `recryst/params/<MODEL_ID>.sh` (copy run5_ep301's, PROVISIONAL).
+Needs the melt-quench glasses of the same potential and `recryst/params/<MODEL_ID>.sh` (copy nozbl_paw's, PROVISIONAL).
 1. **Calibration (generates the criterion and per-T tables).** `cd recryst/calib && sbatch --array=0-53 submit.sh`,
    then `sbatch submit_calibrate.sh`. Read `calib/<MODEL_ID>/calibrate.out` and `calib.png`. If the best criterion
    is not clearly better than a neighbour, rerun with `--export=ALL,CALIB_ARGS="--choose RC THR NMIN"`.
-   `calib_params.sh` is regenerated each time. **Pass:** a crystal/glass margin comparable to run5_ep301's 0.71, no
+   `calib_params.sh` is regenerated each time. **Pass:** a crystal/glass margin comparable to nozbl_paw's 0.716, no
    edge-of-grid warning, and `calib_params.sh` covering every temperature you will anneal at.
 2. **Ramp (sets `TX_GUARD` and centres the grid).**
    `cd recryst && sbatch -A perc -p a100-40gb --gpus-per-node=2 --ntasks-per-node=2 --array=0 submit_ramp.sh` (x0 r1 at
@@ -119,7 +124,7 @@ Needs the melt-quench glasses of the same potential and `recryst/params/<MODEL_I
    Needs the `ramp_resume` case of `tests/recryst_logic` to pass first. `TMAX` must stay below the
    superheated melting point from the melt-quench. Then `bash scripts/analyze_ramps.sh`. **Read:** whether and where x0
    crystallizes (Tx_xfrac). Set `TX_GUARD` to a Tx measured at a heating rate comparable to the anneals' 10 K/ps
-   heat, or to `TMAX` if none exists (run5_ep301: 900). The slow-ramp Tx is not the guard. If nothing crystallizes by
+   heat, or to `TMAX` if none exists (nozbl_paw: 900 = `TMAX`). The slow-ramp Tx is not the guard. If nothing crystallizes by
    `TMAX` even at 0.2 K/ps, expect the anneal grid to be TOO COLD and plan the seeded slabs (step 5) as the main
    route.
 3. **Phase A pilot: x0 over the grid (sets `XSTOP`, `X_END` and checks `BARO`).** Set `TAS` to calibration
@@ -165,7 +170,7 @@ Independent of the other studies; needs only steps A–B. `phases/params/<MODEL_
    **Pass:** the exact-velocity VDOS overlap ≈ 1.000 for the `EXACT_V` runs and `dft-check` ADF overlap ≈ 1 with
    angles/frame ratio 1.000 (`slurm-analysis-*.out`). If only `compare` fails, rerun it alone:
    `env/cgst-ana/bin/python analysis/phases_compare.py compare --model-id <MODEL_ID>` (from the repository root).
-5. **Write-up:** `phases/results/<MODEL_ID>/RESULTS.md`: the metrics per phase against DFT and the earlier potentials,
+5. **Write-up:** `phases/results/<MODEL_ID>/RESULTS.md`: the metrics per phase against DFT and the other current potential (nozbl_paw ↔ zbl_paw),
    and the relaxation effect.
 
 ## What carries over, and what does not

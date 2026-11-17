@@ -1,18 +1,17 @@
 # Melt-quench (`meltquench/`)
 
-`in.meltquench` takes an N×N×N rocksalt cell (`structures/<SIZE>/<cell>.data`; `SIZE` in params: 333 for run5_ep301,
-444 from nozbl_paw on) through melt and quench to an amorphous sample at 300 K. Every stage is NPT, isotropic, 0 bar, with Nosé–Hoover damping Tdamp = 100 dt and Pdamp = 1000 dt.
+`in.meltquench` takes an N×N×N rocksalt cell (`structures/<SIZE>/<cell>.data`; `SIZE` in params: 444 for nozbl_paw;
+333 for run5_ep301, historical) through melt and quench to an amorphous sample at 300 K. Every stage is NPT, isotropic, 0 bar, with Nosé–Hoover damping Tdamp = 100 dt and Pdamp = 1000 dt.
 
-This README describes the method; results are per model in `results/<MODEL_ID>/` (run5_ep301:
-`results/run5_ep301/RESULTS.md` and its `report/`). Runs go to `runs/<MODEL_ID>/`; `MODEL_ID` is set in
+This README describes the method; results are per model in `results/<MODEL_ID>/` (nozbl_paw:
+`results/nozbl_paw/RESULTS.md` and its `report/`; run5_ep301's, historical, in `results/run5_ep301/`). Runs go to `runs/<MODEL_ID>/`; `MODEL_ID` is set in
 `common/model.sh`, and the melt temperature, hold and quench rate come from `meltquench/params/<MODEL_ID>.sh`.
 
-**Check the glass density for every model.** run5_ep301 quenches amorphous GST denser than its own rocksalt
-(6.29 vs 6.24 g/cc), unlike experiment (glass ~6–7% less dense). It inherits this from its DFT reference
-(`tests/RESULTS.md` 1g, 1k). Whether a retrained model does the same decides how densities, and anything that
-depends on the glass–crystal density difference (crystallization strain, pressure-sensitive kinetics), can be
-reported (`RUNBOOK.md`, B). nozbl_paw: the glass is as dense as its crystal (6.239 vs 6.224 g/cc,
-`tests/results/nozbl_paw/RESULTS.md`).
+**Check the glass density for every model.** In experiment the glass is ~6–7% less dense than the crystal. nozbl_paw's
+glass is as dense as its crystal (6.239 vs 6.224 g/cc, `tests/results/nozbl_paw/RESULTS.md`), as in the DFT reference
+it was trained on (run5_ep301, historical: denser, 6.29 vs 6.24; `tests/RESULTS.md` 1g, 1k). How a model's glass
+compares with its crystal decides how densities, and anything that depends on the glass–crystal density difference
+(crystallization strain, pressure-sensitive kinetics), can be reported (`RUNBOOK.md`, B).
 
 ## Protocol
 
@@ -25,11 +24,11 @@ reported (`RUNBOOK.md`, B). nozbl_paw: the glass is as dense as its crystal (6.2
 | 4 | 300 | 100 ps | 50 ps relaxation, then RDF and coordination averaged over 50 ps → `rdf_300K.dat`, `amorphous_300K.data` (input to recryst) |
 
 **Why these choices**
-- **Melt temperature `tmelt` (`TMELT` in params; 1500 K for run5_ep301).** Well above the model's superheated
-  melting point, so the liquid is fast. For run5_ep301 the perfect crystal melts at about 1090 K when heated at 2 K/ps
-  (reference run `md_npt_cubic_gst`; experiment ~900 K), and at 1500 K MSD grows at 7.5–9 Å²/ps for Ge/Sb/Te
-  (reference `md_meltquench`: 380–450 Å² after 50 ps), so the gate is met well within 80 ps. For a new model, set it
-  from that model's own superheating (`RUNBOOK.md`, meltquench). C diffusion is not known in advance, which is why the
+- **Melt temperature `tmelt` (`TMELT` in params; 1500 K for nozbl_paw).** Well above the model's superheated
+  melting point, so the liquid is fast. For nozbl_paw the crystal melts at Tm_app 1139 K (x0) and 983 K (x10) on the
+  10 K/ps heat (experiment ~900 K), and in the 100 ps hold at 1500 K the slowest species moves 651 Å² (x0) and
+  354 Å² (x10), well past the gate (`meltquench/results/nozbl_paw/RESULTS.md`, superheating pilot). For a new model,
+  set it from that model's own superheating (`RUNBOOK.md`, meltquench). C diffusion is not known in advance, which is why the
   gate includes it.
 - **A fixed hold, not one extended until the gate passes.** An adaptive hold would give a slow composition a
   longer melt than the others, and anything that evolves in the melt (C clustering, for one) would then differ
@@ -93,8 +92,8 @@ more replicas:
 - the crystalline fraction left at 300 K, over all atoms (`xfrac_a`) and over Ge/Sb/Te only (`xfracGST_a`, the one to
   report: C false positives inflate `xfrac_a` at high C);
 - the closest approach of any pair in the liquid and the glass (`rmin_l`, `rmin_a`, per pair below the table), with a
-  WARNING below 1.0 Å (close contacts, a risk for potentials without ZBL; run5_ep301: C–C 1.10 Å in the x10 liquid,
-  every other pair ≥ 1.64 Å);
+  WARNING below 1.0 Å (close contacts, a risk for potentials without ZBL; nozbl_paw: C–C 1.08 Å in the x10 liquid,
+  Ge–C 1.62, Te–C 1.72, Ge/Sb/Te pairs ≥ 1.98 Å);
 - the hold length, with a WARNING if the runs do not all share one;
 - partial coordination numbers (CN_ij, j atoms around an i atom) and each species' total coordination Z_i;
 - with `--out`: `<group>_curves.dat`, ρ(T) and H(T) on the heating ramp and the quench, in 10 K bins (std NaN for a
@@ -140,9 +139,9 @@ xfrac ≈ 0.1, the false-positive level the recryst calibration has to remove.
 
 The reference data are frozen copies in `tests/mq_analysis/ref/` (sources and sha256s in `ref/SHA256SUMS`).
 
-**`tests/dft_glass`: CONSISTENT** for both models (rerun per model with `MODEL_GLASS`). The model glass against
-DFT's own cold melt-quenched glass, with the same code: run5_ep301 density +0.85%, every mean Z within 0.08
-(`tests/RESULTS.md` 1k); nozbl_paw +0.01%, within 0.14 (`tests/results/nozbl_paw/RESULTS.md`).
+**`tests/dft_glass`: CONSISTENT** for nozbl_paw (rerun per model with `MODEL_GLASS`; zbl_paw not yet). The model glass
+against DFT's own cold melt-quenched glass, with the same code: nozbl_paw density +0.01%, every mean Z within 0.14
+(`tests/results/nozbl_paw/RESULTS.md`); run5_ep301, historical: +0.85%, within 0.08 (`tests/RESULTS.md` 1k).
 
 **Bugs this test has caught (all fixed):** the MSD-gate `min()`; first-minimum CNs (Te–Te ≈ 10, and Sb–Te ≈ 7 in
 x10; now fixed cutoffs); repeated `mq.dat` rows breaking `np.gradient`; stage windows computed from the schedule
