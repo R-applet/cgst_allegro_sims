@@ -12,6 +12,8 @@ Per phase, from $DFT_PHASES/<amorph|cubic|hex>/<gst|c1|c5|c10>/:
   vdos_species.txt  the DoSPT per-atom DOS (*_dft_dos, one group per atom, 46-51 MB) reduced to nu (THz), total,
                     Ge, Sb, Te, C: the per-atom blocks summed by species, species from phases/structures/<phase>.data
                     (same atom order). The file's own total block is kept as "total" and checked against the sum.
+                    The preliminary plot_dos.py scripts sum Sb and Te one block early (Sb = atoms 32-63, Te =
+                    64-143); their per-species curves are off by one atom, these are not (checked 2026-11-16).
   SOURCES.txt       source paths and sha256.
 """
 import hashlib

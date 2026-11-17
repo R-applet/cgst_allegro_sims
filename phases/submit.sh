@@ -14,19 +14,25 @@
 #   pilot (am_c10 r1, hex_c1 r1):   sbatch --array=9,21 submit.sh
 #   everything (8 phases x 3):      sbatch --array=0-23 submit.sh
 #   on perc instead of strachan:     sbatch -A perc -p a100-40gb --array=... submit.sh
+#   longer equilibration, same seeds: sbatch --array=0-11 --export=ALL,EQ_PS=25,TAG=eq25 submit.sh
+#     (amorphous phases; the same trajectory as the standard runs, analysed 20 ps later: the relaxation check)
 # PHASES, NREP, TEMP, DT, EQ_PS, PROD_PS and TDAMP_PS come from phases/params/<MODEL_ID>.sh (DT there overrides
-# the model's production DT). Array index i -> phase PHASES[i / NREP], replica r = i % NREP + 1.
-# Run directory: runs/<MODEL_ID>/<phase>_r<r>/ (MODEL_ID: common/model.sh). Velocity seed = 1009*(i+1) + 7.
+# the model's production DT); EQ_PS set in the environment overrides it. Array index i -> phase PHASES[i / NREP],
+# replica r = i % NREP + 1. Run directory: runs/<MODEL_ID>/<phase>[_<TAG>]_r<r>/ (MODEL_ID: common/model.sh); give a
+# TAG whenever a setting differs from the params. Velocity seed = 1009*(i+1) + 7 (independent of TAG).
 set -euo pipefail
 cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ..)
+eq=${EQ_PS:-}
 source $ROOT/common/defaults.sh                 # MODEL_ID, MODEL (per node type)
 source $ROOT/phases/params/$MODEL_ID.sh         # PHASES, NREP, TEMP, DT, EQ_PS, PROD_PS, TDAMP_PS
+[ -z "$eq" ] || [ "$eq" = "$EQ_PS" ] || [ -n "${TAG:-}" ] || { echo "EQ_PS=$eq differs from the params: set a TAG" >&2; exit 1; }
+EQ_PS=${eq:-$EQ_PS}
 i=$SLURM_ARRAY_TASK_ID
 [ $i -lt $(( ${#PHASES[@]} * NREP )) ] || { echo "array index $i > $(( ${#PHASES[@]} * NREP - 1 ))" >&2; exit 1; }
 phase=${PHASES[$((i / NREP))]}
 rep=$((i % NREP + 1))
-run=runs/$MODEL_ID/${phase}_r${rep}
+run=runs/$MODEL_ID/${phase}${TAG:+_$TAG}_r${rep}
 mkdir -p $run && cd $run
 $ROOT/common/run_lmp.sh $SLURM_NTASKS -in $ROOT/phases/in.phases -log log.phases \
     -var root $ROOT -var phase $phase -var seed $((1009 * (i + 1) + 7)) -var model $MODEL -var dt $DT \

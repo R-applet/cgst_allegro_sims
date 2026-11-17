@@ -14,10 +14,10 @@ Every `sbatch` is a separate go-ahead: run `--dry-run` / `sbatch --test-only` fi
 Archived: run5_ep301 (tag `run5_ep301-final`; results in `tests/RESULTS.md`, `tests/results/run5_ep301/`,
 `meltquench/results/run5_ep301/`, `recryst/results/run5_ep301/`). Use them for comparison, never as settings.
 
-**Status of `nozbl_paw` (2026-11-15):** A done (A30, G, N and K files); B done, all pass
+**Status of `nozbl_paw` (2026-11-16):** A done (A30, G, N and K files); B done, all pass
 (`tests/results/nozbl_paw/RESULTS.md`); meltquench done (15 runs at 10 K/ps, analysis in
 `meltquench/results/nozbl_paw/`; x0/x10 at 5 and 1 K/ps done; report in `report/`); recryst: calibration done (criterion
-3.9/0.6/4), x0 ramp and Phase A running.
+3.9/0.6/4), x0 ramp and Phase A done, x5/x10 ramps running; phases done (`phases/results/nozbl_paw/RESULTS.md`).
 
 ## A. Register the potential
 1. In `common/model.sh`, add a `case` block for the new `MODEL_ID`: `CKPT` (copy the checkpoint into `models/` so a
@@ -138,6 +138,23 @@ Needs the melt-quench glasses of the same potential and `recryst/params/<MODEL_I
    - take v = dN/dt / (2 A n) from the crystalline cluster connected to the seed, and flag stray nuclei.
 6. **Write-up:** `recryst/results/<MODEL_ID>/RESULTS.md` (v_growth vs Ta per composition with n per point, its
    distribution, the fraction nucleated vs Ta; then the seeded curve). Plots follow the dataviz conventions.
+
+## phases: Allegro vs DFT-MD in the DFT cells (`phases/`)
+Independent of the other studies; needs only steps A–B. `phases/params/<MODEL_ID>.sh` is a copy of nozbl_paw's
+(every value comes from the DFT reference). Method: `phases/README.md`.
+1. **DoSPT, once per checkout:** `bash analysis/build_dospt.sh`, then `bash analysis/build_dospt.sh check`.
+   **Pass:** the example's total DOS reproduced (nozbl_paw: max difference 1.6e-20).
+2. **Pilot:** `cd phases && sbatch --array=9,21 submit.sh` (am_c10 r1, hex_c1 r1; ~1.5 min each on an A30).
+   **Pass:** `phases: <phase> done` in `log.phases`; T near 300 K and the conserved energy flat in `thermo.dat`; no
+   lost atoms or errors.
+3. **Production:** `sbatch --array=0-8,10-20,22-23 submit.sh`, and the relaxation check of the amorphous cells,
+   `sbatch --array=0-11 --export=ALL,EQ_PS=25,TAG=eq25 submit.sh`.
+4. **Analysis:** `sbatch submit_analysis.sh` (all finished runs, the checks, then `compare`; ~25 min).
+   **Pass:** the exact-velocity VDOS overlap ≈ 1.000 for the `EXACT_V` runs and `dft-check` ADF overlap ≈ 1 with
+   angles/frame ratio 1.000 (`slurm-analysis-*.out`). If only `compare` fails, rerun it alone:
+   `env/cgst-ana/bin/python analysis/phases_compare.py compare --model-id <MODEL_ID>` (from the repository root).
+5. **Write-up:** `phases/results/<MODEL_ID>/RESULTS.md`: the metrics per phase against DFT and the earlier potentials,
+   and the relaxation effect.
 
 ## What carries over, and what does not
 - Carries over: the inputs, scripts, analysis code and their tests; the Q4 criterion *form* (Ge/Sb/Te only); the

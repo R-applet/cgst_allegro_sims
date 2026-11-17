@@ -15,9 +15,9 @@ settings, runs and results per `MODEL_ID`, so potentials never share a directory
 |---|---|---|---|---|
 | Validation | `tests/` | done (`tests/RESULTS.md`); glass as dense as the crystal, from the DFT reference (1g, 1k) | done: all gate and physics tests pass, better than run5_ep301 vs DFT; glass as dense as the crystal (`tests/results/nozbl_paw/RESULTS.md`) | to be provided |
 | Melt-quench | `meltquench/` | 15 glasses at 10 K/ps, x0 and x10 at 1 K/ps (`meltquench/results/run5_ep301/`) | done: 15 glasses at 10 K/ps (4×4×4), x0 and x10 at 5 and 1 K/ps (1 K/ps partially crystallizes); same C trends as run5_ep301, ~0.9% lighter; report and slides (`meltquench/results/nozbl_paw/`) | — |
-| Recrystallization | `recryst/` | criterion 3.8 Å/0.6/4; ramps; x0 anneals at 600/650 K (`recryst/results/run5_ep301/RESULTS.md`) | calibration done, criterion 3.9 Å/0.6/4 (`recryst/calib/nozbl_paw/`); x0 ramp and Phase A anneals running | — |
+| Recrystallization | `recryst/` | criterion 3.8 Å/0.6/4; ramps; x0 anneals at 600/650 K (`recryst/results/run5_ep301/RESULTS.md`) | calibration done, criterion 3.9 Å/0.6/4 (`recryst/calib/nozbl_paw/`); x0 ramp (Tx 583 K at 0.2 K/ps) and Phase A (x0, 500–700 K, all usable) done; x5 and x10 ramps running | — |
 | Coexistence | `coexistence/` | — | planned | — |
-| Phases | `phases/` | — | planned | — |
+| Phases | `phases/` | — | done: 8 DFT cells (amorphous, rocksalt, trigonal; 0–10% C) at 300 K vs DFT-MD; RDF and ADF close (R 0.05–0.08, ADF overlap 0.92–0.98), Ge/Sb/Te VDOS 0–9% soft, C VDOS overlap 0.61–0.72 (`phases/results/nozbl_paw/RESULTS.md`) | — |
 | Cascades | `cascades/` | — | planned | — |
 
 ## Study layout
@@ -53,20 +53,25 @@ potential, follow `RUNBOOK.md` A–B, then give each study a `params/<MODEL_ID>.
   `RESULT*.txt` in place; `tests/collect.sh --save <MODEL_ID>` copies them to `tests/results/<MODEL_ID>/`. Summaries:
   `tests/RESULTS.md` (run5_ep301), `tests/results/<MODEL_ID>/RESULTS.md` (later models).
 - `meltquench/`, `recryst/`, `coexistence/`, `phases/`, `cascades/`: the studies (layout above). `recryst/calib/`
-  holds the crystallinity calibration and `recryst/scripts/` the recrystallization workflow.
+  holds the crystallinity calibration and `recryst/scripts/` the recrystallization workflow. `phases/structures/` and
+  `phases/dft/` hold the DFT cells and the DFT RDF/ADF/VDOS they are compared with.
 - `analysis/`: post-processing with `env/`:
   - melt-quench: `mq_summary.py`, `mq_structure.py`;
   - recrystallization: `recryst_summary.py`, `rate_compare.py`;
+  - phases: `phases_compare.py` (RDF, ADF, VDOS vs DFT), `build_dospt.sh` (builds DoSPT into `env/dospt/`);
   - shared helpers: `runio.py` (run-output readers) and `bondorder.py` (Q4 crystallinity, matching
     `common/in.analysis`);
   - `latent_features.py` (exploratory, `tests/latent_feasibility/`) runs in the container.
-- `env/`: the analysis-only conda environment (`environment.yml`). Simulations run in the container.
+- `env/`: the analysis-only conda environment (`environment.yml`) and the DoSPT build (`env/dospt/`, not tracked).
+  Simulations run in the container.
 
 ## Requirements
 This workflow runs on Purdue's **Gilbreth** cluster. It needs read access to **`/depot/prism`**, which holds:
 - the LAMMPS + pair_allegro container;
 - the training checkpoints, and for run5_ep301 the modified nequip/allegro sources that compile and load it;
-- the DFT training and test sets.
+- the DFT training and test sets;
+- the DFT-MD of the phase cells (`$DFT_PHASES`, read by `phases/dft/make_dft_refs.py`) and the DoSPT source that
+  `analysis/build_dospt.sh` builds (needs `gfortran`).
 
 All of these paths are in `common/model.sh`. Elsewhere, provide equivalents and set them there. Slurm accounts
 `strachan` (A30), `perc` (A100-40GB) and/or `alta` (A100-80GB).
