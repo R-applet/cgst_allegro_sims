@@ -41,7 +41,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -49,7 +49,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -108,10 +108,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   3.9320774      1878.6198      11210.408      3638.5126     -588.44944      2039.2232     -1143.0871    
-Loop time of 6.5293e-05 on 1 procs for 0 steps with 144 atoms
+         0   3.817204       1958.3227      11202.869      3868.4512     -546.53362      2089.7527     -1225.1098    
+Loop time of 6.3529e-05 on 1 procs for 0 steps with 144 atoms
 
-0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+64.5% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -121,7 +121,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.529e-05  |            |       |100.00
+Other   |            | 6.353e-05  |            |       |100.00
 
 Nlocal:            144 ave         144 max         144 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -159,7 +159,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -167,7 +167,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -208,10 +208,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   75.178308      4562.1714      5097.081       5405.9994     -331.12501     -8.6597757      512.17102    
-Loop time of 6.0394e-05 on 1 procs for 0 steps with 768 atoms
+         0   75.665846      4808.8199      5158.0278      5722.5456     -307.61336      52.783858      644.95208    
+Loop time of 6.0073e-05 on 1 procs for 0 steps with 768 atoms
 
-61.3% CPU use with 1 MPI tasks x 1 OpenMP threads
+64.9% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -221,7 +221,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.039e-05  |            |       |100.00
+Other   |            | 6.007e-05  |            |       |100.00
 
 Nlocal:            768 ave         768 max         768 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -259,7 +259,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -267,7 +267,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -308,10 +308,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   14.001963      985.71305      4729.1707      1589.5721      3041.6965     -1633.2065     -1222.037     
-Loop time of 5.3771e-05 on 1 procs for 0 steps with 160 atoms
+         0   13.744461      1098.9604      4699.0413      1454.7625      2992.219      -1444.5217     -1276.4057    
+Loop time of 5.4913e-05 on 1 procs for 0 steps with 160 atoms
 
-0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+65.6% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -321,7 +321,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.377e-05  |            |       |100.00
+Other   |            | 5.491e-05  |            |       |100.00
 
 Nlocal:            160 ave         160 max         160 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -359,7 +359,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -367,7 +367,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -408,10 +408,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   177.23996      82901.118      83771.23       87662.306     -1472.5226      4970.4976      671.6028     
-Loop time of 5.3791e-05 on 1 procs for 0 steps with 320 atoms
+         0   177.36577      83706.857      83314.668      87084.766     -1530.7011      4683.1447      760.52356    
+Loop time of 5.6736e-05 on 1 procs for 0 steps with 320 atoms
 
-0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+100.5% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -421,7 +421,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.379e-05  |            |       |100.00
+Other   |            | 5.674e-05  |            |       |100.00
 
 Nlocal:            320 ave         320 max         320 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -459,7 +459,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -467,7 +467,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -508,10 +508,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   20.562216      2265.6991     -705.59178      1529.5532     -560.04456      1910.1471      372.6804     
-Loop time of 5.4252e-05 on 1 procs for 0 steps with 168 atoms
+         0   20.528885      2974.3794      73.564145      2209.6507     -250.84754      1852.4106      385.36638    
+Loop time of 5.5023e-05 on 1 procs for 0 steps with 168 atoms
 
-0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+101.8% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -521,7 +521,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.425e-05  |            |       |100.00
+Other   |            | 5.502e-05  |            |       |100.00
 
 Nlocal:            168 ave         168 max         168 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -559,7 +559,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -567,7 +567,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -608,8 +608,8 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   33.021794      1337.78       -317.96761     -6381.9694     -2172.1374      848.28687      827.99335    
-Loop time of 6.1195e-05 on 1 procs for 0 steps with 176 atoms
+         0   32.663745      1071.7154     -511.81944     -6509.598      -2185.5506      785.98425      1342.3974    
+Loop time of 5.9251e-05 on 1 procs for 0 steps with 176 atoms
 
 0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
@@ -621,7 +621,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 6.12e-05   |            |       |100.00
+Other   |            | 5.925e-05  |            |       |100.00
 
 Nlocal:            176 ave         176 max         176 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -659,7 +659,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -667,7 +667,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -708,10 +708,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0  -82.151209      2189.8528      3720.891       3536.3027      442.34061      344.3141      -277.21504    
-Loop time of 5.6286e-05 on 1 procs for 0 steps with 698 atoms
+         0  -82.146376      2304.1656      3779.2575      3674.4504      441.16255      358.01158     -237.28312    
+Loop time of 5.5204e-05 on 1 procs for 0 steps with 698 atoms
 
-64.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+68.8% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -721,7 +721,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.629e-05  |            |       |100.00
+Other   |            | 5.52e-05   |            |       |100.00
 
 Nlocal:            698 ave         698 max         698 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -759,7 +759,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -767,7 +767,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -808,10 +808,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0  -10.023367      4475.1754      698.37375     -9475.1641     -256.19844     -1964.4432     -443.53056    
-Loop time of 5.364e-05 on 1 procs for 0 steps with 146 atoms
+         0  -10.031991      5108.045       1330.4857     -8882.7479     -146.77226     -2004.5109     -434.53903    
+Loop time of 5.6786e-05 on 1 procs for 0 steps with 146 atoms
 
-65.2% CPU use with 1 MPI tasks x 1 OpenMP threads
+0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -821,7 +821,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.364e-05  |            |       |100.00
+Other   |            | 5.679e-05  |            |       |100.00
 
 Nlocal:            146 ave         146 max         146 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -859,7 +859,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -867,7 +867,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -908,10 +908,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   32.725179      3186.8895     -115.49522      300.9774      -1523.4744      718.1705       578.90364    
-Loop time of 5.4362e-05 on 1 procs for 0 steps with 292 atoms
+         0   32.704317      2838.6657     -154.50319      6.8148834     -1548.6442      682.8233       493.24676    
+Loop time of 5.6336e-05 on 1 procs for 0 steps with 292 atoms
 
-103.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+101.2% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -921,7 +921,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.436e-05  |            |       |100.00
+Other   |            | 5.634e-05  |            |       |100.00
 
 Nlocal:            292 ave         292 max         292 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -959,7 +959,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -967,7 +967,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -1008,10 +1008,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   27.38942       3224.1303      2612.8939      891.67518      294.57939      168.43427      867.24926    
-Loop time of 5.4573e-05 on 1 procs for 0 steps with 730 atoms
+         0   27.745689      3486.2301      2965.6384      1086.9953      282.18308      224.6386       903.92945    
+Loop time of 5.7858e-05 on 1 procs for 0 steps with 730 atoms
 
-66.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+69.1% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -1021,7 +1021,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.457e-05  |            |       |100.00
+Other   |            | 5.786e-05  |            |       |100.00
 
 Nlocal:            730 ave         730 max         730 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -1059,7 +1059,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -1067,7 +1067,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -1108,8 +1108,8 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   2.5604031     -4825.9958     -4859.4298      2871.5002     -470.50543      3897.9176     -908.65009    
-Loop time of 5.3931e-05 on 1 procs for 0 steps with 152 atoms
+         0   2.4528914     -4435.6611     -4456.207       3322.7681     -292.60924      3885.0043     -785.70963    
+Loop time of 5.364e-05 on 1 procs for 0 steps with 152 atoms
 
 0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
 
@@ -1121,7 +1121,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.393e-05  |            |       |100.00
+Other   |            | 5.364e-05  |            |       |100.00
 
 Nlocal:            152 ave         152 max         152 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -1159,7 +1159,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -1167,7 +1167,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -1208,10 +1208,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   91.45554      -8385.7225     -4418.3876     -6852.0691     -1824.1287     -1751.7186     -1417.4488    
-Loop time of 5.4021e-05 on 1 procs for 0 steps with 304 atoms
+         0   91.70928      -8268.8502     -3849.4814     -6561.8859     -1747.9375     -1670.374      -1232.6811    
+Loop time of 5.6506e-05 on 1 procs for 0 steps with 304 atoms
 
-101.8% CPU use with 1 MPI tasks x 1 OpenMP threads
+102.6% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -1221,7 +1221,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.402e-05  |            |       |100.00
+Other   |            | 5.651e-05  |            |       |100.00
 
 Nlocal:            304 ave         304 max         304 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -1259,7 +1259,7 @@ include         ${root}/common/in.potential
 include         ../../common/in.potential
 # Shared potential, neighbor and group setup for every run in this project.
 # Include after read_data / read_restart. Caller must define:
-#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N].nequip.pt2, from common/defaults.sh)
+#   model   path to the compiled Allegro model (models/$MODEL_ID[.G|.N|.K].nequip.pt2, from common/defaults.sh)
 #   dt      timestep in ps (production value: common/defaults.sh; justified by tests/RESULTS.md, 1c)
 # Type order is fixed by the model: 1 Ge, 2 Sb, 3 Te, 4 C (type 4 exists even when there is no C).
 
@@ -1267,7 +1267,7 @@ newton          on
 
 pair_style      allegro
 pair_coeff      * * ${model} Ge Sb Te C     # model cutoff 6.0 A
-pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/nozbl_paw.G.nequip.pt2 Ge Sb Te C     
+pair_coeff      * * /scratch/gilbreth/rapplet/cgst_allegro_sims/models/zbl_paw.G.nequip.pt2 Ge Sb Te C     
 
 neighbor        1.0 bin
 neigh_modify    delay 0 every 1 check yes
@@ -1308,10 +1308,10 @@ Neighbor list info ...
       bin: kk/device
 Per MPI rank memory allocation (min/avg/max) = 3.359 | 3.359 | 3.359 Mbytes
    Step         PotEng          Pxx            Pyy            Pzz            Pyz            Pxz            Pxy      
-         0   80.020267      20345.695      19930.734      19917.83       155.37604     -2385.5894     -448.72262    
-Loop time of 5.4021e-05 on 1 procs for 0 steps with 691 atoms
+         0   79.226151      20672.215      20192.3        19677.036      197.38499     -2413.0154     -499.87022    
+Loop time of 5.6636e-05 on 1 procs for 0 steps with 691 atoms
 
-70.3% CPU use with 1 MPI tasks x 1 OpenMP threads
+70.6% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
@@ -1321,7 +1321,7 @@ Neigh   | 0          | 0          | 0          |   0.0 |  0.00
 Comm    | 0          | 0          | 0          |   0.0 |  0.00
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 5.402e-05  |            |       |100.00
+Other   |            | 5.664e-05  |            |       |100.00
 
 Nlocal:            691 ave         691 max         691 min
 Histogram: 1 0 0 0 0 0 0 0 0 0

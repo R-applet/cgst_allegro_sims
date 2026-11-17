@@ -17,7 +17,19 @@ Archived: run5_ep301 (tag `run5_ep301-final`; results in `tests/RESULTS.md`, `te
 **Status of `nozbl_paw` (2026-11-16):** A done (A30, G, N and K files); B done, all pass
 (`tests/results/nozbl_paw/RESULTS.md`); meltquench done (15 runs at 10 K/ps, analysis in
 `meltquench/results/nozbl_paw/`; x0/x10 at 5 and 1 K/ps done; report in `report/`); recryst: calibration done (criterion
-3.9/0.6/4), x0 ramp and Phase A done, x5/x10 ramps running; phases done (`phases/results/nozbl_paw/RESULTS.md`).
+3.9/0.6/4), x0 ramp and Phase A done, x5/x10 ramps running; Phase B running for x1 and x2p5 (500–700 K, the same window for every composition; x5/x10
+join after their ramps); phases done (`phases/results/nozbl_paw/RESULTS.md`).
+
+**Status of `zbl_paw` (2026-11-17):** A done (A30, G, N and K files, `models/provenance.md`); short gate passed
+(B1 `model_check`, `model_select` on all four node types; `tests/results/zbl_paw/RESULTS.md`); phases done
+(`phases/results/zbl_paw/RESULTS.md`). Next, before any melt-quench: smoke, dt and the rest of B. Select it with
+`MODEL_ID=zbl_paw`; the default stays `nozbl_paw` (running chains source `common/model.sh`).
+
+**Cluster note (PMIx).** On perc g-nodes LAMMPS under `srun` can die in `MPI_Init` with a segfault in PMIx
+(`gds_ds12_lock_pthread`; zbl_paw's first two `model_check` jobs, 2026-11-16). Submitting with
+`--export=ALL,PMIX_MCA_gds=hash` avoids it, and does nothing elsewhere; set `PMIX_MCA_gds=hash` in the shell for
+scripts that submit with `--export=ALL` (`recryst/scripts/submit_grid.sh`). A lone `PMIX ERROR` line in a log that
+otherwise runs is harmless.
 
 ## A. Register the potential
 1. In `common/model.sh`, add a `case` block for the new `MODEL_ID`: `CKPT` (copy the checkpoint into `models/` so a

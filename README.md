@@ -11,13 +11,13 @@ settings, runs and results per `MODEL_ID`, so potentials never share a directory
 
 ## Potentials × studies
 
-| Study | Directory | `run5_ep301` (archived, tag `run5_ep301-final`) | `nozbl_paw` (current default) | second potential |
+| Study | Directory | `run5_ep301` (archived, tag `run5_ep301-final`) | `nozbl_paw` (current default) | `zbl_paw` (per-pair ZBL; `MODEL_ID=zbl_paw`) |
 |---|---|---|---|---|
-| Validation | `tests/` | done (`tests/RESULTS.md`); glass as dense as the crystal, from the DFT reference (1g, 1k) | done: all gate and physics tests pass, better than run5_ep301 vs DFT; glass as dense as the crystal (`tests/results/nozbl_paw/RESULTS.md`) | to be provided |
+| Validation | `tests/` | done (`tests/RESULTS.md`); glass as dense as the crystal, from the DFT reference (1g, 1k) | done: all gate and physics tests pass, better than run5_ep301 vs DFT; glass as dense as the crystal (`tests/results/nozbl_paw/RESULTS.md`) | short gate passed: compiled files match the checkpoint on all four node types; vs DFT RMS 5.2 meV/atom on the model_check frames (`tests/results/zbl_paw/RESULTS.md`); smoke, dt and the rest of the tests next |
 | Melt-quench | `meltquench/` | 15 glasses at 10 K/ps, x0 and x10 at 1 K/ps (`meltquench/results/run5_ep301/`) | done: 15 glasses at 10 K/ps (4×4×4), x0 and x10 at 5 and 1 K/ps (1 K/ps partially crystallizes); same C trends as run5_ep301, ~0.9% lighter; report and slides (`meltquench/results/nozbl_paw/`) | — |
-| Recrystallization | `recryst/` | criterion 3.8 Å/0.6/4; ramps; x0 anneals at 600/650 K (`recryst/results/run5_ep301/RESULTS.md`) | calibration done, criterion 3.9 Å/0.6/4 (`recryst/calib/nozbl_paw/`); x0 ramp (Tx 583 K at 0.2 K/ps) and Phase A (x0, 500–700 K, all usable) done; x5 and x10 ramps running | — |
+| Recrystallization | `recryst/` | criterion 3.8 Å/0.6/4; ramps; x0 anneals at 600/650 K (`recryst/results/run5_ep301/RESULTS.md`) | calibration done, criterion 3.9 Å/0.6/4 (`recryst/calib/nozbl_paw/`); x0 ramp (Tx 583 K at 0.2 K/ps) and Phase A (x0, 500–700 K, all usable) done; x5 and x10 ramps running; Phase B (x1, x2p5 over 500–700 K) running | — |
 | Coexistence | `coexistence/` | — | planned | — |
-| Phases | `phases/` | — | done: 8 DFT cells (amorphous, rocksalt, trigonal; 0–10% C) at 300 K vs DFT-MD; RDF and ADF close (R 0.05–0.08, ADF overlap 0.92–0.98), Ge/Sb/Te VDOS 0–9% soft, C VDOS overlap 0.61–0.72 (`phases/results/nozbl_paw/RESULTS.md`) | — |
+| Phases | `phases/` | — | done: 8 DFT cells (amorphous, rocksalt, trigonal; 0–10% C) at 300 K vs DFT-MD; RDF and ADF close (R 0.05–0.08, ADF overlap 0.92–0.98), Ge/Sb/Te VDOS 0–9% soft, C VDOS overlap 0.61–0.72 (`phases/results/nozbl_paw/RESULTS.md`) | done: the same agreement with DFT as nozbl_paw in every metric (VDOS overlaps within 0.004) except am_c10's second shell (RDF R 0.091 vs 0.071) (`phases/results/zbl_paw/RESULTS.md`) |
 | Cascades | `cascades/` | — | planned | — |
 
 ## Study layout

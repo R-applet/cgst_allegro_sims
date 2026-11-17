@@ -37,6 +37,13 @@ case $MODEL_ID in
         CKPT=${CKPT:-$_models_dir/nozbl_paw.ckpt}  # local copy of outputs/2026-11-05/19-04-55/best.ckpt (provenance.md)
         _dt=0.002   # tests/dt job 12358691: 2 fs passes (tests/results/nozbl_paw/RESULTS.md)
         ;;
+    zbl_paw)        # Allegro with per-pair ZBL, PAW data, trained from scratch with Rushik's modified nequip 0.18.0 /
+                    # allegro 0.8.3 (the MODEL_SRC tree, as run5_ep301), which the container's 0.17.1 lacks
+        MODEL_SRC=${MODEL_SRC-/depot/prism/data/rushik/zbl_updated}
+        TRAIN_DIR=${TRAIN_DIR:-$MODEL_SRC/rushik_zbl_super_short}
+        CKPT=${CKPT:-$_models_dir/zbl_paw.ckpt}    # local copy of outputs/2026-11-13/14-11-21/best.ckpt (provenance.md)
+        _dt=0.002   # PROVISIONAL until tests/dt runs for this model
+        ;;
     *)  # a new model: give its paths here (or in the environment) before running anything
         : "${CKPT:?common/model.sh: set CKPT and TRAIN_DIR (and MODEL_SRC if needed) for MODEL_ID=$MODEL_ID}"
         : "${TRAIN_DIR:?common/model.sh: set TRAIN_DIR for MODEL_ID=$MODEL_ID}"

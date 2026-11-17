@@ -1,0 +1,28 @@
+== model_check/RESULT.txt  (job 12404521, 2026-11-16 21:07)
+ frame     N   nC  dE_meV/at    max|dF|  max|dP|_bar  E-EDFT_meV/at
+     0   144    0     0.0000   5.06e-12     7.00e-04           9.61 
+   767   768   77     0.0000   4.86e-12     3.57e-04          -6.39 
+   800   160   16    -0.0000   5.30e-12     2.94e-04          -1.85 
+  1003   320   32    -0.0000   4.91e-11     5.44e-03           1.32 
+  1005   168   24    -0.0000   5.46e-12     1.86e-04          -5.45 
+  1131   176   32    -0.0000   5.80e-12     4.07e-04           2.43 
+  1270   698    7     0.0000   6.94e-12     2.35e-04          -3.25 
+  1303   146    2    -0.0000   4.70e-12     5.54e-04          -7.43 
+  1507   292    4     0.0000   5.62e-12     1.77e-04           6.12 
+  1508   730   39     0.0000   5.17e-12     2.17e-04          -5.14 
+  1541   152    8    -0.0000   5.03e-12     2.79e-04          -3.89 
+  1663   304   16     0.0000   8.92e-12     5.16e-04          -2.14 
+  2013   691    0    -0.0000   5.17e-12     1.29e-03          -5.65 
+PASS
+== model_select/RESULT_gilbreth-b015.txt  (job 12404525, 2026-11-16 21:44)
+gilbreth-b015: MODEL=zbl_paw.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== model_select/RESULT_gilbreth-g010.txt  (job 12404522, 2026-11-16 21:08)
+gilbreth-g010: MODEL=zbl_paw.G.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== model_select/RESULT_gilbreth-k050.txt  (job 12404524, 2026-11-16 21:08)
+gilbreth-k050: MODEL=zbl_paw.K.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== model_select/RESULT_gilbreth-n014.txt  (job 12404523, 2026-11-16 21:08)
+gilbreth-n014: MODEL=zbl_paw.N.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS

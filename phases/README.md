@@ -45,7 +45,7 @@ vibrational density of states (VDOS), total and per species. Results per potenti
 ## Running
 ```
 cd phases
-sbatch --array=0-23 submit.sh                                       # 8 phases x 3 seeds, ~1.5 min each on an A30
+sbatch --array=0-23 submit.sh                                       # 8 phases x 3 seeds, ~1.5 min each on an A30, 1–1.7 on a perc A100
 sbatch --array=0-11 --export=ALL,EQ_PS=25,TAG=eq25 submit.sh       # amorphous phases, longer equilibration
 sbatch submit_analysis.sh                                           # after both; ~25 min on 16 CPUs
 ```

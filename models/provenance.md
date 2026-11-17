@@ -8,7 +8,36 @@ checkpoint copies are not tracked by git; their hashes are here.
 |---|---|---|---|---|---|---|
 | `run5_ep301` | Allegro (nequip/allegro with per-pair ZBL, `zbl_updated`) | per-pair ZBL | `CGST/cgst_train_paw.xyz` | `run5_ep301.ckpt` (`b6ae59f2…96b1`) | `.pt2`, `.G`, `.N` | archived, tag `run5_ep301-final` |
 | `nozbl_paw` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `CGST/cgst_train_paw.xyz` | `nozbl_paw.ckpt` (`ed645c56…bfcc`) | A30, `.G`, `.N`, `.K` (validated; A30 on b-nodes only) | in progress (default `MODEL_ID`) |
-| (second potential) | — | — | — | — | — | to be provided |
+| `zbl_paw` | Allegro 0.8.3 (modified nequip 0.18.0, `zbl_updated`) | per-pair ZBL | `CGST/cgst_train_paw.xyz` | `zbl_paw.ckpt` (`f448d7bc…e738`) | A30, `.G`, `.N`, `.K` (short gate passed) | phases done 2026-11-17; rest of the B tests before any melt-quench |
+
+## zbl_paw
+
+| | |
+|---|---|
+| Source checkpoint | `/depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/outputs/2026-11-13/14-11-21/best.ckpt` (saved 2026-11-16 13:00), copied to `models/zbl_paw.ckpt` on 2026-11-16 |
+| sha256 (checkpoint) | `f448d7bc4c6658f389fffd45354b9be26d75da19a90f51e4621327d41fb6e738` |
+| Training config | `.../rushik_zbl_super_short/config_paw.yaml` (resolved: `outputs/2026-11-13/14-11-21/.hydra/config.yaml`); `allegro.model.AllegroModel`, float64, `cutoff_radius` 6.0 Å, `num_layers` 1, `l_max` 3, 128 scalar / 16 tensor features, energy + force + stress loss, EMA 0.999, lr 0.001, 2 GPUs (DDP); best checkpoint by validation force RMSE |
+| Short range | `nequip.nn.pair_potential.ZBL` with per-pair cutoffs (`per_edge_type_cutoff`, 0.7 Å C–C to 1.45 Å Sb–Sb), the same form as run5_ep301 |
+| Training data | `CGST/cgst_train_paw.xyz` (the same PAW set as run5_ep301 and nozbl_paw), test set `cgst_test_paw.xyz` (= `TESTSET`) |
+| Training run | nequip 0.18.0, allegro 0.8.3, torch 2.12.1+cu130 (`train.log`); trained from scratch (run5_ep301 was a fine-tune); started 2026-11-13 14:11, stopped by `max_time` (2 d 23 h) at epoch ~500 of 1500. Its own test-set metrics (wandb summary): energy RMSE 7.1 meV/atom, force RMSE 0.121 eV/Å, stress RMSE 0.80 meV/Å³ |
+| Types | `Ge Sb Te C` → LAMMPS types 1–4 |
+| Compile | as run5_ep301: the modified sources in `MODEL_SRC=/depot/prism/data/rushik/zbl_updated` (nequip 0.18.0 / allegro 0.8.3, the training versions) on `PYTHONPATH`, from `TRAIN_DIR=.../rushik_zbl_super_short`, where `../../CGST/cgst_train_paw.xyz` resolves. Trained with torch 2.12, compiled and run with the container's torch 2.8 (`tests/model_check` confirms the compiled file against the checkpoint) |
+
+Compiled files (`models/compile_model.sh` with `MODEL_ID=zbl_paw` on a node of each type, from `models/zbl_paw.ckpt`; logs in
+`models/slurm-<job>.out`):
+
+| file | compiled on | used on | sha256 | validated |
+|---|---|---|---|---|
+| `zbl_paw.G.nequip.pt2` | a100-40gb gilbreth-g010, 2026-11-16 (job 12403441) | a100-40gb g-nodes | `15677320fbb4fc3745289049067eb70e92d18dac7ffe6341cc31df9708286b79` | `tests/model_check` (job 12404521, g010): vs checkpoint max \|ΔE\| 0.0000 meV/atom, max \|ΔF\| 4.9e-11 eV/Å, max \|ΔP\| 0.005 bar; `tests/model_select` (job 12404522, g010): selected and \|ΔE\| = 0 |
+| `zbl_paw.N.nequip.pt2` | a100-40gb gilbreth-n004, 2026-11-16 (job 12403442) | a100-40gb n-nodes | `9b25088a312cedbcb82f63a06940bd65e0d18087cfc37a688a8a09696e401c5f` | `tests/model_select` (job 12404523, n014): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
+| `zbl_paw.K.nequip.pt2` | a100-80gb gilbreth-k021, 2026-11-16 (job 12403443, account `alta`) | a100-80gb k-nodes | `50671106ea6bba9427368770641cca9bb5085bfb775e864d40fab7e3d571dfb0` | `tests/model_select` (job 12404524, k050): selected, max \|ΔE\| = 0 vs the G file |
+| `zbl_paw.nequip.pt2` | a30 gilbreth-b015, 2026-11-16 (job 12404503, account `strachan`) | a30 b-nodes (d-nodes not checked) | `4b5b5fc26b3e4d9199071095251a4ae9e7983dc120284e6cc437ca014dee5ea5` | `tests/model_select` (job 12404525, b015): selected, max \|ΔE\| = 0 vs the G file |
+
+The torch 2.12 checkpoint loads and compiles in the container's torch 2.8 with version warnings only; `model_check`
+confirms the compiled file reproduces it. Checkpoint vs DFT on the 13 model_check frames: RMS 5.2 meV/atom (mean
+\|error\| 4.7, max 9.6), against 5.4 (4.7, 10.4) for nozbl_paw and 6.3 (5.5, 9.7) for run5_ep301. On perc g-nodes
+the first two `model_check` jobs (12403492, 12403592) died in `MPI_Init` (PMIx `gds_ds12` lock, not the model);
+`sbatch --export=ALL,PMIX_MCA_gds=hash` avoids it (`RUNBOOK.md`). Gate results: `tests/results/zbl_paw/`.
 
 ## nozbl_paw
 

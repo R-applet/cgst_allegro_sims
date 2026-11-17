@@ -14,7 +14,7 @@
 # Usage: sbatch -p <partition> compile_model.sh <output.nequip.pt2>   (from models/; output models/$MODEL_ID[.G|.N].nequip.pt2)
 #
 # nequip-compile must run from the training folder: it loads a sample frame through the checkpoint's relative
-# dataset path (for both registered models it points at CGST/cgst_train_paw.xyz), which only resolves from there.
+# dataset path (for every registered model it points at CGST/cgst_train_paw.xyz), which only resolves from there.
 module load cuda/12.6.0
 OUT=$(realpath -m "${1:?output path required}")
 source "${SLURM_SUBMIT_DIR:-$(dirname "$(realpath "$0")")}/../common/model.sh"   # MODEL_ID, CKPT, MODEL_PYTHONPATH, TRAIN_DIR, SIF

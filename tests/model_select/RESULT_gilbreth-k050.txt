@@ -1,2 +1,2 @@
-gilbreth-k050: MODEL=nozbl_paw.K.nequip.pt2
+gilbreth-k050: MODEL=zbl_paw.K.nequip.pt2
 13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
