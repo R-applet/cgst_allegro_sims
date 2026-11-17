@@ -1,0 +1,29 @@
+[2026-11-06 19:22:23,102][nequip.scripts.train][INFO] - [rank: 0] Starting fresh training ...
+[2026-11-06 19:22:23,105][nequip.utils.versions.package_versions][INFO] - [rank: 0] Version Information:
+[2026-11-06 19:22:23,105][nequip.utils.versions.package_versions][INFO] - [rank: 0] torch 2.8.0
+[2026-11-06 19:22:23,105][nequip.utils.versions.package_versions][INFO] - [rank: 0] e3nn 0.6.0
+[2026-11-06 19:22:23,105][nequip.utils.versions.package_versions][INFO] - [rank: 0] nequip 0.17.1
+[2026-11-06 19:22:23,105][nequip.utils.versions.package_versions][INFO] - [rank: 0] allegro 0.8.2
+[2026-11-06 19:22:23,105][nequip.scripts.train][INFO] - [rank: 0] This `nequip-train` run will perform the following tasks: ['train', 'val', 'test']
+[2026-11-06 19:22:23,105][nequip.scripts.train][INFO] - [rank: 0] and use the output directory provided by Hydra: /depot/prism/data/rushik/CGST/nequip_zbl/outputs/2026-11-06/19-22-23
+[2026-11-06 19:22:23,146][nequip.scripts.train][INFO] - [rank: 0] Building datamodule ...
+[2026-11-06 19:22:23,154][nequip.data.datamodule._base_datamodule][INFO] - [rank: 0] Found 1 training dataset(s), 1 validation dataset(s), 1 test dataset(s), and 0 predict dataset(s).
+[2026-11-06 19:23:53,932][nequip.data.stats_manager][INFO] - [rank: 0] Computed data statistics:
+[2026-11-06 19:23:53,933][nequip.data.stats_manager][INFO] - [rank: 0] num_neighbors_mean: 29.86057854873739
+[2026-11-06 19:23:53,933][nequip.data.stats_manager][INFO] - [rank: 0] per_type_num_neighbors_mean_Ge: 28.94671457989789
+[2026-11-06 19:23:53,933][nequip.data.stats_manager][INFO] - [rank: 0] per_type_num_neighbors_mean_Sb: 27.23128906086896
+[2026-11-06 19:23:53,933][nequip.data.stats_manager][INFO] - [rank: 0] per_type_num_neighbors_mean_Te: 27.23571150981763
+[2026-11-06 19:23:53,933][nequip.data.stats_manager][INFO] - [rank: 0] per_type_num_neighbors_mean_C: 60.2332166770538
+[2026-11-06 19:23:53,933][nequip.data.stats_manager][INFO] - [rank: 0] per_atom_energy_mean: 0.23695471692825174
+[2026-11-06 19:23:53,933][nequip.data.stats_manager][INFO] - [rank: 0] forces_rms: 0.8839411769890646
+[2026-11-06 19:23:53,933][nequip.data.stats_manager][INFO] - [rank: 0] per_type_forces_rms_Ge: 0.6989488298831164
+[2026-11-06 19:23:53,934][nequip.data.stats_manager][INFO] - [rank: 0] per_type_forces_rms_Sb: 0.7894764041258028
+[2026-11-06 19:23:53,934][nequip.data.stats_manager][INFO] - [rank: 0] per_type_forces_rms_Te: 0.7944268986466869
+[2026-11-06 19:23:53,934][nequip.data.stats_manager][INFO] - [rank: 0] per_type_forces_rms_C: 1.8231280276490547
+[2026-11-06 19:23:53,939][nequip.scripts.train][INFO] - [rank: 0] Building model and training_module from scratch ...
+[2026-11-06 19:23:54,267][nequip.scripts.train][INFO] - [rank: 0] TRAIN RUN START
+[2026-11-09 18:25:12,285][nequip.scripts.train][INFO] - [rank: 0] TRAIN RUN END
+[2026-11-09 18:25:12,286][nequip.scripts.train][INFO] - [rank: 0] VAL RUN START
+[2026-11-09 18:26:05,751][nequip.scripts.train][INFO] - [rank: 0] VAL RUN END
+[2026-11-09 18:26:05,752][nequip.scripts.train][INFO] - [rank: 0] TEST RUN START
+[2026-11-09 18:26:35,544][nequip.scripts.train][INFO] - [rank: 0] TEST RUN END

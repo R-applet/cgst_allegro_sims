@@ -1,0 +1,182 @@
+run:
+- train
+- val
+- test
+cutoff_radius: 6.0
+num_layers: 1
+l_max: 3
+num_features: 64
+num_scalar_features: 128
+num_tensor_features: 16
+lr: 0.001
+batch_size: 1
+chemical_symbols:
+- Ge
+- Sb
+- Te
+- C
+model_type_names: ${chemical_symbols}
+monitored_metric: val0_epoch/forces_rmse
+data:
+  _target_: nequip.data.datamodule.ASEDataModule
+  seed: 456
+  split_dataset:
+    file_path: ../../CGST/cgst_train_paw.xyz
+    train: 0.8
+    val: 0.2
+  test_file_path: ../../CGST/cgst_test_paw.xyz
+  transforms:
+  - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
+    model_type_names: ${model_type_names}
+    chemical_species_to_atom_type_map:
+      Ge: Ge
+      Sb: Sb
+      Te: Te
+      C: C
+  - _target_: nequip.data.transforms.NeighborListTransform
+    r_max: ${cutoff_radius}
+  train_dataloader:
+    _target_: torch.utils.data.DataLoader
+    batch_size: ${batch_size}
+    num_workers: 0
+    shuffle: true
+  val_dataloader:
+    _target_: torch.utils.data.DataLoader
+    batch_size: ${batch_size}
+    num_workers: ${data.train_dataloader.num_workers}
+  stats_manager:
+    _target_: nequip.data.CommonDataStatisticsManager
+    dataloader_kwargs:
+      batch_size: ${batch_size}
+    type_names: ${model_type_names}
+trainer:
+  _target_: lightning.Trainer
+  enable_checkpointing: true
+  num_nodes: 1
+  devices: 2
+  strategy:
+    _target_: nequip.train.SimpleDDPStrategy
+  max_epochs: 1500
+  max_time: 02:23:00:00
+  log_every_n_steps: 20
+  logger:
+    _target_: lightning.pytorch.loggers.wandb.WandbLogger
+    project: cgst
+    name: rushik_zbl_short_paw
+    save_dir: ${hydra:runtime.output_dir}
+  callbacks:
+  - _target_: nequip.train.callbacks.TestTimeXYZFileWriter
+    out_file: ${hydra:runtime.output_dir}/test
+    output_fields_from_original_dataset:
+    - total_energy
+    - forces
+    chemical_symbols: ${chemical_symbols}
+  - _target_: lightning.pytorch.callbacks.ModelCheckpoint
+    monitor: ${monitored_metric}
+    dirpath: ${hydra:runtime.output_dir}
+    filename: best
+    save_last: true
+  - _target_: lightning.pytorch.callbacks.ModelCheckpoint
+    dirpath: ${hydra:runtime.output_dir}
+    filename: latest
+    monitor: null
+    every_n_epochs: 1
+    save_top_k: 1
+    enable_version_counter: false
+  - _target_: lightning.pytorch.callbacks.LearningRateMonitor
+    logging_interval: epoch
+training_module:
+  _target_: nequip.train.EMALightningModule
+  ema_decay: 0.999
+  loss:
+    _target_: nequip.train.EnergyForceStressLoss
+    per_atom_energy: true
+    coeffs:
+      total_energy: 1.0
+      forces: 1.0
+      stress: 1.0
+  val_metrics:
+    _target_: nequip.train.EnergyForceStressMetrics
+    coeffs:
+      per_atom_energy_rmse: 1.0
+      forces_rmse: 1.0
+      stress_rmse: 1.0
+      total_energy_rmse: null
+      per_atom_energy_mae: null
+      forces_mae: null
+      stress_mae: null
+  train_metrics: ${training_module.val_metrics}
+  test_metrics: ${training_module.val_metrics}
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: ${lr}
+  lr_scheduler:
+    scheduler:
+      _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+      factor: 0.5
+      patience: 30
+      threshold: 0.0001
+      min_lr: 1.0e-05
+    monitor: ${monitored_metric}
+    interval: epoch
+    frequency: 1
+  model:
+    _target_: allegro.model.AllegroModel
+    seed: 456
+    model_dtype: float64
+    type_names: ${model_type_names}
+    r_max: ${cutoff_radius}
+    radial_chemical_embed:
+      _target_: allegro.nn.TwoBodyBesselScalarEmbed
+      num_bessels: 10
+      bessel_trainable: true
+      polynomial_cutoff_p: 6
+    radial_chemical_embed_dim: ${num_scalar_features}
+    scalar_embed_mlp_hidden_layers_depth: 1
+    scalar_embed_mlp_hidden_layers_width: ${num_scalar_features}
+    scalar_embed_mlp_nonlinearity: silu
+    l_max: ${l_max}
+    num_layers: ${num_layers}
+    num_scalar_features: ${num_scalar_features}
+    num_tensor_features: ${num_tensor_features}
+    allegro_mlp_hidden_layers_depth: 3
+    allegro_mlp_hidden_layers_width: ${num_scalar_features}
+    allegro_mlp_nonlinearity: silu
+    parity: true
+    tp_path_channel_coupling: true
+    readout_mlp_hidden_layers_depth: 1
+    readout_mlp_hidden_layers_width: ${num_scalar_features}
+    readout_mlp_nonlinearity: silu
+    avg_num_neighbors: ${training_data_stats:num_neighbors_mean}
+    per_type_energy_shifts:
+      Ge: 4.70127
+      Sb: 4.47921
+      Te: 3.04859
+      C: 9.21423
+    pair_potential:
+      _target_: nequip.nn.pair_potential.ZBL
+      units: metal
+      chemical_species: ${chemical_symbols}
+      polynomial_cutoff_p: 2
+      r_max: ${cutoff_radius}
+      per_edge_type_cutoff:
+        C:
+          C: 1.4
+          Ge: 1.95
+          Sb: 2.15
+          Te: 2.1
+        Ge:
+          C: 1.95
+          Ge: 2.5
+          Sb: 2.7
+          Te: 2.65
+        Sb:
+          C: 2.15
+          Ge: 2.7
+          Sb: 2.9
+          Te: 2.85
+        Te:
+          C: 2.1
+          Ge: 2.65
+          Sb: 2.85
+          Te: 2.8
