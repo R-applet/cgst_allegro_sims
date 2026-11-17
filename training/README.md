@@ -58,6 +58,33 @@ Per-pair ZBL cutoffs (`per_edge_type_cutoff`) need the modified nequip in `zbl_u
 (`config_run2_scratch_ep51.yaml`) via `ModelFromCheckpoint` on 1 GPU (`config_ft51_paw.yaml`). Kept for the record
 only; `CHANGELOG_ft51.md` is the full log of how the data, shifts and filters above were arrived at.
 
+## Checkpoints
+
+Each `configs/<training directory>/best.ckpt` is that run's best checkpoint (lowest validation force RMSE);
+sha256 in `CHECKPOINTS.sha256`. They are tracked through an exception in the top-level `.gitignore`
+(`*.ckpt` stays ignored everywhere else).
+
+| folder | `MODEL_ID` | best epoch | sha256 (first 16) |
+|---|---|---|---|
+| `nequip_no_zbl` | `nozbl_paw` | 503 | `ed645c56ddeb3311` |
+| `rushik_zbl_super_short` | `zbl_paw` | 497 | `f448d7bc4c6658f3` |
+| `rushik_zbl_dataedge` | — | 496 | `4e45d86354fe6157` |
+| `rushik_zbl_short` | — | 497 | `2e37ba0f594a3738` |
+| `nequip_zbl` | — | 507 | `6feb183a45a9c2e4` |
+| `run5_ep301_finetune` | `run5_ep301` | 301 | `b6ae59f20a2fdcbb` |
+
+The `nozbl_paw`, `zbl_paw` and `run5_ep301` hashes match `models/provenance.md`.
+
+Loading: `nequip.ase.NequIPCalculator._from_saved_model(ckpt)` or `nequip-compile` (see `models/compile_model.sh`).
+Per-pair ZBL models need the modified nequip from `zbl_updated/` on `PYTHONPATH`; stock nequip 0.17.1 is enough for
+`nequip_no_zbl` and `nequip_zbl`. Compiling reads one training frame through the checkpoint's relative data path, so
+run it from a directory where `../../CGST/cgst_train_paw.xyz` (or `../cgst_train_paw.xyz`) resolves.
+
+`run5_ep301_finetune/best.ckpt` is not self-contained: it was built with `ModelFromCheckpoint` and loads its starting
+model from the absolute path `/depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/outputs/2026-10-22/09-32-54/best.ckpt`.
+That file is included as `run5_ep301_finetune/parent_run2_ep51.ckpt`; copy it to that path (or edit
+`hyper_parameters.info_dict.training_module.model.checkpoint_path` in the checkpoint) before loading on another machine.
+
 ## Notes
 
 - Never resume or fine-tune on 2 GPUs: twice (ModelFromCheckpoint, and `++ckpt_path` resume) the weights went NaN

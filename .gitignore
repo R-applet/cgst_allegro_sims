@@ -29,3 +29,6 @@ __pycache__/
 tests/latent_feasibility/features.npz
 # reference copies of run inputs written by common/run_lmp.sh; the test inputs are tracked themselves
 tests/**/lmp_inputs/
+# exception: the trained best checkpoints that go with the training configs (training/README.md)
+!training/configs/*/best.ckpt
+!training/configs/run5_ep301_finetune/parent_run2_ep51.ckpt
