@@ -8,7 +8,7 @@ sqrt(n)); the seeds of one amorphous phase settle at different densities (each g
 that error is the one to quote. Then each crystal against the amorphous cell of the same potential.
 
 Writes phases/results/<MODEL_ID>/npt_runs.txt and npt_summary.txt for each model given, and with two or more models
-phases/results/npt_compare.txt (one table of every model).
+phases/report/npt_compare.txt (one table of every model).
 
 Usage: python analysis/phases_npt.py [--avg-ps 100] MODEL_ID [MODEL_ID ...]
 """
@@ -94,7 +94,7 @@ def main():
         for m, s in allsum.items():
             lines.append(f"{m:22s}" + "".join(f"{s[p]['rho']:10.3f} +- {s[p]['se']:.3f}" for p in phases)
                          + "".join(f"{g[m][p][0]:+9.2f}% +- {g[m][p][1]:.2f}" for p in cols) + "\n")
-        (PH / "results" / "npt_compare.txt").write_text("".join(lines))
+        (PH / "report" / "npt_compare.txt").write_text("".join(lines))
         print("".join(lines), end="")
 
 

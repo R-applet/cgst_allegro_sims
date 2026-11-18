@@ -33,11 +33,12 @@ each; analysis job 12431380 (23 min). Outputs here: `phases_summary.txt`, `phase
 Definitions as in `../nequip_no_zbl/RESULTS.md` (R: RDF misfit over 1.5–6 Å, 0 = identical; overlaps: shared area of
 the normalized curves, 1 = identical). Per species and for C: `phases_summary.txt`.
 
-**Reading: rushik_zbl_pairwise reproduces the DFT phases as the other two potentials do;** every metric but one lies within about
-the seed spread of theirs, so at 300 K the short-range term makes no measurable difference in these cells. The one
-difference larger than the seed spread is the RDF misfit of amorphous GST + 10% C (R 0.089 ± 0.011 against 0.071 and
-0.075): the C-bond peak at 2.0 Å is taller than DFT's (g ≈ 0.9 against 0.65) and the second shell (3.4–4.8 Å) sits
-slightly outward, below DFT's on its inner side and above it on its outer side (`figures/am_c10.png`).
+**Reading: rushik_zbl_pairwise reproduces the DFT phases as the other two potentials do;** every metric lies within about the seed
+spread of theirs, so at 300 K the short-range term makes no measurable difference in these cells. The largest gap is
+the RDF misfit of amorphous GST + 10% C, R 0.089 ± 0.006 (standard error of 3 seeds) against 0.071 ± 0.008 and
+0.075 ± 0.005: under 2 standard errors, and the deviation from DFT has the same shape for all three potentials (the
+C-bond peak at 2.0 Å taller than DFT's, g ≈ 0.9 against 0.65, and the second shell, 3.4–4.8 Å, shifted outward;
+`figures/am_c10.png`, `phases/report/figures/am_c10_detail.png`).
 The C vibrations agree least with DFT for all three potentials (C VDOS overlap 0.5–0.7, ⟨ν_C⟩ up to 20% high in
 am_c10), and cub_c1's two C atoms make its C metrics noisy.
 
@@ -61,11 +62,13 @@ each run's `lmp_inputs/`) that have the same settings as `in.npt`.
 
 - **Cubic crystal vs glass +0.20% ± 0.18%, hexagonal +1.41% ± 0.18%** (in density; the
   crystals are 109 and 144 meV/atom lower in energy). The three potentials agree
-  (`../npt_compare.txt`): the rocksalt crystal is as dense as the glass, the trigonal one about 1.5% denser.
+  (`../../report/npt_compare.txt`): the rocksalt crystal is as dense as the glass, the trigonal one about 1.5% denser.
 - The DFT cells are not at this potential's zero pressure: the crystals expand by about 1% and the glass contracts,
   so the DFT-cell gaps (cubic +1.9%, hexagonal +3.5%) mostly close at 0 bar.
 - Each crystal stays crystalline (no drift of density or PE over 500 ps); the cells stretch about 0.85% along one
   axis (cubic) and 0.8–0.9% along c (hexagonal). The glass seeds settle 0.02–0.03 g/cc apart and stay there.
+
+The three potentials compared, with figures and slides: `phases/report/` (`phases_report.pdf`).
 
 ## Caveats
 Those of `../nequip_no_zbl/RESULTS.md` apply unchanged (the DFT references and the method): the DFT-MD of these

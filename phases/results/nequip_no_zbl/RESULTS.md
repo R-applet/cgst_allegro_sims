@@ -107,11 +107,13 @@ each run's `lmp_inputs/`) that have the same settings as `in.npt`.
 
 - **Cubic crystal vs glass -0.15% ± 0.21%, hexagonal +1.47% ± 0.21%** (in density; the
   crystals are 107 and 144 meV/atom lower in energy). The three potentials agree
-  (`../npt_compare.txt`): the rocksalt crystal is as dense as the glass, the trigonal one about 1.5% denser.
+  (`../../report/npt_compare.txt`): the rocksalt crystal is as dense as the glass, the trigonal one about 1.5% denser.
 - The DFT cells are not at this potential's zero pressure: the crystals expand by about 1% and the glass contracts,
   so the DFT-cell gaps (cubic +1.9%, hexagonal +3.5%) mostly close at 0 bar.
 - Each crystal stays crystalline (no drift of density or PE over 500 ps); the cells stretch about 0.85% along one
   axis (cubic) and 0.8–0.9% along c (hexagonal). The glass seeds settle 0.02–0.03 g/cc apart and stay there.
+
+The three potentials compared, with figures and slides: `phases/report/` (`phases_report.pdf`).
 
 ## Caveats
 - **The DFT ADF files used two Sb–Te bond cutoffs.** The depot's `compute_adf.py` scripts say 3.4 Å, but hex_gst's

@@ -5,8 +5,8 @@ and 10 at.% C; rocksalt and trigonal GST + 0 and 1.4% C; 144–160 atoms), compa
 temperature, timestep and window: the radial distribution function (RDF), the bond-angle distribution (ADF) and the
 vibrational density of states (VDOS), total and per species (NVT). The C-free cells (amorphous, rocksalt, trigonal
 GST) are also run at 0 bar (NPT), for each potential's own density and cell of each phase. Results per potential:
-`results/<MODEL_ID>/RESULTS.md`; NPT across potentials: `results/npt_compare.txt`. Runs: `runs/<MODEL_ID>/nvt/` and
-`runs/<MODEL_ID>/npt/` (not tracked).
+`results/<MODEL_ID>/RESULTS.md`; the potentials compared: `report/` (`phases_report.pdf`, `phases_slides.pptx`,
+`npt_compare.txt`). Runs: `runs/<MODEL_ID>/nvt/` and `runs/<MODEL_ID>/npt/` (not tracked).
 
 ## Layout
 - `structures/`: the 8 cells as LAMMPS data files (`convert_dft_cells.py`; the table of cells in its `README.md`).
@@ -25,6 +25,9 @@ GST) are also run at 0 bar (NPT), for each potential's own density and cell of e
   `1009 (i + 1) + 7`; run directory `runs/<MODEL_ID>/nvt/<phase>[_<TAG>]_r<k>/`.
 - `submit_npt.sh`: the NPT runs as a job array, index i → phase `NPT_PHASES[i / NREP]`, replica `i % NREP + 1`, with
   the velocity seed of the NVT run of the same phase and replica; run directory `runs/<MODEL_ID>/npt/<phase>_r<k>/`.
+- `report/`: the comparison of the potentials. `make_figures.py` reads every potential's analysed runs and the DFT
+  references with `analysis/phases_compare.py`'s own functions and writes `figures/` and `metrics_compare.txt` (every
+  number the report quotes); `phases_report.tex` → `phases_report.pdf`; `build_deck.js` → `phases_slides.pptx`.
 - `submit_analysis.sh`: `analysis/phases_compare.py analyze` on every finished run (4 at a time), the `dft-check`
   validation, then `compare` → `results/<MODEL_ID>/` (tables, per-phase figures and `figures/summary.png`).
 
@@ -49,7 +52,7 @@ GST) are also run at 0 bar (NPT), for each potential's own density and cell of e
   after `NPT_AVG_PS` (the volume settles within 50–100 ps), and its error is the standard error over the 3 seeds,
   because each 144-atom glass keeps its own structure at 300 K and the seeds settle 0.02–0.03 g/cc apart (crystal
   seeds agree to 0.0003). `analysis/phases_npt.py` writes `npt_runs.txt` and `npt_summary.txt` per potential (with
-  each crystal against the amorphous cell) and `results/npt_compare.txt` across potentials.
+  each crystal against the amorphous cell) and `report/npt_compare.txt` across potentials.
 - **Relaxation check.** The amorphous cells relax during the window (PE drift ~−0.01 eV/atom over 20 ps for
   nequip_no_zbl). Runs tagged `eq25` repeat them with the same seeds and `EQ_PS=25`, and `compare` pairs them by seed
   (`phases_relaxation.txt`).
@@ -63,6 +66,15 @@ sbatch submit_analysis.sh                                           # after both
 sbatch --array=0-8 submit_npt.sh                                    # NPT: 3 C-free phases x 3 seeds, ~12 min each
 ../env/cgst-ana/bin/python ../analysis/phases_npt.py <MODEL_ID> [...]   # NPT densities (seconds; with every model: npt_compare.txt)
 ```
+The comparison report, after every potential's analysis (`MODELS` in `report/make_figures.py`; about 1 min):
+```
+../env/cgst-ana/bin/python report/make_figures.py                   # figures/ and metrics_compare.txt
+cd report && module load texlive/20220321 && pdflatex phases_report.tex && pdflatex phases_report.tex
+NODE_PATH=<dir with node_modules/pptxgenjs> PPTX_SKILL=<pptx skill dir> node build_deck.js
+```
+Node.js and `pptxgenjs` are not part of `env/` or the cluster: `pip install --target <dir> nodejs-bin` into a scratch
+directory provides node, then `npm install pptxgenjs` there. The deck's numbers are typed in `build_deck.js` and the
+report's in `phases_report.tex`, both from `metrics_compare.txt` and `npt_compare.txt`: update them when those change.
 Each NVT run's dump is ~260 MB (9.4 GB for the 36 runs of a potential); NPT runs write no trajectory; `runs/` is not
 tracked.
 

@@ -174,7 +174,10 @@ Independent of the other studies; needs only steps A–B. `phases/params/<MODEL_
    (am, cub and hex GST, 3 seeds, ~12 min each), then `env/cgst-ana/bin/python analysis/phases_npt.py <every MODEL_ID>`
    from the repository root. **Pass:** no drift of density or PE in the crystals (each stays crystalline).
 6. **Write-up:** `phases/results/<MODEL_ID>/RESULTS.md`: the metrics per phase against DFT and the other potentials,
-   the relaxation effect, and the 0 bar densities (`npt_summary.txt`, `../npt_compare.txt`).
+   the relaxation effect, and the 0 bar densities (`npt_summary.txt`, `phases/report/npt_compare.txt`).
+7. **Comparison report** (when every potential has finished steps 1–6): add it to `MODELS` in
+   `phases/report/make_figures.py`, rebuild figures, PDF and slides (`phases/README.md`, Running), and update the
+   numbers in `phases_report.tex` and `build_deck.js` from `metrics_compare.txt`.
 
 ## What carries over, and what does not
 - Carries over: the inputs, scripts, analysis code and their tests; the Q4 criterion *form* (Ge/Sb/Te only); the
