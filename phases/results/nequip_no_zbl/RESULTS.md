@@ -2,7 +2,7 @@
 
 Method: `phases/README.md`. Settings: `phases/params/nequip_no_zbl.sh` (8 DFT cells of 144–160 atoms, 300 K Nosé–Hoover
 NVT at the DFT volume, 1 fs, 5 ps equilibration + 20 ps production dumped every step, 3 seeds per phase). Runs in
-`phases/runs/nequip_no_zbl/`, each with its input record in `lmp_inputs/log.phases/`. Analysis:
+`phases/runs/nequip_no_zbl/nvt/`, each with its input record in `lmp_inputs/log.phases/`. Analysis:
 `analysis/phases_compare.py` (definitions in its docstring), through `phases/submit_analysis.sh`.
 
 **Status (2026-11-16):** done. 24 standard runs (pilot array 12402180 tasks 9 and 21, production array 12402403) and
@@ -90,6 +90,28 @@ The relaxation stiffens the Ge/Sb/Te vibrations by up to 0.08 THz (≤ 2%, towar
 spectral metric by about the seed-to-seed spread or less; am_c5's RDF R and ADF overlap move by 2–4 spreads, still by
 only 0.014 and 0.012. **No conclusion above changes.** The standard window, which is the one DFT used (the first 5 of
 25 ps discarded), stays the main comparison.
+
+## Density at 0 bar (NPT; `npt_runs.txt`, `npt_summary.txt`)
+
+The C-free cells at 300 K and 0 bar for 500 ps, 3 seeds each (those of the NVT runs; `phases/in.npt`, isotropic
+barostat for the amorphous cell, full cell relaxation for the crystals), jobs 12414363 (amorphous, 2026-11-17) and 12429530 (crystals, 2026-11-18) on alta k-nodes; density averaged
+over 100–500 ps, ± the standard error over the seeds. Runs in `phases/runs/nequip_no_zbl/npt/`. They were run before
+`phases/in.npt` and `submit_npt.sh` existed, with inputs outside the repository (recorded in
+each run's `lmp_inputs/`) that have the same settings as `in.npt`.
+
+| phase | DFT cell (g/cc) | nequip_no_zbl (g/cc) | nequip_zbl / rushik_zbl_pairwise | PE (eV/atom) |
+|---|---|---|---|---|
+| am_gst | 6.193 | 6.251 ± 0.013 | 6.246 / 6.232 | -0.112 |
+| cub_gst | 6.311 | 6.241 ± 0.000 | 6.248 / 6.245 | -0.219 |
+| hex_gst | 6.412 | 6.343 ± 0.000 | 6.342 / 6.321 | -0.256 |
+
+- **Cubic crystal vs glass -0.15% ± 0.21%, hexagonal +1.47% ± 0.21%** (in density; the
+  crystals are 107 and 144 meV/atom lower in energy). The three potentials agree
+  (`../npt_compare.txt`): the rocksalt crystal is as dense as the glass, the trigonal one about 1.5% denser.
+- The DFT cells are not at this potential's zero pressure: the crystals expand by about 1% and the glass contracts,
+  so the DFT-cell gaps (cubic +1.9%, hexagonal +3.5%) mostly close at 0 bar.
+- Each crystal stays crystalline (no drift of density or PE over 500 ps); the cells stretch about 0.85% along one
+  axis (cubic) and 0.8–0.9% along c (hexagonal). The glass seeds settle 0.02–0.03 g/cc apart and stay there.
 
 ## Caveats
 - **The DFT ADF files used two Sb–Te bond cutoffs.** The depot's `compute_adf.py` scripts say 3.4 Å, but hex_gst's

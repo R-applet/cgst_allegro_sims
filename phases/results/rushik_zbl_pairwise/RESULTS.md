@@ -2,7 +2,7 @@
 
 Method: `phases/README.md`. Settings: `phases/params/rushik_zbl_pairwise.sh`, identical to nequip_no_zbl's (8 DFT cells of 144–160
 atoms, 300 K Nosé–Hoover NVT at the DFT volume, 1 fs, 5 ps equilibration + 20 ps production dumped every step, 3 seeds
-per phase, the same seeds). Runs in `phases/runs/rushik_zbl_pairwise/`. Analysis: `analysis/phases_compare.py` through
+per phase, the same seeds). Runs in `phases/runs/rushik_zbl_pairwise/nvt/`. Analysis: `analysis/phases_compare.py` through
 `phases/submit_analysis.sh`.
 
 **Status (2026-11-18):** done, on perc A100-40GB n-nodes with `--export=ALL,MODEL_ID=rushik_zbl_pairwise,PMIX_MCA_gds=hash`: pilot
@@ -44,6 +44,28 @@ am_c10), and cub_c1's two C atoms make its C metrics noisy.
 ## Effect of the relaxation (`phases_relaxation.txt`)
 dPE_prod (eV/atom, last minus first 2 ps of the window), standard / `_eq25`: am_gst -0.0074 / -0.0049; am_c1 -0.0107 / -0.0055; am_c5 -0.0109 / -0.0017; am_c10 -0.0123 / -0.0046. The longer
 equilibration moves the Ge/Sb/Te metrics by about the seed spread or less, as for nequip_no_zbl.
+
+## Density at 0 bar (NPT; `npt_runs.txt`, `npt_summary.txt`)
+
+The C-free cells at 300 K and 0 bar for 500 ps, 3 seeds each (those of the NVT runs; `phases/in.npt`, isotropic
+barostat for the amorphous cell, full cell relaxation for the crystals), job array 12430604 (2026-11-18) on perc n-nodes; density averaged
+over 100–500 ps, ± the standard error over the seeds. Runs in `phases/runs/rushik_zbl_pairwise/npt/`. They were run before
+`phases/in.npt` and `submit_npt.sh` existed, with inputs outside the repository (recorded in
+each run's `lmp_inputs/`) that have the same settings as `in.npt`.
+
+| phase | DFT cell (g/cc) | rushik_zbl_pairwise (g/cc) | nequip_no_zbl / nequip_zbl | PE (eV/atom) |
+|---|---|---|---|---|
+| am_gst | 6.193 | 6.232 ± 0.011 | 6.251 / 6.246 | -0.110 |
+| cub_gst | 6.311 | 6.245 ± 0.000 | 6.241 / 6.248 | -0.219 |
+| hex_gst | 6.412 | 6.321 ± 0.000 | 6.343 / 6.342 | -0.254 |
+
+- **Cubic crystal vs glass +0.20% ± 0.18%, hexagonal +1.41% ± 0.18%** (in density; the
+  crystals are 109 and 144 meV/atom lower in energy). The three potentials agree
+  (`../npt_compare.txt`): the rocksalt crystal is as dense as the glass, the trigonal one about 1.5% denser.
+- The DFT cells are not at this potential's zero pressure: the crystals expand by about 1% and the glass contracts,
+  so the DFT-cell gaps (cubic +1.9%, hexagonal +3.5%) mostly close at 0 bar.
+- Each crystal stays crystalline (no drift of density or PE over 500 ps); the cells stretch about 0.85% along one
+  axis (cubic) and 0.8–0.9% along c (hexagonal). The glass seeds settle 0.02–0.03 g/cc apart and stay there.
 
 ## Caveats
 Those of `../nequip_no_zbl/RESULTS.md` apply unchanged (the DFT references and the method): the DFT-MD of these

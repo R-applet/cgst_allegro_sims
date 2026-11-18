@@ -10,7 +10,7 @@
 #SBATCH --job-name=cgst-phases-ana
 #SBATCH --output=slurm-analysis-%j.out
 # Analysis of the phases runs (analysis/phases_compare.py; CPU only, the GPU is the partition's minimum):
-#   sbatch submit_analysis.sh                     every finished run in runs/<MODEL_ID>/ without analysis/, then compare
+#   sbatch submit_analysis.sh                     every finished run in runs/<MODEL_ID>/nvt/ without analysis/, then compare
 #   sbatch --export=ALL,REDO=1 submit_analysis.sh  every finished run
 # Four runs at a time, 4 OpenMP threads each for DoSPT. Runs listed in EXACT_V (default: the two pilot runs) also get
 # the DoSPT spectrum from the dumped velocities (the check of DoSPT's estimated velocities). Then dft-check on the
@@ -23,7 +23,7 @@ PY=$ROOT/env/cgst-ana/bin/python
 EXACT_V=${EXACT_V:-"am_c10_r1 hex_c1_r1"}
 export SLURM_CPUS_PER_TASK=4 TMPDIR=${TMPDIR:-/tmp}
 todo=()
-for r in runs/$MODEL_ID/*_r*; do
+for r in runs/$MODEL_ID/nvt/*_r*; do
     grep -q "phases: .* done" $r/log.phases 2>/dev/null || { echo "skip $r: not finished"; continue; }
     [ -n "${REDO:-}" ] || [ ! -e $r/analysis/vdos_species.txt ] && todo+=($r)
 done

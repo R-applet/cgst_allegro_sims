@@ -1,0 +1,7 @@
+# analysis/phases_npt.py: 300 K, 0 bar NPT (phases/in.npt); averages after 100 ps; rho in g/cc
+# MODEL_ID rushik_zbl_pairwise; +- = standard error over the replicas
+am_gst     n=3  rho 6.2324 +- 0.0112  PE -0.1097
+cub_gst    n=3  rho 6.2451 +- 0.0001  PE -0.2188  cell +0.06% +0.86% +0.15%
+hex_gst    n=3  rho 6.3205 +- 0.0003  PE -0.2536  cell +0.26% +0.27% +0.91%
+cub_gst - amorphous: +0.20% +- 0.18% in density, -109 meV/atom in PE
+hex_gst - amorphous: +1.41% +- 0.18% in density, -144 meV/atom in PE

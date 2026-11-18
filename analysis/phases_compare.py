@@ -2,7 +2,7 @@
 
 Stages (env/cgst-ana python; `analyze` is the heavy one, run it through Slurm):
   analyze RUN_DIR... [--exact-v] [--every N]
-      per run (runs/<MODEL_ID>/<phase>_r<k>/, traj.lammpstrj from phases/in.phases) -> RUN_DIR/analysis/:
+      per run (runs/<MODEL_ID>/nvt/<phase>_r<k>/, traj.lammpstrj from phases/in.phases) -> RUN_DIR/analysis/:
         rdf.txt           r (A) on the phase's DFT grid, total g(r), then the 10 partials (Allegro only: DFT has totals)
         adf.txt           bond angle (deg, the DFT file's bins: 90 of 2 deg, 100 of 1.8 for hex_c1), normalized density, with ADF_CUTOFFS (the DFT's);
                           header: angles per frame. adf_sbte34.txt: the same with Sb-Te 3.4 A (see SBTE_ALT)
@@ -12,7 +12,7 @@ Stages (env/cgst-ana python; `analyze` is the heavy one, run it through Slurm):
         vdos_species_v.txt  (--exact-v) the same from the dumped velocities, to check the estimate
       RDF and ADF use every N-th frame (default 10: 2000 of 20000); DoSPT uses every frame.
   compare [--model-id ID]
-      every analysed run in phases/runs/<MODEL_ID>/ against phases/dft/<phase>/ -> phases/results/<MODEL_ID>/:
+      every analysed run in phases/runs/<MODEL_ID>/nvt/ against phases/dft/<phase>/ -> phases/results/<MODEL_ID>/:
         phases_runs.txt (one row per run), phases_summary.txt (per phase, mean +- sample std over replicas),
         figures/<group>.png|pdf, figures/summary.png|pdf (the metrics of the untagged groups across phases). A run group is <phase>[_<tag>] (run directory <phase>[_<tag>]_r<k>); a tagged group
         with the same seeds as its untagged one (e.g. am_c10_eq25: EQ_PS=25, the same trajectory 20 ps later) is
@@ -383,7 +383,7 @@ def sbte_of(phase, model_id):
     """Sb-Te cutoff (3.2 or SBTE_ALT) the phase's DFT ADF file was made with: the variant whose angles per frame,
     over this model's analysed untagged runs of the phase, come closest to the file's (adf_sbte in the outputs)."""
     dft_n = load_dft(phase)["adf"][:, 1].sum()
-    runs = [r for r in (PH / "runs" / model_id).glob(f"{phase}_r*") if (r / "analysis/adf_sbte34.txt").exists()]
+    runs = [r for r in (PH / "runs" / model_id / "nvt").glob(f"{phase}_r*") if (r / "analysis/adf_sbte34.txt").exists()]
     if not runs:
         return 3.2
     n = {v: np.mean([load_adf(r / "analysis" / f).angles_per_frame for r in runs])
@@ -399,9 +399,9 @@ def pe_drift(run, prod_ps):
 
 
 def compare(model_id):
-    runs = sorted(p for p in (PH / "runs" / model_id).glob("*_r*") if (p / "analysis/vdos_species.txt").exists())
+    runs = sorted(p for p in (PH / "runs" / model_id / "nvt").glob("*_r*") if (p / "analysis/vdos_species.txt").exists())
     if not runs:
-        sys.exit(f"no analysed runs in phases/runs/{model_id}/ (run the analyze stage)")
+        sys.exit(f"no analysed runs in phases/runs/{model_id}/nvt/ (run the analyze stage)")
     res = PH / "results" / model_id
     (res / "figures").mkdir(parents=True, exist_ok=True)
     keys = (["dPE_prod", "adf_sbte", "R_rdf", "r1", "g1", "adf_overlap", "adf_count_ratio", "adf_peak"]
@@ -469,7 +469,7 @@ def relaxation(res, keys, by_phase):
     fig, ax = plt.subplots(figsize=(7, 3.6))
     ramp = ["#86b6ef", "#5598e7", "#1c5cab", "#104281"]
     for c, g in zip(ramp, tagged):
-        runs = sorted((PH / "runs" / res.name).glob(f"{g}_r*"))
+        runs = sorted((PH / "runs" / res.name / "nvt").glob(f"{g}_r*"))
         curves = [np.loadtxt(r / "thermo.dat", skiprows=1, usecols=(0, 2)) for r in runs]
         n = min(len(x) for x in curves)
         t = curves[0][:n, 0]

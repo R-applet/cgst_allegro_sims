@@ -170,8 +170,11 @@ Independent of the other studies; needs only steps A–B. `phases/params/<MODEL_
    **Pass:** the exact-velocity VDOS overlap ≈ 1.000 for the `EXACT_V` runs and `dft-check` ADF overlap ≈ 1 with
    angles/frame ratio 1.000 (`slurm-analysis-*.out`). If only `compare` fails, rerun it alone:
    `env/cgst-ana/bin/python analysis/phases_compare.py compare --model-id <MODEL_ID>` (from the repository root).
-5. **Write-up:** `phases/results/<MODEL_ID>/RESULTS.md`: the metrics per phase against DFT and the other potentials,
-   and the relaxation effect.
+5. **NPT at 0 bar:** `sbatch -A perc -p a100-40gb --array=0-8 --export=ALL,MODEL_ID=<id>,PMIX_MCA_gds=hash submit_npt.sh`
+   (am, cub and hex GST, 3 seeds, ~12 min each), then `env/cgst-ana/bin/python analysis/phases_npt.py <every MODEL_ID>`
+   from the repository root. **Pass:** no drift of density or PE in the crystals (each stays crystalline).
+6. **Write-up:** `phases/results/<MODEL_ID>/RESULTS.md`: the metrics per phase against DFT and the other potentials,
+   the relaxation effect, and the 0 bar densities (`npt_summary.txt`, `../npt_compare.txt`).
 
 ## What carries over, and what does not
 - Carries over: the inputs, scripts, analysis code and their tests; the Q4 criterion *form* (Ge/Sb/Te only); the

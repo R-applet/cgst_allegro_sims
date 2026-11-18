@@ -22,7 +22,7 @@ of the data). Each is compared with DFT and with the others. Their training conf
 | Melt-quench | `meltquench/` | done: 15 glasses at 10 K/ps (4×4×4), x0 and x10 at 5 and 1 K/ps (1 K/ps partially crystallizes); density, Tm_app, Tg and structure against C; report and slides (`meltquench/results/nequip_no_zbl/`) | superheating pilot running (2026-11-18) | superheating pilot running (2026-11-18) |
 | Recrystallization | `recryst/` | calibration done, criterion 3.9 Å/0.6/4 (`recryst/calib/nequip_no_zbl/`); ramps x0, x5, x10 done (Tx 583, 650 K; x10 none below 900 K); Phase A (x0, 500–700 K) done; Phase B x1/x2p5 partly done, the rest of Phase B cancelled 2026-11-18 (`RUNBOOK.md`, status) | — | — |
 | Coexistence | `coexistence/` | planned | — | — |
-| Phases | `phases/` | done: 8 DFT cells (amorphous, rocksalt, trigonal; 0–10% C) at 300 K vs DFT-MD; RDF and ADF close (R 0.05–0.08, ADF overlap 0.92–0.98), Ge/Sb/Te VDOS 0–9% soft, C VDOS overlap 0.61–0.72 (`phases/results/nequip_no_zbl/RESULTS.md`) | done (2026-11-18): the same agreement with DFT as nequip_no_zbl within the seed spread (`phases/results/nequip_zbl/RESULTS.md`) | done (2026-11-18): the same, except am_c10 RDF R 0.089 vs 0.071–0.075 (`phases/results/rushik_zbl_pairwise/RESULTS.md`) |
+| Phases | `phases/` | done: 8 DFT cells (amorphous, rocksalt, trigonal; 0–10% C) at 300 K vs DFT-MD; RDF and ADF close (R 0.05–0.08, ADF overlap 0.92–0.98), Ge/Sb/Te VDOS 0–9% soft, C VDOS overlap 0.61–0.72 (`phases/results/nequip_no_zbl/RESULTS.md`); at 0 bar the rocksalt crystal is as dense as the glass, trigonal +1.5% (all three potentials, `phases/results/npt_compare.txt`) | done (2026-11-18): the same agreement with DFT as nequip_no_zbl within the seed spread (`phases/results/nequip_zbl/RESULTS.md`) | done (2026-11-18): the same, except am_c10 RDF R 0.089 vs 0.071–0.075 (`phases/results/rushik_zbl_pairwise/RESULTS.md`) |
 | Cascades | `cascades/` | planned | — | — |
 
 ## Study layout
@@ -64,7 +64,8 @@ potential, follow `RUNBOOK.md` A–B, then give each study a `params/<MODEL_ID>.
 - `analysis/`: post-processing with `env/`:
   - melt-quench: `mq_summary.py`, `mq_structure.py`;
   - recrystallization: `recryst_summary.py`, `rate_compare.py`;
-  - phases: `phases_compare.py` (RDF, ADF, VDOS vs DFT), `build_dospt.sh` (builds DoSPT into `env/dospt/`);
+  - phases: `phases_compare.py` (RDF, ADF, VDOS vs DFT), `phases_npt.py` (0 bar densities), `build_dospt.sh` (builds
+    DoSPT into `env/dospt/`);
   - shared helpers: `runio.py` (run-output readers) and `bondorder.py` (Q4 crystallinity, matching
     `common/in.analysis`);
   - `latent_features.py` (exploratory, `tests/latent_feasibility/`) runs in the container.

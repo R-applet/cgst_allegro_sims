@@ -18,7 +18,7 @@
 #     (amorphous phases; the same trajectory as the standard runs, analysed 20 ps later: the relaxation check)
 # PHASES, NREP, TEMP, DT, EQ_PS, PROD_PS and TDAMP_PS come from phases/params/<MODEL_ID>.sh (DT there overrides
 # the model's production DT); EQ_PS set in the environment overrides it. Array index i -> phase PHASES[i / NREP],
-# replica r = i % NREP + 1. Run directory: runs/<MODEL_ID>/<phase>[_<TAG>]_r<r>/ (MODEL_ID: common/model.sh); give a
+# replica r = i % NREP + 1. Run directory: runs/<MODEL_ID>/nvt/<phase>[_<TAG>]_r<r>/ (MODEL_ID: common/model.sh); give a
 # TAG whenever a setting differs from the params. Velocity seed = 1009*(i+1) + 7 (independent of TAG).
 set -euo pipefail
 cd $SLURM_SUBMIT_DIR
@@ -32,7 +32,7 @@ i=$SLURM_ARRAY_TASK_ID
 [ $i -lt $(( ${#PHASES[@]} * NREP )) ] || { echo "array index $i > $(( ${#PHASES[@]} * NREP - 1 ))" >&2; exit 1; }
 phase=${PHASES[$((i / NREP))]}
 rep=$((i % NREP + 1))
-run=runs/$MODEL_ID/${phase}${TAG:+_$TAG}_r${rep}
+run=runs/$MODEL_ID/nvt/${phase}${TAG:+_$TAG}_r${rep}
 mkdir -p $run && cd $run
 $ROOT/common/run_lmp.sh $SLURM_NTASKS -in $ROOT/phases/in.phases -log log.phases \
     -var root $ROOT -var phase $phase -var seed $((1009 * (i + 1) + 7)) -var model $MODEL -var dt $DT \

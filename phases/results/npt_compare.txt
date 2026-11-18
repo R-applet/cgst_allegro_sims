@@ -1,0 +1,6 @@
+# analysis/phases_npt.py: 300 K, 0 bar NPT (phases/in.npt); averages after 100 ps; rho in g/cc
+# rho +- standard error over the replicas; crystal - amorphous in % of the amorphous density
+model                             am_gst           cub_gst           hex_gst      cub_gst - am      hex_gst - am
+nequip_no_zbl              6.251 +- 0.013     6.241 +- 0.000     6.343 +- 0.000    -0.15% +- 0.21    +1.47% +- 0.21
+nequip_zbl                 6.246 +- 0.016     6.248 +- 0.000     6.342 +- 0.000    +0.03% +- 0.25    +1.55% +- 0.25
+rushik_zbl_pairwise        6.232 +- 0.011     6.245 +- 0.000     6.320 +- 0.000    +0.20% +- 0.18    +1.41% +- 0.18

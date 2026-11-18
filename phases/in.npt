@@ -1,0 +1,33 @@
+# NPT MD of one DFT-sized phase cell at 0 bar (phases/structures/<phase>.data): the potential's own equilibrium density
+# and cell of each phase at the DFT-MD temperature, compared across potentials and with the DFT cell (phases/README.md).
+#   velocities at temp (seed), Nose-Hoover NPT at 0 bar for run_ps; thermo.dat every 100 steps; final.data at the end.
+#   baro: iso for the amorphous cells (one scale factor), tri for the crystals (every cell length and tilt relaxes, so
+#   the crystal keeps its own shape). A tilt that passes half a box length is flipped by LAMMPS: the same lattice.
+#
+# Variables (-var on the command line; submit_npt.sh passes them from phases/params/<MODEL_ID>.sh):
+#   phase  a cell of phases/structures (submit_npt.sh: NPT_PHASES)
+#   root   project root (absolute path);  model  compiled model file for this node (common/defaults.sh)
+#   dt     timestep in ps;  seed  velocity seed;  temp  K;  run_ps  ps
+#   tdamp_ps, pdamp_ps  thermostat and barostat damping (ps);  baro  iso | tri
+# Outputs in the run directory: log.npt, thermo.dat (time T PE P V/atom rho lx ly lz xy xz yz), final.data.
+
+units           metal
+atom_style      atomic
+boundary        p p p
+
+read_data       ${root}/phases/structures/${phase}.data
+include         ${root}/common/in.potential
+
+variable        nrun equal round(${run_ps}/${dt})
+velocity        all create ${temp} ${seed} mom yes rot no dist gaussian loop geom
+fix             npt all npt temp ${temp} ${temp} ${tdamp_ps} ${baro} 0.0 0.0 ${pdamp_ps}
+variable        rho equal mass(all)/vol*1.66054
+
+thermo_style    custom step time temp pe press vol v_rho lx ly lz xy xz yz
+thermo          10000
+fix             th all print 100 "$(time) $(temp) $(pe/atoms) $(press) $(vol/atoms) $(v_rho) $(lx) $(ly) $(lz) $(xy) $(xz) $(yz)" file thermo.dat &
+                screen no title "time_ps T_K PE_eV_per_atom P_bar V_A3_per_atom rho_gcc lx ly lz xy xz yz"
+run             ${nrun}
+
+write_data      final.data
+print           "npt: ${phase} done, ${run_ps} ps"
