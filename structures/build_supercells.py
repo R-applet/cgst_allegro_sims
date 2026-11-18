@@ -1,4 +1,4 @@
-"""Build the NxNxN supercells (melt-quench and recrystallization: 4x4x4 from 2026-11-13; 3x3x3 for run5_ep301) from the
+"""Build the NxNxN supercells (melt-quench and recrystallization: 4x4x4) from the
 cleaned single rocksalt cells in structures/, named by atom count:
 
     x0_461.data     0 C               x5_486.data    25 C  (5.14 at.%)

@@ -19,7 +19,7 @@
 #   root   project root (absolute path)
 #   model  compiled model file (required: it must match the node's CPU type; submit scripts pass
 #          $MODEL from common/defaults.sh)
-#   dt     timestep in ps (tests/RESULTS.md, 1c)
+#   dt     timestep in ps (DT in common/model.sh, from tests/dt: test 1c)
 #   tscale optional, multiplies every duration and the MSD gate (testing only; 1 in production).
 #          Every stage must stay a whole number of ps (e.g. tscale 0.1 works with qrate 10).
 #   hold_ps optional, tmelt hold in ps before tscale (default 100; submit.sh passes HOLD_PS).

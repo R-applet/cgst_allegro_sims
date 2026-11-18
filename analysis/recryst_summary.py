@@ -8,8 +8,8 @@ ramp runs (ramp.dat):
             NaN unless it rose by at least RISE_MIN (0.2), i.e. the sample crystallized
   Tx_H      T of the fastest enthalpy release, max of -dH/dt (10 ps moving average), excluding the first 50 K
   Tx_rho    T of the fastest density change, max of |drho/dt| (10 ps moving average), excluding the first 50 K.
-            Sign-agnostic: in run5_ep301, as in its DFT reference, the glass is denser than the crystal
-            (tests/RESULTS.md 1g, 1k), so crystallization lowers the density instead of raising it as in experiment
+            Sign-agnostic: in this project's DFT reference the glass is about as dense as the crystal (test 1k,
+            tests/results/nequip_no_zbl/RESULTS.md), so crystallization need not raise the density as in experiment
   drho_x    signed density change across Tx_rho (g/cc): mean over 20 ps after minus 20 ps before
   xfrac_end xfracGST at the ramp's end (tmax, 900 K by default)
   Tx_H and Tx_rho always return a value; read them only when Tx_xfrac is finite (crystallization happened).
@@ -48,8 +48,8 @@ anneal: anneal_done.txt); others are listed and skipped.
             the Ge/Sb/Te atoms (periodic images bias it by < 0.5% up to 60%, -5% by 80%)
   single_grain  fraction of the window's frames in which no second cluster has --nucleated-size atoms (1: one grain
             throughout; below 0.8, i.e. a second grain in more than 20% of the frames, the radius mixes grains and
-            v_growth is an upper bound), NaN without a window. A fraction, not a flag: every run5_ep301 anneal showed a
-            short-lived second cluster in a frame or two (recryst/results/run5_ep301/RESULTS.md)
+            v_growth is an upper bound), NaN without a window. A fraction, not a flag, so that a
+            short-lived second cluster in a frame or two does not disqualify a run
   Per replica group:
   survival  n_nucleated of n_runs, J_surv = n_nucleated / (total observed hold time x V), runs that never nucleated
             counting as censored at t_end (maximum likelihood for an exponential waiting time), relative error
@@ -65,7 +65,7 @@ anneal: anneal_done.txt); others are listed and skipped.
 Replica groups (runio.group_of: the name without _r<rep>) with two or more runs also get mean +- sample std.
 Times in ps; NaN when the event did not happen within the run.
 Output starts with '#' header lines: MODEL_ID (environment, common/model.sh), the model file each run's log names, the
-criterion and end point used. A run whose log names a model other than MODEL_ID is reported as a WARNING line.
+criterion and end point used. A run whose log names a model other than MODEL_ID (or one of its MODEL_ALIASES) is reported as a WARNING line.
 
 Usage: python recryst_summary.py [--tscale S] [--x-crystal X | --x-end X]
        [--clusters --nucleated-size N [--nucleus-min N]]
@@ -317,7 +317,7 @@ def main():
     for r in set(a.runs) - set(ramps) - set(anneals):
         print(f"{r.name}: not a ramp_* or anneal_*_T<Ta>_* directory, skipped")
     expected = os.environ.get("MODEL_ID")
-    # ramps from before in.ramp took tmax (run5_ep301) end at 900 K and write no ramp_done.txt; their log has no tmax
+    # ramps from before in.ramp took tmax end at 900 K and write no ramp_done.txt; their log has no tmax
     old = [r for r in ramps if not (r / "ramp_done.txt").exists() and (r / "snap_900K.data").exists()
            and (r / "log.ramp").exists() and "tmax" not in (r / "log.ramp").read_text(errors="replace")]
     done = (complete_runs([r for r in ramps if r not in old], "ramp_done.txt") + old
@@ -327,8 +327,9 @@ def main():
     print(f"# x_c: {f'--x-end {a.x_end:g}' if a.x_end is not None else 'per run (x_c_from)'}"
           + (f"; clusters: criterion q_rc {a.q_rc:g} q_thr {a.q_thr:g} q_nmin {a.q_nmin}, t_nuc at "
              f"{a.nucleated_size} atoms" if a.clusters else ""))
+    accepted = {expected, *os.environ.get("MODEL_ALIASES", "").split()}  # earlier names of the same model (common/model.sh)
     for name, m in sorted(used.items()):
-        if expected and m != expected:
+        if expected and m not in accepted:
             print(f"WARNING: {name} ran with model {m}, not MODEL_ID {expected}")
     groups, cls = {}, {}
     for run in done:

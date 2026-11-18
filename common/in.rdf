@@ -6,7 +6,7 @@
 # Sb-Sb Sb-Te Sb-C Te-Te Te-C C-C), each with its running coordination number. 300 bins to 6.0 A.
 #
 # fix ave/time only writes on timesteps that are multiples of Nfreq, and only when the whole sampling window
-# lies after the fix was defined. The example run in md_meltquench lost its RDF for this reason. So first run
+# lies after the fix was defined. An early example run lost its RDF for this reason. So first run
 # "pad" steps up to the next multiple of Nfreq, then define the fix and run exactly one window.
 
 variable        rdf_N   equal round(${rdf_ps}/${dt})        # window length (steps) = Nfreq

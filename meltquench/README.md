@@ -1,15 +1,14 @@
 # Melt-quench (`meltquench/`)
 
-`in.meltquench` takes an N×N×N rocksalt cell (`structures/<SIZE>/<cell>.data`; `SIZE` in params: 444 for nozbl_paw;
-333 for run5_ep301, historical) through melt and quench to an amorphous sample at 300 K. Every stage is NPT, isotropic, 0 bar, with Nosé–Hoover damping Tdamp = 100 dt and Pdamp = 1000 dt.
+`in.meltquench` takes an N×N×N rocksalt cell (`structures/<SIZE>/<cell>.data`; `SIZE` in params: 444 for nequip_no_zbl) through melt and quench to an amorphous sample at 300 K. Every stage is NPT, isotropic, 0 bar, with Nosé–Hoover damping Tdamp = 100 dt and Pdamp = 1000 dt.
 
-This README describes the method; results are per model in `results/<MODEL_ID>/` (nozbl_paw:
-`results/nozbl_paw/RESULTS.md` and its `report/`; run5_ep301's, historical, in `results/run5_ep301/`). Runs go to `runs/<MODEL_ID>/`; `MODEL_ID` is set in
+This README describes the method; results are per model in `results/<MODEL_ID>/` (nequip_no_zbl:
+`results/nequip_no_zbl/RESULTS.md` and its `report/`). Runs go to `runs/<MODEL_ID>/`; `MODEL_ID` is set in
 `common/model.sh`, and the melt temperature, hold and quench rate come from `meltquench/params/<MODEL_ID>.sh`.
 
-**Check the glass density for every model.** In experiment the glass is ~6–7% less dense than the crystal. nozbl_paw's
-glass is as dense as its crystal (6.239 vs 6.224 g/cc, `tests/results/nozbl_paw/RESULTS.md`), as in the DFT reference
-it was trained on (run5_ep301, historical: denser, 6.29 vs 6.24; `tests/RESULTS.md` 1g, 1k). How a model's glass
+**Check the glass density for every model.** In experiment the glass is ~6–7% less dense than the crystal. nequip_no_zbl's
+glass is as dense as its crystal (6.239 vs 6.224 g/cc, `tests/results/nequip_no_zbl/RESULTS.md`), as in the DFT reference
+it was trained on (test 1k, `tests/dft_glass`). How a model's glass
 compares with its crystal decides how densities, and anything that depends on the glass–crystal density difference
 (crystallization strain, pressure-sensitive kinetics), can be reported (`RUNBOOK.md`, B).
 
@@ -24,17 +23,17 @@ compares with its crystal decides how densities, and anything that depends on th
 | 4 | 300 | 100 ps | 50 ps relaxation, then RDF and coordination averaged over 50 ps → `rdf_300K.dat`, `amorphous_300K.data` (input to recryst) |
 
 **Why these choices**
-- **Melt temperature `tmelt` (`TMELT` in params; 1500 K for nozbl_paw).** Well above the model's superheated
-  melting point, so the liquid is fast. For nozbl_paw the crystal melts at Tm_app 1139 K (x0) and 983 K (x10) on the
+- **Melt temperature `tmelt` (`TMELT` in params; 1500 K for nequip_no_zbl).** Well above the model's superheated
+  melting point, so the liquid is fast. For nequip_no_zbl the crystal melts at Tm_app 1139 K (x0) and 983 K (x10) on the
   10 K/ps heat (experiment ~900 K), and in the 100 ps hold at 1500 K the slowest species moves 651 Å² (x0) and
-  354 Å² (x10), well past the gate (`meltquench/results/nozbl_paw/RESULTS.md`, superheating pilot). For a new model,
+  354 Å² (x10), well past the gate (`meltquench/results/nequip_no_zbl/RESULTS.md`, superheating pilot). For a new model,
   set it from that model's own superheating (`RUNBOOK.md`, meltquench). C diffusion is not known in advance, which is why the
   gate includes it.
 - **A fixed hold, not one extended until the gate passes.** An adaptive hold would give a slow composition a
   longer melt than the others, and anything that evolves in the melt (C clustering, for one) would then differ
   between compositions for a reason that is not composition. So every run has the same hold, and the gate is a
   check that it was long enough.
-- **10 K/ps quench.** This is the usual MLP/AIMD rate for GST and matches the reference run. The **1 K/ps
+- **10 K/ps quench.** This is the usual MLP/AIMD rate for GST. The **1 K/ps
   sensitivity runs** (x0 and x10, one replica each) show how much the amorphous structure, density and Tg depend
   on rate. The 10 K/ps glasses already read `xfrac` ≈ 0.15 at 300 K, from persistent crystal-like patches
   (`recryst/README.md`, "Crystal-like order already in the glass"). A 1 K/ps glass well above that baseline, with a
@@ -71,16 +70,15 @@ sbatch --array=0,12 --export=ALL,QRATE=1 submit.sh    # optional 1 K/ps sensitiv
 sbatch -A perc -p a100-40gb --gpus-per-node=2 --ntasks-per-node=2 --array=0-14 submit.sh
 # 444 on the A30s (24 GB each): 3 per run
 sbatch --constraint=B --gpus-per-node=3 --ntasks-per-node=3 --export=ALL,NGPU=3 --array=0-14 submit.sh
-M=nozbl_paw                                           # = MODEL_ID
+M=nequip_no_zbl                                           # = MODEL_ID
 python ../analysis/mq_summary.py --out results/$M runs/$M/*_q*_r*      # with env/cgst-ana active
 python ../analysis/mq_structure.py --out results/$M runs/$M/*_q*_r*    # heavy: an sbatch job
 ```
 Array index i → cell `(x0 x1 x2p5 x5 x10)[i/3]`, replica `i%3+1`; runs go to `runs/<MODEL_ID>/<cell>_q<qrate>_r<rep>/`.
-strachan's 6-GPU A30 cap runs at most 3 two-GPU jobs at once. At 333, one A100 gives 2.9–3.1 ns/day, close to the
-3.35 ns/day of 2 A30s (`tests/RESULTS.md` 1d); at 444 (32.8k atoms), 2 A100s give 2.59 ns/day
-(`tests/scaling/submit_size.sh`). `common/defaults.sh` picks the right compiled model on each node type, and
-`submit.sh` passes `$SLURM_NTASKS` GPUs to LAMMPS. Each run fits in the 1-day wall-time limit: at 333 on 2 A30s about
-3–5 h at 10 K/ps and 11–13 h at 1 K/ps; at 444 on 2 A100s 3.6–4.9 h at 10 K/ps. So a failed run is normally rerun from scratch. For
+strachan's 6-GPU A30 cap runs at most 3 two-GPU jobs at once. At 333, one A100 gives 3.1 ns/day; at 444 (32.8k atoms), 2 A100s give
+2.59 ns/day (`tests/scaling/submit_size.sh`; nequip_no_zbl). `common/defaults.sh` picks the right compiled model on each node type, and
+`submit.sh` passes `$SLURM_NTASKS` GPUs to LAMMPS. Each run fits in the 1-day wall-time limit: at 444, 3.6–4.9 h at 10 K/ps on 2 A100s, 5.4–6.8 h at 5 K/ps on 3 A30s
+and 11–13.5 h at 1 K/ps on 2 A100-80GBs (nequip_no_zbl). So a failed run is normally rerun from scratch. For
 manual recovery, `snap_<T>K.data` marks each 100 K of the quench, and `mq.restart.a/b` hold the last two 50 ps
 points of any stage. Resuming from them needs a hand-edited input that starts at the right stage.
 
@@ -92,7 +90,7 @@ more replicas:
 - the crystalline fraction left at 300 K, over all atoms (`xfrac_a`) and over Ge/Sb/Te only (`xfracGST_a`, the one to
   report: C false positives inflate `xfrac_a` at high C);
 - the closest approach of any pair in the liquid and the glass (`rmin_l`, `rmin_a`, per pair below the table), with a
-  WARNING below 1.0 Å (close contacts, a risk for potentials without ZBL; nozbl_paw: C–C 1.08 Å in the x10 liquid,
+  WARNING below 1.0 Å (close contacts, a risk for potentials without ZBL; nequip_no_zbl: C–C 1.08 Å in the x10 liquid,
   Ge–C 1.62, Te–C 1.72, Ge/Sb/Te pairs ≥ 1.98 Å);
 - the hold length, with a WARNING if the runs do not all share one;
 - partial coordination numbers (CN_ij, j atoms around an i atom) and each species' total coordination Z_i;
@@ -110,7 +108,7 @@ replica mean ± sample std of:
 ## Validation
 Both tests write a `RESULT.txt` with one PASS/FAIL line per check (`tests/collect.sh` prints them).
 
-**`tests/mq_logic`: PASS** (nozbl_paw: job 12358737; run5_ep301: job 12278869). The full input runs on the 1×1×1 x0 (461 atoms) and x10 (512) cells with
+**`tests/mq_logic`: PASS** (nequip_no_zbl: job 12358737). The full input runs on the 1×1×1 x0 (461 atoms) and x10 (512) cells with
 every duration ×0.1, plus `x0_gatefail`: x0 with an unreachable gate (`gate_A2 1e9`). `check.py` runs at the end of
 the job and verifies:
 - every output file, including both restart files;
@@ -127,9 +125,10 @@ meaningless; the test checks the logic only. With the uncalibrated default Q4 cr
 xfrac ≈ 0.1, the false-positive level the recryst calibration has to remove.
 
 **`tests/mq_analysis`: PASS.** Independent checks of the analysis code:
-- against Rushik's 10 K/ps reference glass (`md_meltquench`, 7200 atoms): partial g(r) matches his own g(r) from
-  the same frames (peak shifts ≤ 0.11 Å, g → 1 at 14–15 Å); S_NN(q) peaks at 2.14 and 3.26 Å⁻¹, where amorphous
-  GST's peaks sit; the Tg fit on its 121-point quench gives 675 K;
+- against nequip_no_zbl's x0 r1 10 K/ps glass (29.5k atoms): the partial g(r) counted from its 11 final frames
+  matches LAMMPS's own g(r) over the same window (max |Δg| ≤ 0.11 beyond 2 Å, peak shifts ≤ 0.06 Å, g → 1 at
+  14–15 Å); S_NN(q) peaks at 2.14 and 3.26 Å⁻¹, where amorphous GST's peaks sit; the Tg fit on its 121-point quench
+  gives 810 K;
 - known answers: on the perfect rocksalt lattice every Ge/Sb has Z = 6, the mean Z_Te equals
   6 (N_Ge + N_Sb)/N_Te exactly, and bond angles fall only at 90° and 180° (180° fraction 0.2); a toy C cell gives
   the exact cluster sizes, motifs and chain angle. Breaking the bond-vector sign in the angle code fails the toy
@@ -137,11 +136,12 @@ xfrac ≈ 0.1, the false-positive level the recryst calibration has to remove.
 - replica statistics: the sample std (ddof 1) of 1, 2, 3 is 1, and a single value gives NaN;
 - closest approach (`rmin_*`): on a synthetic RDF file, the first occupied bin per pair, NaN for an absent pair.
 
-The reference data are frozen copies in `tests/mq_analysis/ref/` (sources and sha256s in `ref/SHA256SUMS`).
+The reference data are frozen copies of that run in `tests/mq_analysis/ref/` (sources and sha256s in
+`ref/SHA256SUMS`, 2026-11-18); `tests/dft_glass` uses the same glass by default.
 
-**`tests/dft_glass`: CONSISTENT** for nozbl_paw (rerun per model with `MODEL_GLASS`; zbl_paw not yet). The model glass
-against DFT's own cold melt-quenched glass, with the same code: nozbl_paw density +0.01%, every mean Z within 0.14
-(`tests/results/nozbl_paw/RESULTS.md`); run5_ep301, historical: +0.85%, within 0.08 (`tests/RESULTS.md` 1k).
+**`tests/dft_glass`: CONSISTENT** for nequip_no_zbl (rerun per model with `MODEL_GLASS`). The model glass against DFT's
+own cold melt-quenched glass, with the same code: density +0.01%, every mean Z within 0.14
+(`tests/results/nequip_no_zbl/RESULTS.md`).
 
 **Bugs this test has caught (all fixed):** the MSD-gate `min()`; first-minimum CNs (Te–Te ≈ 10, and Sb–Te ≈ 7 in
 x10; now fixed cutoffs); repeated `mq.dat` rows breaking `np.gradient`; stage windows computed from the schedule

@@ -8,7 +8,7 @@
 # inside a segment loses at most that segment (0.2 K/ps: 250 ps; ~2.3 h at 444 on 2 A100s).
 # Tx = T where the Ge/Sb/Te crystalline fraction (xfracGST) has made half its rise (analysis/recryst_summary.py),
 # cross-checked against the density change and the enthalpy release. tmax must stay below the model's superheated
-# melting (run5_ep301: ~1090 K at 2 K/ps, so 900 K; RUNBOOK.md meltquench step 1). Ends with ramp_done.txt.
+# melting (nequip_no_zbl: Tm_app 983 K for x10 on the 10 K/ps heat, so 900 K; RUNBOOK.md meltquench step 1). Ends with ramp_done.txt.
 #
 # Variables: cell, rep, seed, root, dt, model (as in meltquench; model is required); hrate (K/ps);
 #   src (required on a fresh start) amorphous data file (submit_ramp.sh passes the glass above)

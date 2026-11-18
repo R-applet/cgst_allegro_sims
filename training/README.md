@@ -2,7 +2,7 @@
 
 Everything needed to retrain the Allegro potentials used in this record: the training and test sets, the
 nequip/Allegro configs and submit scripts for each model, and the scripts that built and cleaned the data.
-Checkpoints and compiled `.pt2` files are not tracked (see `models/provenance.md` for their hashes).
+Each folder's best checkpoint is tracked (Checkpoints, below); compiled `.pt2` files are not (`models/provenance.md`).
 
 ## Data (`data/`)
 
@@ -39,24 +39,21 @@ pre-PAW models put separated atoms at the crystal energy and vaporized instead o
 ## Configs (`configs/<training directory>/`)
 
 Each folder: `config_paw.yaml` (as submitted), `config_resolved.yaml` (hydra-resolved), `submit_paw.sh`, `train.log`.
-All five are trained **from scratch** on the same data with identical settings except the short-range term:
+All three are trained **from scratch** on the same data with identical settings except the short-range term:
 `allegro.model.AllegroModel`, float64, cutoff 6.0 Å, 1 layer, `l_max` 3, 128 scalar / 16 tensor features,
 energy + force + stress loss (coeffs 1/1/1), EMA 0.999, Adam lr 1e-3, `ReduceLROnPlateau` (factor 0.5, patience 30,
 threshold 1e-4), batch 1, 2 GPUs (DDP), `max_time` 2 d 23 h, best checkpoint by validation force RMSE.
 
 | folder (training directory) | `MODEL_ID` | short range | environment | best epoch | val F RMSE (eV/Å) | test E / F RMSE |
 |---|---|---|---|---|---|---|
-| `nequip_no_zbl` | `nozbl_paw` | none | conda `allegro` (nequip 0.17.1, allegro 0.8.2) | 503 | 0.1219 | 6.9 meV/atom / 0.120 eV/Å |
-| `rushik_zbl_super_short` | `zbl_paw` | per-pair ZBL, 0.7–1.45 Å, p = 2 | `zbl_updated/venv` (modified nequip 0.18.0, allegro 0.8.3) | 497 | 0.1219 | 7.1 / 0.121 |
-| `rushik_zbl_dataedge` | — | per-pair ZBL at the data edge, 1.15–1.76 Å, p = 2 | `zbl_updated/venv` | 496 | 0.1228 | 7.3 / 0.122 |
-| `rushik_zbl_short` | — | per-pair ZBL, 1.4–2.9 Å, p = 2 | `zbl_updated/venv` | 497 | 0.1215 | 6.9 / 0.120 |
+| `nequip_no_zbl` | `nequip_no_zbl` | none | conda `allegro` (nequip 0.17.1, allegro 0.8.2) | 503 | 0.1219 | 6.9 meV/atom / 0.120 eV/Å |
+| `rushik_zbl_pairwise` | — | per-pair ZBL at the data edge, 1.15–1.76 Å, p = 2 | `zbl_updated/venv` (modified nequip 0.18.0, allegro 0.8.3) | 496 | 0.1228 | 7.3 / 0.122 |
 | `nequip_zbl` | — | ZBL for all pairs to r_max 6 Å, p = 2 | conda `allegro` | 507 | 0.1214 | 7.0 / 0.120 |
 
 Per-pair ZBL cutoffs (`per_edge_type_cutoff`) need the modified nequip in `zbl_updated/` (stock 0.17.1 lacks them).
 
-`run5_ep301_finetune/` (historical `run5_ep301`): fine-tuned from epoch 51 of a from-scratch run on pre-filter data
-(`config_run2_scratch_ep51.yaml`) via `ModelFromCheckpoint` on 1 GPU (`config_ft51_paw.yaml`). Kept for the record
-only; `CHANGELOG_ft51.md` is the full log of how the data, shifts and filters above were arrived at.
+`rushik_zbl_pairwise` was trained as `rushik_zbl_dataedge` (its hydra run name, `submit_paw.sh` job name and
+`train.log` paths keep that name); renamed here 2026-11-18.
 
 ## Checkpoints
 
@@ -66,28 +63,20 @@ sha256 in `CHECKPOINTS.sha256`. They are tracked through an exception in the top
 
 | folder | `MODEL_ID` | best epoch | sha256 (first 16) |
 |---|---|---|---|
-| `nequip_no_zbl` | `nozbl_paw` | 503 | `ed645c56ddeb3311` |
-| `rushik_zbl_super_short` | `zbl_paw` | 497 | `f448d7bc4c6658f3` |
-| `rushik_zbl_dataedge` | — | 496 | `4e45d86354fe6157` |
-| `rushik_zbl_short` | — | 497 | `2e37ba0f594a3738` |
+| `nequip_no_zbl` | `nequip_no_zbl` | 503 | `ed645c56ddeb3311` |
+| `rushik_zbl_pairwise` | — | 496 | `4e45d86354fe6157` |
 | `nequip_zbl` | — | 507 | `6feb183a45a9c2e4` |
-| `run5_ep301_finetune` | `run5_ep301` | 301 | `b6ae59f20a2fdcbb` |
 
-The `nozbl_paw`, `zbl_paw` and `run5_ep301` hashes match `models/provenance.md`.
+The `nequip_no_zbl` hash matches `models/provenance.md`.
 
 Loading: `nequip.ase.NequIPCalculator._from_saved_model(ckpt)` or `nequip-compile` (see `models/compile_model.sh`).
 Per-pair ZBL models need the modified nequip from `zbl_updated/` on `PYTHONPATH`; stock nequip 0.17.1 is enough for
 `nequip_no_zbl` and `nequip_zbl`. Compiling reads one training frame through the checkpoint's relative data path, so
 run it from a directory where `../../CGST/cgst_train_paw.xyz` (or `../cgst_train_paw.xyz`) resolves.
 
-`run5_ep301_finetune/best.ckpt` is not self-contained: it was built with `ModelFromCheckpoint` and loads its starting
-model from the absolute path `/depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/outputs/2026-10-22/09-32-54/best.ckpt`.
-That file is included as `run5_ep301_finetune/parent_run2_ep51.ckpt`; copy it to that path (or edit
-`hyper_parameters.info_dict.training_module.model.checkpoint_path` in the checkpoint) before loading on another machine.
-
 ## Notes
 
 - Never resume or fine-tune on 2 GPUs: twice (ModelFromCheckpoint, and `++ckpt_path` resume) the weights went NaN
   within the first steps. From scratch on 2 GPUs, or continuation on 1 GPU, has always worked.
-- In bulk (test set, liquid/amorphous DFT frames, melt-quench) the five models are equivalent; they differ only
+- In bulk (test set, liquid/amorphous DFT frames, melt-quench) the models are equivalent; they differ only
   below ~1.6 Å (dimer scans), where there is no DFT data.

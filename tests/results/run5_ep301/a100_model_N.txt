@@ -1,4 +1,0 @@
-gilbreth-n019.rcac.purdue.edu
-Model name:                              AMD EPYC 7413 24-Core Processor
-13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
-bench 1 GPU: Performance: 3.127 ns/day, 7.675 hours/ns, 18.097 timesteps/s, 250.178 katom-step/s

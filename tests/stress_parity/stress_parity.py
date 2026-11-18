@@ -1,5 +1,5 @@
-"""Model vs DFT pressure on identical structures, by config type: is the dense model glass (tests/RESULTS.md, 1g)
-a fitting error or a property of the reference DFT?
+"""Model vs DFT pressure on identical structures, by config type (test 1h, tests/RESULTS.md): the model's pressure
+bias, which shifts its densities independently of any property of the reference DFT.
 
 For every frame of the held-out test set (CGST/cgst_test_paw.xyz), evaluate the checkpoint ($CKPT, common/model.sh; eager,
 float64) and compare P = -trace(stress)/3 with the DFT value stored in the frame. Both are static (virial-only)

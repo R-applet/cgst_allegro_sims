@@ -1,5 +1,5 @@
-# Test 1g: equilibrium density of the rocksalt crystal with the production model (epoch 301), for comparison with
-# the amorphous density of the reference melt-quench (md_meltquench, same model: 30.14 A^3/atom at 300 K).
+# Test 1g: equilibrium density of the rocksalt crystal with the production model, for comparison with the
+# amorphous density of the same model's 10 K/ps melt-quench (meltquench/results/<MODEL_ID>/).
 #   3x3x3 x0 rocksalt -> minimize -> NPT iso 0 bar at T: 20 ps equilibration, then V/atom and density averaged
 #   over 20 ps -> density_<cell>_<T>K.txt. The equilibration length equals the averaging window, so the window
 #   starts on a multiple of Nfreq (fix ave/time only writes at multiples of Nfreq; see common/in.rdf).

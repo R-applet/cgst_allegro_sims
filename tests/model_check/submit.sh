@@ -10,8 +10,8 @@
 #SBATCH -t 00:45:00
 #SBATCH --job-name=cgst-modelcheck
 # Test 1b: compiled model (LAMMPS) vs training checkpoint (nequip, Python) on DFT test-set frames.
-# The container's nequip lacks the per-pair ZBL cutoffs the model was trained with, so PYTHONPATH points at
-# the modified nequip/allegro (same setup as the reference md_meltquench compile step).
+# A model trained with modified nequip/allegro (MODEL_SRC in common/model.sh, e.g. per-pair ZBL cutoffs the
+# container's nequip lacks) gets them on PYTHONPATH (MODEL_PYTHONPATH); otherwise the container's own are used.
 cd $SLURM_SUBMIT_DIR
 module load cuda/12.6.0
 source ../../common/defaults.sh             # MODEL; from common/model.sh: SIF, MODEL_SRC, CKPT, TESTSET (exported)

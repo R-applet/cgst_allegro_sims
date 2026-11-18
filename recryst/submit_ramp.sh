@@ -14,7 +14,6 @@
 #   x0 r1 at HRATE (recryst/params/<MODEL_ID>.sh, 0.2 K/ps):  sbatch --array=0 submit_ramp.sh
 #     (0.2 K/ps to 900 K is 3,010 ps: ~28 h at 444 on 2 A100s, so it runs as a chain of jobs, see below)
 #   more replicas or compositions: --array=1,2 (x0 r2, r3), 3-5 (x1), ...
-# The 1 K/ps ramps of run5_ep301 crystallized nothing by 900 K, so they are not part of the workflow (RUNBOOK.md).
 # Array index i -> cell CELLS[i / 3], replica i % 3 + 1 (same mapping as meltquench/submit.sh).
 # Run directory: runs/<MODEL_ID>/ramp_<cell>_h<HRATE>_r<rep>/, or .../ramp_<cell>_<TAG>_h<HRATE>_r<rep>/ with TAG
 # set; the glass is meltquench/runs/<MODEL_ID>/<cell>_q<QRATE>_r<rep>/amorphous_300K.data (MODEL_ID: common/model.sh).

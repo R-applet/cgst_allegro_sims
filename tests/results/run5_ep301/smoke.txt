@@ -1,3 +1,0 @@
-x0: PASS
-x10: PASS
-PASS

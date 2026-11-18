@@ -1,11 +1,12 @@
-# Frozen copies of external reference data used by tests/mq_analysis and tests/dft_glass (2026-11-07).
-# sha256 of each copy here, then of its source. model_glass_300K.npz holds the last 11 frames of the source
-# trajectory (steps, box, pos as float32 relative to the box origin, types 1-4), read with analysis/bondorder.read_dump.
-e75e8d6ccc25beac6422b338d36e26aa9953f0bfb83df316a77207338921829f  meltquench.dat
-7dfc26dccfeedd7bc6a67df4c26a0bf3e8615bd71dc9cf01e5d3f1efec2411f6  rdf_amorphous_300K_from_traj.dat
-3a09f5e32f0de0073144df22f5268ab8e487ab2a7c4c5a338782279a3f5a6a3c  model_glass_300K.npz
-# sources
-e75e8d6ccc25beac6422b338d36e26aa9953f0bfb83df316a77207338921829f  /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/meltquench.dat
-7dfc26dccfeedd7bc6a67df4c26a0bf3e8615bd71dc9cf01e5d3f1efec2411f6  /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/rdf_amorphous_300K_from_traj.dat
-ac21f2d3320b3fd1e7d103d482b098539ba96c46ca27d5f07ef6f0f6461226af  /depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/traj.lammpstrj
+# Frozen copies of nequip_no_zbl's x0 r1 10 K/ps melt-quench (job 12359216), used by tests/mq_analysis and tests/dft_glass
+# (2026-11-18). model_glass_300K.npz: the 11 trajectory frames of the final 50 ps at 300 K (tests/dft_glass/
+# make_model_glass.py); rdf_300K.dat: copy of the run's file; mq_quench.dat: mq.dat rows at 240-360 ps, last row per step.
+4ad44eab7330a285f6111d9ecda50192d1fca50e54d1ec29eb5a128f01d979b5  model_glass_300K.npz
+f1c18c9d53ae09533a997a7a229ce650b8fd0db44efed150d52b41c60ff1de3a  rdf_300K.dat
+c2c1c6e3bb4acdba374e4ff05bfc9a1b3e77bec8c1629eecfca134cd496ad1f1  mq_quench.dat
+# sources (meltquench/runs/nequip_no_zbl/x0_q10_r1/)
+f1c18c9d53ae09533a997a7a229ce650b8fd0db44efed150d52b41c60ff1de3a  rdf_300K.dat
+4504adab704547e529944d159a017c22616d388f714169e333305887417b665e  mq.dat
+f636e903f91e6c27ba578f4c04affe006f9bace19d2b705f668b923122612946  traj.lammpstrj.gz
+4ad44eab7330a285f6111d9ecda50192d1fca50e54d1ec29eb5a128f01d979b5  model_glass_300K.npz
 db096d92669b6b98e6c04c172ab3b9db28930b529feadc99206c745db7611047  /depot/prism/data/rapplet/cgst-vasp-data/xyz_files/train/GST_Melt_Quench_Eform_train.xyz

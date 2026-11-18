@@ -4,8 +4,8 @@ DFT: GST_Melt_Quench_Eform_train.xyz, 200 frames of 144-atom Ge2Sb2Te5 from an N
 own cell volume). The frames span the whole trajectory, from hot liquid to glass, and carry no temperature. Frame
 energy is used as the temperature proxy: the coldest frames (lowest energy) are the quenched glass. Reported for the
 coldest 10, 20 and 40 frames, so the sensitivity to that choice is visible.
-Model: Rushik's 10 K/ps melt-quench with run5_ep301 (md_meltquench, 7200 atoms, NPT 0 bar), final 11 frames at 300 K
-(the frozen copy in tests/mq_analysis/ref/). The DFT file is the project's own training data; its sha256 is in
+Model: by default nequip_no_zbl's 10 K/ps x0 melt-quench, replica 1 (29.5k atoms, NPT 0 bar), final 11 frames at
+300 K (the frozen copy in tests/mq_analysis/ref/); another model's glass with MODEL_GLASS. The DFT file is the project's own training data; its sha256 is in
 tests/mq_analysis/ref/SHA256SUMS.
 Both are analysed with the same code and bond cutoffs (analysis/mq_structure.frame_stats):
   V/atom, density (Ge2Sb2Te5 mass per atom), DFT static pressure (ASE sign: P > 0 wants to expand; at 300 K and
@@ -26,7 +26,7 @@ import mq_structure as ms  # noqa: E402
 
 DFT = Path(os.environ.get("DFT_TRAIN", "/depot/prism/data/rapplet/cgst-vasp-data/xyz_files/train")) / "GST_Melt_Quench_Eform_train.xyz"
 MODEL = Path(os.environ.get("MODEL_GLASS", HERE.parent / "mq_analysis/ref/model_glass_300K.npz"))
-# default: the frozen run5_ep301 glass (source, sha256: ref/SHA256SUMS); for another model, set MODEL_GLASS to its own
+# default: the frozen nequip_no_zbl glass (source, sha256: ref/SHA256SUMS); for another model, set MODEL_GLASS to its own
 # 10 K/ps glass npz (RUNBOOK.md), written from its x0 melt-quench run by make_model_glass.py
 AMU_A3_TO_GCC = 1.66053907
 MASS_PER_ATOM = (2 * 72.63 + 2 * 121.76 + 5 * 127.6) / 9         # Ge2Sb2Te5, amu

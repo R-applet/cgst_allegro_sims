@@ -1,0 +1,4 @@
+# MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.65, BARO aniso, MAX_NS 2
+ramp_x0_h0.2     crystallized 1 of 1: Tx_xfrac 583.0 +- n/a K, max sdev_z 1.1
+ramp_x10_h0.2    crystallized 0 of 1: no Tx below the ramp ceiling
+ramp_x5_h0.2     crystallized 1 of 1: Tx_xfrac 649.7 +- n/a K, max sdev_z 0.0

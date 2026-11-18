@@ -1,2 +1,0 @@
-T600: USABLE   nucleated 3 of 3; n_base 160 / N 260 (0.62); sdev_z>5: anneal_x0_T600_r1 anneal_x0_T600_r2 anneal_x0_T600_r3
-T650: USABLE   nucleated 3 of 3; n_base 120 / N 210 (0.57); sdev_z>5: anneal_x0_T650_r1 anneal_x0_T650_r2 anneal_x0_T650_r3

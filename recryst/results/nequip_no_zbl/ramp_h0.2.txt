@@ -1,0 +1,6 @@
+# MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.65, BARO aniso, MAX_NS 2
+# MODEL_ID nequip_no_zbl; runs used: nequip_no_zbl
+# x_c: per run (x_c_from)
+ramp_x0_h0.2_r1              x_a 0.09215  x_peak 0.6663  Tx_xfrac 583  Tx_H 733.1  Tx_rho 889.5  drho_x -0.005265  xfrac_end 0.02624  sdev_base 0.1573  sdev_end 0.1778  sdev_z 1.141
+ramp_x10_h0.2_r1             x_a 0.07178  x_peak 0.2519  Tx_xfrac nan  Tx_H 742.8  Tx_rho 847.2  drho_x -0.004844  xfrac_end 0.02048  sdev_base 0.243  sdev_end 0.1921  sdev_z -2.114
+ramp_x5_h0.2_r1              x_a 0.06633  x_peak 0.3914  Tx_xfrac 649.7  Tx_H 846.5  Tx_rho 895.2  drho_x nan  xfrac_end 0.01268  sdev_base 0.2426  sdev_end 0.1764  sdev_z -3.037

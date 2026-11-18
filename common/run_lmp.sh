@@ -7,7 +7,7 @@
 # Container: lammps_debug.sif = LAMMPS 30 Mar 2026, Kokkos 5.0.2 (CUDA, double), libtorch 2.8.0+cu126.
 # The compiled model must match the node's CPU: common/defaults.sh sets MODEL per node type (a30 b/d, a100-40gb g/n, a100-80gb k),
 # and inputs take it as -var model $MODEL (models/provenance.md).
-# Which nodes and containers have been tested, with results: tests/RESULTS.md (environment probe, 1d, 1f).
+# Which nodes and containers have been tested: tests/RESULTS.md (Environment; 1f).
 # The container is $SIF from common/model.sh; it can be overridden from the environment (tests/container uses this
 # for lammps_stable.sif).
 set -euo pipefail

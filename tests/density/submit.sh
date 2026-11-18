@@ -10,7 +10,7 @@
 #SBATCH -t 02:00:00
 #SBATCH --job-name=cgst-density
 # Test 1g: crystal density at 300 K with the production model (x0 rocksalt, 12447 atoms).
-# Compare with the amorphous V/atom from the reference melt-quench (same model, epoch 301): see tests/RESULTS.md.
+# Compare with the model's own 10 K/ps x0 glass (meltquench/results/<MODEL_ID>/; RUNBOOK.md B, glass vs crystal).
 set -euo pipefail
 cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ../..)

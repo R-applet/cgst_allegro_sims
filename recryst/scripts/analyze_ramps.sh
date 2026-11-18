@@ -1,5 +1,5 @@
 #!/bin/bash
-# Ramp analysis (RUNBOOK.md, recryst step 2): the HRATE ramps of recryst/params/<MODEL_ID>.sh (0.2 K/ps for run5_ep301), any
+# Ramp analysis (RUNBOOK.md, recryst step 2): the HRATE ramps of recryst/params/<MODEL_ID>.sh (0.2 K/ps for nequip_no_zbl), any
 # composition and replica that ran. recryst_summary.py reads only ramp.dat and stress.dat here (no dumps), so this
 # runs in seconds on a login node.
 #   bash scripts/analyze_ramps.sh       -> results/<MODEL_ID>/ramp_h<HRATE>.txt and ramp_tx_h<HRATE>.txt
@@ -22,7 +22,7 @@ for r in $RUNS/$G; do
     grep -v '^ *if ' $l | grep -i 'error\|nan' && check "$l mentions error/nan: read it before trusting its row"
     grep -q "cutoff $Q_RC components" $l && grep -q "orientorder q4 $Q_THR\$" $l && grep -q "c_ncb>=$Q_NMIN\$" $l \
         || check "$r: criterion is not $Q_RC/$Q_THR/$Q_NMIN"
-    grep -Eq "^pair_coeff +\* \* \S*/$MODEL_ID(\.[GNK])?\.nequip\.pt2 " $l || check "$r: model is not $MODEL_ID"
+    grep -Eq "^pair_coeff +\* \* \S*/($MODEL_RE)(\.[GNK])?\.nequip\.pt2 " $l || check "$r: model is not $MODEL_ID"
 done
 
 # 1. One row per run, then mean +- sample std per group. CAUTION: group means skip NaN (a replica that did not
@@ -43,6 +43,6 @@ awk '$1 ~ /^ramp_.*_r[0-9]+$/ {
              printf "%-16s crystallized %d of %d: Tx_xfrac %.1f +- %s K, max sdev_z %.1f\n",
                     g, k[g], n[g], m, (sd < 0 ? "n/a" : sprintf("%.1f", sd)), z[g] } }' $out | sort; } \
     | tee $RESULTS/ramp_tx_h$HRATE.txt
-# Reading: Tx_H and Tx_rho only where Tx_xfrac is finite. drho_x is negative for run5_ep301 (its glass is denser than
-# its crystal, tests/RESULTS.md 1g/1k); check its sign for a new model. A ramp that crystallized nothing by TMAX means
+# Reading: Tx_H and Tx_rho only where Tx_xfrac is finite. The sign of drho_x follows the model's glass-crystal density
+# difference (nequip_no_zbl: glass about as dense as the crystal, tests/results/nequip_no_zbl/RESULTS.md); check it. A ramp that crystallized nothing by TMAX means
 # slow kinetics in this model: the anneal grid may be TOO COLD everywhere (RUNBOOK.md).

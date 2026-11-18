@@ -1,6 +1,7 @@
 #!/bin/bash
 # Isothermal anneal grid (RUNBOOK.md, recryst steps 3-4): for each Ta in TAS and each composition in CELLS, NREP
 # replicas of submit_anneal.sh, with everything else from recryst/params/<MODEL_ID>.sh (criterion, BARO, XSTOP, MAX_NS, RUNTAG).
+# A barostat variant sets BARO and RUNTAG together: BARO=iso RUNTAG=iso TAS="600 650" CELLS=x0 bash scripts/submit_grid.sh
 #   Phase A (pilot, x0 over the grid):   CELLS=x0 bash scripts/submit_grid.sh [--dry-run]
 #   Phase B (every composition):         bash scripts/submit_grid.sh [--dry-run]         (CELLS default: all five)
 #   a subset of temperatures:            TAS="600 650" CELLS=x0 bash scripts/submit_grid.sh
@@ -36,7 +37,7 @@ for TA in $TAS; do
     done
     [ ${#arr[@]} -gt 0 ] || continue
     cmd=(sbatch $RES --array=$(IFS=,; echo "${arr[*]}")
-         --export=ALL,TA=$TA,NREP=$NREP,XSTOP=$XSTOP,MAX_NS=$MAX_NS${RUNTAG:+,TAG=$RUNTAG} submit_anneal.sh)
+         --export=ALL,TA=$TA,NREP=$NREP,XSTOP=$XSTOP,MAX_NS=$MAX_NS,BARO=$BARO${RUNTAG:+,TAG=$RUNTAG} submit_anneal.sh)
     echo "T$TA: ${cmd[*]}"
     [ $DRY = 1 ] || "${cmd[@]}"
 done

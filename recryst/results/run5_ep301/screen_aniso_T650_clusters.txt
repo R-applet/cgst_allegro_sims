@@ -1,6 +1,0 @@
-clusters: criterion q_rc 3.8 q_thr 0.6 q_nmin 4; t_nuc at 210 atoms
-anneal_x0_aniso_T650_r1      t_nuc 69  v_growth 7.412  single_grain 0  x_a 0.07538  x_c 0.65  x_c_from x-end  t_inc 121  t50 302  n_JMAK 1.183  k_JMAK 0.001653  t_end 522  xfrac_end 0.6978  sdev_base 0.2843  sdev_end 0.695  sdev_z 4.818
-anneal_x0_aniso_T650_r2      t_nuc 91  v_growth 9.981  single_grain 0  x_a 0.06984  x_c 0.65  x_c_from x-end  t_inc 120  t50 285  n_JMAK 1.025  k_JMAK 0.003894  t_end 425  xfrac_end 0.6961  sdev_base 0.2815  sdev_end 0.3524  sdev_z 1.877
-anneal_x0_aniso_T650_r3      t_nuc 79  v_growth 8.473  single_grain 0  x_a 0.075  x_c 0.65  x_c_from x-end  t_inc 132  t50 279  n_JMAK 0.9804  k_JMAK 0.005571  t_end 408  xfrac_end 0.6973  sdev_base 0.2533  sdev_end 0.3977  sdev_z 2.606
-anneal_x0_aniso_T650         n=3 mean +- sample std: t_nuc 79.67 +- 11  v_growth 8.622 +- 1.3  single_grain 0 +- 0  x_a 0.07341 +- 0.0031  x_c 0.65 +- 0  t_inc 124.3 +- 6.7  t50 288.7 +- 12  n_JMAK 1.063 +- 0.11  k_JMAK 0.003706 +- 0.002  t_end 451.7 +- 62  xfrac_end 0.6971 +- 0.00085  sdev_base 0.273 +- 0.017  sdev_end 0.4817 +- 0.19  sdev_z 3.1 +- 1.5
-anneal_x0_aniso_T650         nucleation: n_nucleated 3  n_runs 3  J_surv_per_m3_s 3.267e+34  J_surv_rel_err 0.5774  n_base 98  n_star 3266  tau_J_ps 506.8  J_per_m3_s 5.137e+33  n_replicas 3

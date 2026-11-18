@@ -23,7 +23,7 @@ stop into a warning. `RECRYST` points at another run tree (tests) and `PY` overr
 `recryst_summary.py` group means skip NaN while the group line counts every run. For that reason these scripts count
 crystallized or nucleated runs from the per-run rows.
 
-Removed after run5_ep301 (tag `run5_ep301-final` has them; their outputs are in `../results/run5_ep301/`):
+Removed scripts (in git history):
 - `submit_screen.sh` and `analyze_screen.sh`, replaced by the grid scripts with `CELLS=x0`;
 - `submit_production.sh` and `analyze_production.sh`, the one-Ta design;
 - `submit_aniso.sh` and `analyze_ramp_aniso.sh`, since aniso is now the default barostat (`BARO` in params);

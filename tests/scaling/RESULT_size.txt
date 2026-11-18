@@ -1,9 +1,9 @@
-Size test (submit_size.sh), MODEL_ID nozbl_paw, x10, NPT 600 K, ana 1, dt 2 fs; perc A100-40GB; 2026-11-13
+Size test (submit_size.sh), MODEL_ID nequip_no_zbl, x10, NPT 600 K, ana 1, dt 2 fs; perc A100-40GB; 2026-11-13
 run                          ns/day katom-st/s  peak MiB/GPU job
-nozbl_paw_s333_N_g1           3.120    249.578         19753 12358496
-nozbl_paw_s444_N_g1           1.342    254.455         34321 12358493
-nozbl_paw_s444_G_g1           1.227    232.592         34319 12358497
-nozbl_paw_s444_N_g2           2.588    490.765         23307 12358494
-nozbl_paw_s444_N_g4           4.981    944.455         11951 12358495
+nequip_no_zbl_s333_N_g1           3.120    249.578         19753 12358496
+nequip_no_zbl_s444_N_g1           1.342    254.455         34321 12358493
+nequip_no_zbl_s444_G_g1           1.227    232.592         34319 12358497
+nequip_no_zbl_s444_N_g2           2.588    490.765         23307 12358494
+nequip_no_zbl_s444_N_g4           4.981    944.455         11951 12358495
 444 scaling vs 1 GPU (N): 2 GPUs 1.93x (96%), 4 GPUs 3.71x (93%). Per atom, 444 = 333 (254 vs 250 katom-step/s).
-One GPU holds 444 x10 with 6.6 GB to spare (600 K solid); production uses NGPU=2 (meltquench/params/nozbl_paw.sh).
+One GPU holds 444 x10 with 6.6 GB to spare (600 K solid); production uses NGPU=2 (meltquench/params/nequip_no_zbl.sh).

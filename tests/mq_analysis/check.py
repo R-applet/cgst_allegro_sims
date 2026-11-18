@@ -1,12 +1,16 @@
 """Independent checks of the melt-quench analysis (analysis/mq_structure.py, analysis/mq_summary.py).
 
-Reference glass: Rushik's 10 K/ps run of the same model (md_meltquench: 7200-atom Ge2Sb2Te5, final 11 frames at
-300 K), whose partial g(r) was computed separately from the same frames (rdf_amorphous_300K_from_traj.dat). Frozen
-copies in ref/ (sources and sha256s in ref/SHA256SUMS), so the check does not depend on another user's directory:
-  1. pair counting: our partial g(r) matches the reference g(r) (max |dg| for r > 2 A, first-peak position) and
-     tends to 1 at 14-15 A
+Reference glass: nequip_no_zbl's 10 K/ps x0 melt-quench, replica 1 (meltquench/runs/nequip_no_zbl/x0_q10_r1:
+29.5k-atom Ge2Sb2Te5, 4x4x4), as frozen copies in ref/ (sources and sha256s in ref/SHA256SUMS), so the check does not
+depend on the run directory:
+  - model_glass_300K.npz: the 11 trajectory frames of the final 50 ps at 300 K (tests/dft_glass/make_model_glass.py)
+  - rdf_300K.dat: LAMMPS's own partial g(r) (compute rdf, common/in.rdf) over the same 50 ps window, an independent
+    implementation of the same quantity, sampled more often than the dumped frames
+  - mq_quench.dat: the run's mq.dat rows of the 1500 -> 300 K quench (240-360 ps, one row per step)
+  1. pair counting: our partial g(r) from the frames matches LAMMPS's (max |dg| for r > 2 A, first-peak position)
+     and tends to 1 at 14-15 A
   2. S_NN(q): first two peaks inside sanity windows around the amorphous-GST peaks (~2.0-2.2 and ~3.1-3.4 1/A)
-  3. Tg: the bilinear fit on that run's 121-point quench (meltquench.dat, 50-170 ps) lands in 500-900 K
+  3. Tg: the bilinear fit on the 121-point quench lands in 500-900 K
 Known answers, independent of any simulation:
   4. perfect rocksalt x0 lattice (structures/111/x0.data, 3.015 A grid, 3.2 A cutoff): every Ge/Sb has Z = 6;
      mean Z_Te = 6 (N_Ge + N_Sb) / N_Te (each cation has six Te neighbours; Te loses one per vacant site); bond
@@ -18,7 +22,7 @@ Known answers, independent of any simulation:
      g > 0 per pair (Ge-Te 2.30 A, C-C 0.94 A), NaN for a pair that never appears
 Check 4 needs structures/111/x0.data (gitignored; python structures/build_supercells.py --nrep 1). The rocksalt
 angle check cannot see a reversed bond vector (cubic angles stay at 90/180); the toy cell's 180 deg check can.
-Writes RESULT.txt and exits 1 on any failure. Run: ../../env/cgst-ana/bin/python check.py (~20 s)
+Writes RESULT.txt and exits 1 on any failure. Run: ../../env/cgst-ana/bin/python check.py
 """
 import sys
 from pathlib import Path
@@ -30,7 +34,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "analysis"))
 import mq_structure as ms  # noqa: E402
-from mq_summary import bilinear_tg  # noqa: E402
+from mq_summary import bilinear_tg, load_rdf  # noqa: E402
 
 REF = HERE / "ref"
 lines, ok = [], True
@@ -54,18 +58,19 @@ for L, pos in frames:
 V /= len(frames)
 r = (np.arange(counts.shape[2]) + 0.5) * ms.DR
 shell = 4 * np.pi * r ** 2 * ms.DR
-ref = np.loadtxt(REF / "rdf_amorphous_300K_from_traj.dat")      # r, GeGe GeSb GeTe SbSb SbTe TeTe (0.025 A bins)
-for k, (i, j) in enumerate([(0, 0), (0, 1), (0, 2), (1, 1), (1, 2), (2, 2)]):
+r_ref, rdf_ref = load_rdf(REF / "rdf_300K.dat")                  # LAMMPS, 0.02 A bins to 6 A
+for i, j in [(0, 0), (0, 1), (0, 2), (1, 1), (1, 2), (2, 2)]:
     npairs = N[i] * (N[i] - 1) / 2 if i == j else N[i] * N[j]
     g = counts[i, j] / len(frames) * V / (npairs * shell)
-    gi = np.interp(ref[:, 0], r, g)
-    m = ref[:, 0] > 2.0
-    dg = np.abs(gi[m] - ref[m, k + 1]).max()
-    dpk = abs(r[np.argmax(g)] - ref[np.argmax(ref[:, k + 1]), 0])
+    g_ref = rdf_ref[(i, j)][0]
+    gi = np.interp(r_ref, r, g)
+    m = r_ref > 2.0
+    dg = np.abs(gi[m] - g_ref[m]).max()
+    dpk = abs(r[np.argmax(g)] - r_ref[np.argmax(g_ref)])
     tail = g[r > 14].mean()
     name = ms.SPECIES[i] + ms.SPECIES[j]
-    # 0.2 allows for the different bin widths (0.02 vs 0.025 A) at the sharp Ge-Te/Sb-Te peaks
-    check(f"g_{name}(r) matches the reference", dg < 0.2 and dpk < 0.15 and abs(tail - 1) < 0.03,
+    # 0.2 allows for the sampling difference (11 dumped frames vs LAMMPS's averaging) at the sharp Ge-Te/Sb-Te peaks
+    check(f"g_{name}(r) matches LAMMPS's", dg < 0.2 and dpk < 0.15 and abs(tail - 1) < 0.03,
           f"max|dg| {dg:.3f}, peak shift {dpk:.2f} A, g(14-15 A) {tail:.3f}")
 _, snn = ms.structure_factor(counts, len(frames), N, V)
 pk, _ = find_peaks(snn, prominence=0.05)
@@ -74,8 +79,8 @@ check("S_NN(q) first two peaks in the a-GST windows", 2.0 <= q1 <= 2.25 and 3.1 
       f"{q1:.2f}, {q2:.2f} 1/A")
 
 # ---------- 3. Tg on the reference quench ----------
-d = np.loadtxt(REF / "meltquench.dat", skiprows=1)
-q = (d[:, 1] > 50) & (d[:, 1] <= 170)
+d = np.loadtxt(REF / "mq_quench.dat", skiprows=1)                 # step time_ps T_K P_bar V_A3_per_atom ...
+q = np.ones(len(d), bool)
 tg = bilinear_tg(d[q, 2], d[q, 4])
 check("Tg of the reference 10 K/ps quench in 500-900 K", 500 <= tg <= 900, f"Tg = {tg:.0f} K from {q.sum()} points")
 

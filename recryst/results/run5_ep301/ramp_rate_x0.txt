@@ -1,5 +1,0 @@
-ramp_x0_h0.2_r1              x_a 0.09383  x_peak 0.6695  Tx_xfrac 570.9  Tx_H 726.2  Tx_rho 876.8  drho_x -0.007763  xfrac_end 0.5759  sdev_base 0.524  sdev_end 5.001  sdev_z 90.9
-ramp_x0_h1_r1                x_a 0.09383  x_peak 0.1563  Tx_xfrac nan  Tx_H 874.7  Tx_rho 882.7  drho_x -0.01598  xfrac_end 0.01052  sdev_base 0.3768  sdev_end 0.2634  sdev_z -2.691
-ramp_x0_h1_r2                x_a 0.1005  x_peak 0.2157  Tx_xfrac nan  Tx_H 435.1  Tx_rho 872.8  drho_x -0.02009  xfrac_end 0.01101  sdev_base 0.5894  sdev_end 0.2682  sdev_z -6.378
-ramp_x0_h1_r3                x_a 0.1037  x_peak 0.1513  Tx_xfrac nan  Tx_H 719.5  Tx_rho 896  drho_x -0.0119  xfrac_end 0.009625  sdev_base 0.3469  sdev_end 0.2555  sdev_z -3.066
-ramp_x0_h1                   n=3 mean +- sample std: x_a 0.09933 +- 0.005  x_peak 0.1744 +- 0.036  Tx_xfrac nan +- nan  Tx_H 676.4 +- 2.2e+02  Tx_rho 883.8 +- 12  drho_x -0.01599 +- 0.0041  xfrac_end 0.01039 +- 0.0007  sdev_base 0.4377 +- 0.13  sdev_end 0.2624 +- 0.0064  sdev_z -4.045 +- 2

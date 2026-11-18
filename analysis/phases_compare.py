@@ -647,7 +647,7 @@ def main():
     a.add_argument("--every", type=int, default=10, help="frame stride for RDF/ADF (DoSPT uses every frame)")
     a.add_argument("--exact-v", action="store_true", help="also DoSPT from the dumped velocities")
     c = sub.add_parser("compare")
-    c.add_argument("--model-id", default=os.environ.get("MODEL_ID", "nozbl_paw"))
+    c.add_argument("--model-id", default=os.environ.get("MODEL_ID", "nequip_no_zbl"))
     d = sub.add_parser("dft-check")
     d.add_argument("xyz", type=Path)
     d.add_argument("--phase", required=True)

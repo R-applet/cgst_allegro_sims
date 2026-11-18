@@ -11,7 +11,8 @@
 # Compile the checkpoint of the current model (common/model.sh: MODEL_ID, CKPT) for pair_allegro on this node.
 # Run once per node type for every new MODEL_ID (RUNBOOK.md, A2): AOT host code runs only on the CPU type it was
 # compiled on (common/defaults.sh).
-# Usage: sbatch -p <partition> compile_model.sh <output.nequip.pt2>   (from models/; output models/$MODEL_ID[.G|.N].nequip.pt2)
+# Usage: sbatch -p <partition> --export=ALL,MODEL_ID=<id> compile_model.sh <output.nequip.pt2>
+#        (from models/; output models/$MODEL_ID[.G|.N|.K].nequip.pt2; RUNBOOK.md A2 has the line per node type)
 #
 # nequip-compile must run from the training folder: it loads a sample frame through the checkpoint's relative
 # dataset path (for every registered model it points at CGST/cgst_train_paw.xyz), which only resolves from there.

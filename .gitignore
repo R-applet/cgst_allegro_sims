@@ -31,4 +31,3 @@ tests/latent_feasibility/features.npz
 tests/**/lmp_inputs/
 # exception: the trained best checkpoints that go with the training configs (training/README.md)
 !training/configs/*/best.ckpt
-!training/configs/run5_ep301_finetune/parent_run2_ep51.ckpt

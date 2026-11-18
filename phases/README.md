@@ -39,17 +39,17 @@ vibrational density of states (VDOS), total and per species. Results per potenti
 - **Checks** (every potential): DoSPT on the dumped exact velocities for two runs (`EXACT_V`; must give overlap ≈ 1),
   DoSPT's cell against the box in every run (`analyze` stops on a mismatch), and `dft-check`, which runs the RDF/ADF code on the hex_gst DFT trajectory and must reproduce its DFT files.
 - **Relaxation check.** The amorphous cells relax during the window (PE drift ~−0.01 eV/atom over 20 ps for
-  nozbl_paw). Runs tagged `eq25` repeat them with the same seeds and `EQ_PS=25`, and `compare` pairs them by seed
+  nequip_no_zbl). Runs tagged `eq25` repeat them with the same seeds and `EQ_PS=25`, and `compare` pairs them by seed
   (`phases_relaxation.txt`).
 
 ## Running
 ```
 cd phases
-sbatch --array=0-23 submit.sh                                       # 8 phases x 3 seeds, ~1.5 min each on an A30, 1–1.7 on a perc A100
+sbatch --array=0-23 submit.sh                                       # 8 phases x 3 seeds, 1.3–2.2 min each on an A30
 sbatch --array=0-11 --export=ALL,EQ_PS=25,TAG=eq25 submit.sh       # amorphous phases, longer equilibration
 sbatch submit_analysis.sh                                           # after both; ~25 min on 16 CPUs
 ```
-Each run's dump is ~260 MB (9.4 GB for the 36 runs of nozbl_paw); `runs/` is not tracked.
+Each run's dump is ~260 MB (9.4 GB for the 36 runs of nequip_no_zbl); `runs/` is not tracked.
 
 Caveat for every potential: the DFT-MD of these phases is in the training data (`cgst_train_paw.xyz`), so this tests
 how the potential reproduces its training phases, not a prediction.

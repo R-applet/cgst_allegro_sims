@@ -1,0 +1,6 @@
+# MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.65, BARO aniso, MAX_NS 2
+x0    T500: USABLE   nucleated 3 of 3; n_base 162 / N 200 (0.81)
+x0    T550: USABLE   nucleated 3 of 3; n_base 171 / N 200 (0.85)
+x0    T600: USABLE   nucleated 3 of 3; n_base 159 / N 210 (0.76)
+x0    T650: USABLE   nucleated 3 of 3; n_base 155 / N 280 (0.55)
+x0    T700: USABLE   nucleated 2 of 3; n_base 105 / N 120 (0.88)

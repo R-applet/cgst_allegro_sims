@@ -15,7 +15,7 @@ if [ -z "${MODEL:-}" ]; then
     _models=$(cd "$(dirname "${BASH_SOURCE[0]}")/../models" && pwd)
     case "$(hostname -s)" in
         gilbreth-b*) MODEL=$_models/$MODEL_ID.nequip.pt2 ;;      # a30 b-nodes (compiled there)
-        gilbreth-d*) MODEL=$_models/$MODEL_ID.nequip.pt2 ;;      # a30 d-nodes (ran there: tests/RESULTS.md, 1d)
+        gilbreth-d*) MODEL=$_models/$MODEL_ID.nequip.pt2 ;;      # a30 d-nodes (assumed to take the b-node file: tests/RESULTS.md)
         gilbreth-g*) MODEL=$_models/$MODEL_ID.G.nequip.pt2 ;;    # a100-40gb g-nodes, AMD EPYC 7662
         gilbreth-n*) MODEL=$_models/$MODEL_ID.N.nequip.pt2 ;;    # a100-40gb n-nodes, AMD EPYC 7413
         gilbreth-k*) MODEL=$_models/$MODEL_ID.K.nequip.pt2 ;;    # a100-80gb k-nodes (alta account)

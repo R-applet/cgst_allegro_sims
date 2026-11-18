@@ -1,3 +1,0 @@
-cc=7.5: Performance: 1.702 ns/day, 14.100 hours/ns, 9.850 timesteps/s, 136.172 katom-step/s; RDF rows: 300; ghosts: ave
-cc=7.0: Performance: 1.695 ns/day, 14.158 hours/ns, 9.810 timesteps/s, 135.611 katom-step/s; RDF rows: 300; ghosts: ave
-munge/PMIx noise lines: default 3, PMIX_MCA_psec=native 1

@@ -10,7 +10,7 @@ the box and a Masses section is added. Types: 1 Ge, 2 Sb, 3 Te, 4 C.
 | am_gst | 144 | 32/32/80/0 | cubic | 30.59 |
 | am_c1 | 146 | 32/32/80/2 | cubic | 30.25 |
 | am_c5 | 152 | 32/32/80/8 | cubic | 28.86 |
-| am_c10 | 160 | 32/32/80/16 | cubic | 27.70 |
+| am_c10 | 160 | 32/32/80/16 | cubic | 27.69 |
 | cub_gst | 144 | 32/32/80/0 | triclinic (rocksalt) | 30.02 |
 | cub_c1 | 146 | 32/32/80/2 | triclinic (rocksalt) | 29.65 |
 | hex_gst | 144 | 32/32/80/0 | hexagonal (trigonal GST) | 29.55 |

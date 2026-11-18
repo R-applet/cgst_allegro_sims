@@ -1,6 +1,6 @@
 """Write a model glass npz for check.py (MODEL_GLASS) from a melt-quench run: the trajectory frames of the final 50 ps
-at 300 K (the RDF window of stage 4 of meltquench/in.meltquench), in the format of the frozen run5_ep301 reference
-tests/mq_analysis/ref/model_glass_300K.npz: steps, box (N x 3), pos (N x atoms x 3, float32, relative to the box
+at 300 K (the RDF window of stage 4 of meltquench/in.meltquench), in the format of the frozen reference
+tests/mq_analysis/ref/model_glass_300K.npz (nequip_no_zbl x0 r1, made with this script): steps, box (N x 3), pos (N x atoms x 3, float32, relative to the box
 origin), types (1-4, int8). Use a C-free (x0) run: the DFT glass is Ge2Sb2Te5.
 
 Usage: python make_model_glass.py <melt-quench run dir> <out.npz> [--window-ps 50]

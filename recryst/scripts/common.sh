@@ -1,5 +1,6 @@
 # Shared setup for the recryst workflow scripts (sourced, not run). After sourcing:
 #   ROOT, MODEL_ID      project root; the model (common/model.sh)
+#   MODEL_RE            MODEL_ID|MODEL_ALIASES, for checking the model file a LAMMPS log names
 #   cwd = RECRYST       recryst/ (or $RECRYST, a fake tree for tests)
 #   RUNS, RESULTS       runs/$MODEL_ID and results/$MODEL_ID, relative to recryst/ (RESULTS is created)
 #   PY                  the cgst-ana python (or $PY)
@@ -14,11 +15,12 @@
 # from those two files, so no script carries a model's values.
 ROOT=$(realpath "$(dirname "${BASH_SOURCE[0]}")/../..")
 source "$ROOT/common/model.sh"
+MODEL_RE=$MODEL_ID${MODEL_ALIASES:+|${MODEL_ALIASES// /|}}   # the model and its earlier names, as logs may name them
 cd "${RECRYST:-$ROOT/recryst}"
 PY=${PY:-$ROOT/env/cgst-ana/bin/python}
 die() { echo "STOPPED: $*" >&2; exit 1; }
 check() { [ "${FORCE:-0}" = 1 ] && { echo "WARNING (FORCE=1): $*"; return 0; }; die "$*"; }
-[ -e "$ROOT/recryst/params/$MODEL_ID.sh" ] || die "no recryst/params/$MODEL_ID.sh (copy recryst/params/run5_ep301.sh and set every value, RUNBOOK.md)"
+[ -e "$ROOT/recryst/params/$MODEL_ID.sh" ] || die "no recryst/params/$MODEL_ID.sh (copy recryst/params/nequip_no_zbl.sh and set every value, RUNBOOK.md)"
 [ -e "$ROOT/meltquench/params/$MODEL_ID.sh" ] || die "no meltquench/params/$MODEL_ID.sh (the glasses' QRATE)"
 source "$ROOT/recryst/params/$MODEL_ID.sh"
 [ -n "${Q_ARGS:-}" ] || die "no recryst/calib/$MODEL_ID/calib_params.sh: run the calibration first (RUNBOOK.md)"
@@ -55,7 +57,7 @@ check_anneal_set() {
         [ -e $l ] || { check "$l missing"; continue; }
         if [ $BARO = aniso ]; then grep -q ' aniso 0.0 0.0' $l && ! grep -q ' iso 0.0 0.0' $l
         else grep -q ' iso 0.0 0.0' $l && ! grep -q ' aniso 0.0 0.0' $l; fi || check "$l: barostat is not $BARO"
-        grep -Eq "^pair_coeff +\* \* \S*/$MODEL_ID(\.[GNK])?\.nequip\.pt2 " $l || check "$l: model is not $MODEL_ID"
+        grep -Eq "^pair_coeff +\* \* \S*/($MODEL_RE)(\.[GNK])?\.nequip\.pt2 " $l || check "$l: model is not $MODEL_ID"
     done
     echo "$c T$T: $d of $n finished, criterion $crit, $stops, $BARO, $MODEL_ID"
 }

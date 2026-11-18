@@ -1,123 +1,85 @@
 # Model registry and provenance
 
-Every potential this project has run, with the checkpoint it came from and the compiled files per node type
-(`common/model.sh` names them; `common/defaults.sh` picks the file for the node). Compiled `.pt2` files and local
-checkpoint copies are not tracked by git; their hashes are here.
+The potentials this project runs, each named after its training folder (`training/configs/<MODEL_ID>/`, which holds
+the config, training log and best checkpoint), with the compiled files per node type (`common/model.sh` names them;
+`common/defaults.sh` picks the file for the node). Compiled `.pt2` files are not tracked by git; their hashes are
+here. The three models are trained from scratch on the same PAW data with identical settings except the short-range
+term (`training/README.md`).
 
-| MODEL_ID | Type | Short range | Training data | Checkpoint (sha256) | Compiled files | Status |
-|---|---|---|---|---|---|---|
-| `run5_ep301` | Allegro (nequip/allegro with per-pair ZBL, `zbl_updated`) | per-pair ZBL | `CGST/cgst_train_paw.xyz` | `run5_ep301.ckpt` (`b6ae59f2…96b1`) | `.pt2`, `.G`, `.N` | archived, tag `run5_ep301-final` |
-| `nozbl_paw` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `CGST/cgst_train_paw.xyz` | `nozbl_paw.ckpt` (`ed645c56…bfcc`) | A30, `.G`, `.N`, `.K` (validated; A30 on b-nodes only) | in progress (default `MODEL_ID`) |
-| `zbl_paw` | Allegro 0.8.3 (modified nequip 0.18.0, `zbl_updated`) | per-pair ZBL | `CGST/cgst_train_paw.xyz` | `zbl_paw.ckpt` (`f448d7bc…e738`) | A30, `.G`, `.N`, `.K` (short gate passed) | phases done 2026-11-17; rest of the B tests before any melt-quench |
+| MODEL_ID | Type | Short range | Checkpoint (sha256) | Compiled files | Status |
+|---|---|---|---|---|---|
+| `nequip_no_zbl` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `ed645c56…bfcc` | A30, `.G`, `.N`, `.K` (validated) | default `MODEL_ID`; formerly `nozbl_paw` |
+| `nequip_zbl` | Allegro 0.8.2 (stock nequip 0.17.1) | ZBL for all pairs to r_max 6 Å | `6feb183a…aee3` | not compiled yet | registered 2026-11-18 |
+| `rushik_zbl_pairwise` | Allegro 0.8.3 (modified nequip 0.18.0, `zbl_updated`) | per-pair ZBL at the data edge, 1.15–1.76 Å | `4e45d863…57e4` | not compiled yet | registered 2026-11-18 |
 
-## zbl_paw
-
-| | |
-|---|---|
-| Source checkpoint | `/depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/outputs/2026-11-13/14-11-21/best.ckpt` (saved 2026-11-16 13:00), copied to `models/zbl_paw.ckpt` on 2026-11-16 |
-| sha256 (checkpoint) | `f448d7bc4c6658f389fffd45354b9be26d75da19a90f51e4621327d41fb6e738` |
-| Training config | `.../rushik_zbl_super_short/config_paw.yaml` (resolved: `outputs/2026-11-13/14-11-21/.hydra/config.yaml`); `allegro.model.AllegroModel`, float64, `cutoff_radius` 6.0 Å, `num_layers` 1, `l_max` 3, 128 scalar / 16 tensor features, energy + force + stress loss, EMA 0.999, lr 0.001, 2 GPUs (DDP); best checkpoint by validation force RMSE |
-| Short range | `nequip.nn.pair_potential.ZBL` with per-pair cutoffs (`per_edge_type_cutoff`, 0.7 Å C–C to 1.45 Å Sb–Sb), the same form as run5_ep301 |
-| Training data | `CGST/cgst_train_paw.xyz` (the same PAW set as run5_ep301 and nozbl_paw), test set `cgst_test_paw.xyz` (= `TESTSET`) |
-| Training run | nequip 0.18.0, allegro 0.8.3, torch 2.12.1+cu130 (`train.log`); trained from scratch (run5_ep301 was a fine-tune); started 2026-11-13 14:11, stopped by `max_time` (2 d 23 h) at epoch ~500 of 1500. Its own test-set metrics (wandb summary): energy RMSE 7.1 meV/atom, force RMSE 0.121 eV/Å, stress RMSE 0.80 meV/Å³ |
-| Types | `Ge Sb Te C` → LAMMPS types 1–4 |
-| Compile | as run5_ep301: the modified sources in `MODEL_SRC=/depot/prism/data/rushik/zbl_updated` (nequip 0.18.0 / allegro 0.8.3, the training versions) on `PYTHONPATH`, from `TRAIN_DIR=.../rushik_zbl_super_short`, where `../../CGST/cgst_train_paw.xyz` resolves. Trained with torch 2.12, compiled and run with the container's torch 2.8 (`tests/model_check` confirms the compiled file against the checkpoint) |
-
-Compiled files (`models/compile_model.sh` with `MODEL_ID=zbl_paw` on a node of each type, from `models/zbl_paw.ckpt`; logs in
-`models/slurm-<job>.out`):
-
-| file | compiled on | used on | sha256 | validated |
-|---|---|---|---|---|
-| `zbl_paw.G.nequip.pt2` | a100-40gb gilbreth-g010, 2026-11-16 (job 12403441) | a100-40gb g-nodes | `15677320fbb4fc3745289049067eb70e92d18dac7ffe6341cc31df9708286b79` | `tests/model_check` (job 12404521, g010): vs checkpoint max \|ΔE\| 0.0000 meV/atom, max \|ΔF\| 4.9e-11 eV/Å, max \|ΔP\| 0.005 bar; `tests/model_select` (job 12404522, g010): selected and \|ΔE\| = 0 |
-| `zbl_paw.N.nequip.pt2` | a100-40gb gilbreth-n004, 2026-11-16 (job 12403442) | a100-40gb n-nodes | `9b25088a312cedbcb82f63a06940bd65e0d18087cfc37a688a8a09696e401c5f` | `tests/model_select` (job 12404523, n014): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
-| `zbl_paw.K.nequip.pt2` | a100-80gb gilbreth-k021, 2026-11-16 (job 12403443, account `alta`) | a100-80gb k-nodes | `50671106ea6bba9427368770641cca9bb5085bfb775e864d40fab7e3d571dfb0` | `tests/model_select` (job 12404524, k050): selected, max \|ΔE\| = 0 vs the G file |
-| `zbl_paw.nequip.pt2` | a30 gilbreth-b015, 2026-11-16 (job 12404503, account `strachan`) | a30 b-nodes (d-nodes not checked) | `4b5b5fc26b3e4d9199071095251a4ae9e7983dc120284e6cc437ca014dee5ea5` | `tests/model_select` (job 12404525, b015): selected, max \|ΔE\| = 0 vs the G file |
-
-The torch 2.12 checkpoint loads and compiles in the container's torch 2.8 with version warnings only; `model_check`
-confirms the compiled file reproduces it. Checkpoint vs DFT on the 13 model_check frames: RMS 5.2 meV/atom (mean
-\|error\| 4.7, max 9.6), against 5.4 (4.7, 10.4) for nozbl_paw and 6.3 (5.5, 9.7) for run5_ep301. On perc g-nodes
-the first two `model_check` jobs (12403492, 12403592) died in `MPI_Init` (PMIx `gds_ds12` lock, not the model);
-`sbatch --export=ALL,PMIX_MCA_gds=hash` avoids it (`RUNBOOK.md`). Gate results: `tests/results/zbl_paw/`.
-
-## nozbl_paw
+## nequip_no_zbl
 
 | | |
 |---|---|
-| Source checkpoint | `/depot/prism/data/rushik/CGST/nequip_no_zbl/outputs/2026-11-05/19-04-55/best.ckpt` (saved 2026-11-08 13:37), copied to `models/nozbl_paw.ckpt` on 2026-11-13 so a resumed training run cannot change it |
+| Name | `nozbl_paw` until 2026-11-18, renamed to its training folder's name (`MODEL_ALIASES=nozbl_paw` in `common/model.sh`): logs, `lmp_inputs/` records and raw test outputs written before then name `nozbl_paw` and `models/nozbl_paw*.nequip.pt2`. Same checkpoint and the same compiled files, renamed (the hashes below are unchanged) |
+| Source checkpoint | `/depot/prism/data/rushik/CGST/nequip_no_zbl/outputs/2026-11-05/19-04-55/best.ckpt` (saved 2026-11-08 13:37); in the repo as `training/configs/nequip_no_zbl/best.ckpt` (`CKPT`; until 2026-11-18 a local copy `models/nozbl_paw.ckpt`, identical) |
 | sha256 (checkpoint) | `ed645c56ddeb3311789e12f6d7421462978beb292b0f3b5ce30afdbfaf2bbfcc` |
 | Training config | `.../nequip_no_zbl/config_paw.yaml` (resolved: `outputs/2026-11-05/19-04-55/.hydra/config.yaml`); `allegro.model.AllegroModel`, float64, `cutoff_radius` 6.0 Å, `num_layers` 1, `l_max` 3, 128 scalar / 16 tensor features, energy + force + stress loss, EMA 0.999 |
-| Training data | `../cgst_train_paw.xyz` (the same PAW set as run5_ep301), test set `../cgst_test_paw.xyz` (= `TESTSET`) |
+| Training data | `../cgst_train_paw.xyz` (the PAW set of every current model, `training/data/`), test set `../cgst_test_paw.xyz` (= `TESTSET`) |
 | Training run | nequip 0.17.1, allegro 0.8.2, torch 2.8.0 (`train.log`); started 2026-11-05 19:04, stopped by `max_time` (2 d 23 h) at epoch ~538 of `max_epochs` 1500. `best.ckpt` = lowest validation metric |
-| Types | `Ge Sb Te C` → LAMMPS types 1–4 (`chemical_symbols` order, as for run5_ep301) |
+| Types | `Ge Sb Te C` → LAMMPS types 1–4 (`chemical_symbols` order) |
 | No ZBL | no short-range repulsion term: close contacts in hot liquids are possible; `analysis/mq_summary.py` reports the closest pair distances per run (`rmin_*`) |
 | Compile | the container's own nequip/allegro are the training versions, so `MODEL_SRC` is empty; `TRAIN_DIR` is `.../nequip_no_zbl`, where the checkpoint's relative `../cgst_train_paw.xyz` resolves |
 | Not used | `.../nequip_no_zbl/0718_nequip_no_zbl.nequip.pt2`: compiled 2026-07-18 from an older run on the pre-PAW data (`config.yaml`, `outputs/2026-07-15`) |
 
-Compiled files (`models/compile_model.sh` on a node of each type, from `models/nozbl_paw.ckpt`; the logs, `models/slurm-<job>.out`,
-print the hash):
+Compiled files (`models/compile_model.sh` on a node of each type, from the same checkpoint, as `nozbl_paw*.nequip.pt2`; renamed
+2026-11-18; the compile logs were removed then, the hashes are below):
 
 | file | compiled on | used on | sha256 | validated |
 |---|---|---|---|---|
-| `nozbl_paw.G.nequip.pt2` | a100-40gb gilbreth-g008, 2026-11-13 (job 12358491) | a100-40gb g-nodes | `f76aeea05254960c98abd3f4c27dbecc15b628627c0258ff360e24dcfc4e037d` | `tests/model_check` (job 12358679, g000): vs checkpoint max \|ΔE\| 0.0000 meV/atom, max \|ΔF\| 3.5e-11 eV/Å, max \|ΔP\| 0.005 bar; `tests/model_select` (job 12358680, g000): selected and \|ΔE\| = 0 |
-| `nozbl_paw.N.nequip.pt2` | a100-40gb gilbreth-n006, 2026-11-13 (job 12358492) | a100-40gb n-nodes | `a9933e81fcce76eccefb0223bf316df89d58021e254d5678d84a5c7e955dcf5f` | `tests/model_select` (job 12358681, n011): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
-| `nozbl_paw.K.nequip.pt2` | a100-80gb gilbreth-k050, 2026-11-14 (job 12383791, account `alta`) | a100-80gb k-nodes | `d78970fd7c54059a5622f453723bb3082135218db2df332061b42ad14ec57fea` | `tests/model_select` (job 12383792, k050): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
-| `nozbl_paw.nequip.pt2` | a30 gilbreth-b013, 2026-11-13 (job 12359234, account `strachan`) | a30 b-nodes (d-nodes: same file, not yet checked there) | `6e90500833de32ac1c3bfdb6512ab0ea6ec922aeee416775687432c1cd8943e5` | `tests/model_select` (job 12384204, b003): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
+| `nequip_no_zbl.G.nequip.pt2` | a100-40gb gilbreth-g008, 2026-11-13 (job 12358491) | a100-40gb g-nodes | `f76aeea05254960c98abd3f4c27dbecc15b628627c0258ff360e24dcfc4e037d` | `tests/model_check` (job 12358679, g000): vs checkpoint max \|ΔE\| 0.0000 meV/atom, max \|ΔF\| 3.5e-11 eV/Å, max \|ΔP\| 0.005 bar; `tests/model_select` (job 12358680, g000): selected and \|ΔE\| = 0 |
+| `nequip_no_zbl.N.nequip.pt2` | a100-40gb gilbreth-n006, 2026-11-13 (job 12358492) | a100-40gb n-nodes | `a9933e81fcce76eccefb0223bf316df89d58021e254d5678d84a5c7e955dcf5f` | `tests/model_select` (job 12358681, n011): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
+| `nequip_no_zbl.K.nequip.pt2` | a100-80gb gilbreth-k050, 2026-11-14 (job 12383791, account `alta`) | a100-80gb k-nodes | `d78970fd7c54059a5622f453723bb3082135218db2df332061b42ad14ec57fea` | `tests/model_select` (job 12383792, k050): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
+| `nequip_no_zbl.nequip.pt2` | a30 gilbreth-b013, 2026-11-13 (job 12359234, account `strachan`) | a30 b-nodes (d-nodes: same file, not yet checked there) | `6e90500833de32ac1c3bfdb6512ab0ea6ec922aeee416775687432c1cd8943e5` | `tests/model_select` (job 12384204, b003): selected, max \|ΔE\| = 0 vs the G file on the 13 model_check frames |
 
 All four files (A30, G, N, K) are the same model: identical energies (max |ΔE| = 0) on the 13 model_check frames.
 The K file serves the a100-80gb k-nodes of the `alta` account (36 GPUs; no a100-40gb), where the A30 build died with
 `Illegal instruction` in Part 1; i-nodes (also a100-80gb) still have no file. They differ in
-bytes, as AOTInductor output depends on the build machine (as for run5_ep301).
+bytes, as AOTInductor output depends on the build machine.
 
 First accuracy look (`tests/model_check`, the same 13 DFT test frames, 144–768 atoms, 0–77 C): checkpoint energy vs
-DFT, RMS 5.4 meV/atom (mean |error| 4.7, max 10.4), against 6.3 (5.5, 9.7) for run5_ep301. `stress_parity`, `am_eos`
-and the other tests: `tests/results/nozbl_paw/RESULTS.md` (all pass; pressure RMSE 1.65 vs 2.60 kbar for
-run5_ep301; 2 fs timestep).
+DFT, RMS 5.4 meV/atom (mean |error| 4.7, max 10.4). `stress_parity`, `am_eos` and the other tests:
+`tests/results/nequip_no_zbl/RESULTS.md` (all pass; pressure RMSE 1.65 kbar; 2 fs timestep).
 
-## run5_ep301
-
-`run5_ep301.nequip.pt2` and its G/N copies: the potential of every run up to tag `run5_ep301-final`.
+## nequip_zbl
 
 | | |
 |---|---|
-| Source compiled file | `/depot/prism/data/rushik/zbl_updated/rushik_zbl_super_short/md_meltquench/run5_ep301.nequip.pt2` (copied 2026-11-06) |
-| sha256 (compiled) | `0a1a1b31733501e9880723f01ca1092a5d26d78793ecd7b089b451c1ea1301b1` |
-| Checkpoint | `.../md_meltquench/run5_ep301.ckpt`, sha256 `b6ae59f20a2fdcbbcb31a3f20a1728304b57b2f37f87f72d3c963d4f2c0596b1` |
-| Training config | `.../rushik_zbl_super_short/config_ft51_paw.yaml` (fine-tune from `outputs/2026-10-22/09-32-54/best.ckpt`) |
-| Training data | `/depot/prism/data/rushik/CGST/cgst_train_paw.xyz`, test set `cgst_test_paw.xyz` (the test set has C-doped cells up to 10 at.% C, e.g. 768-atom cells with 77 C) |
-| Types | `Ge Sb Te C` → LAMMPS types 1–4 |
-| Cutoff | 6.0 Å (`config_ft51_paw.yaml`: `cutoff_radius: 6.0`); per-pair ZBL short-range terms according to the reference submit script (not checked against the config) |
-| Compiled for | `pair_allegro`, AOTInductor, CUDA, sm_80 (A30 and A100; not A10/H100) |
-| Container | `/depot/prism/data/rushik/lammps_wallegro/lammps_debug.sif` (LAMMPS 30 Mar 2026, Kokkos 5.0.2, libtorch 2.8.0+cu126); see below |
+| Checkpoint | `training/configs/nequip_zbl/best.ckpt` (best epoch 507), sha256 `6feb183a45a9c2e4e1e64944599fe9c6584de85632d1ccdd51d4e0bb6ddeaee3` |
+| Training | `training/configs/nequip_zbl/` (`config_paw.yaml`, `train.log`); nequip 0.17.1 / allegro 0.8.2 = the container's |
+| Short range | ZBL for every pair out to r_max (6 Å), p = 2 |
+| Compile | `MODEL_SRC` empty; `TRAIN_DIR=/depot/prism/data/rushik/CGST/nequip_zbl`, where the checkpoint's relative `../cgst_train_paw.xyz` resolves |
 
-The compiled model must come from the same container libtorch that runs it. The container's own nequip (0.17)
-lacks the per-pair ZBL cutoffs, so compiling uses the modified `nequip`/`allegro` from
-`/depot/prism/data/rushik/zbl_updated` on `PYTHONPATH`, and `NEQUIP_FLOAT64_MODEL_TOL=1e-10`.
-`nequip-compile` must run from the training folder (`.../rushik_zbl_super_short`): it loads a sample frame through
-the checkpoint's relative dataset path `../../CGST/cgst_train_paw.xyz`, which only resolves from there.
-`compile_model.sh` reproduces the compile, for example for another GPU architecture. `tests/compile_check` confirmed
-that its output gives identical energies to this file (max |ΔE| = 0 on 13 frames). The sha256 differs, because the
-AOTInductor output is not byte-reproducible, so the hash above identifies this specific file, not the model.
+Compiled files: none yet.
 
-`tests/model_check` confirms that this file reproduces the checkpoint's energies and forces (see `tests/RESULTS.md`).
+## rushik_zbl_pairwise
 
-### Compiled files per node type
-An AOT-compiled model's host code runs only on the CPU type it was compiled on. On other CPUs it dies with
-`Illegal instruction` in the model loader (`tests/RESULTS.md`, environment probe). `common/defaults.sh` picks the
-file from the hostname when a job starts.
+| | |
+|---|---|
+| Checkpoint | `training/configs/rushik_zbl_pairwise/best.ckpt` (best epoch 496), sha256 `4e45d86354fe6157a125a9941e3a71425ebcc64b66b783af00d70c01ce7257e4` |
+| Training | trained as `rushik_zbl_dataedge` (`/depot/prism/data/rushik/zbl_updated/rushik_zbl_dataedge`); `training/configs/rushik_zbl_pairwise/`; modified nequip 0.18.0 / allegro 0.8.3 |
+| Short range | per-pair ZBL (`per_edge_type_cutoff`) at the edge of the training data, 1.15–1.76 Å, p = 2 |
+| Compile | the modified sources `MODEL_SRC=/depot/prism/data/rushik/zbl_updated` on `PYTHONPATH` (the container's nequip 0.17.1 lacks per-pair cutoffs), from `TRAIN_DIR=$MODEL_SRC/rushik_zbl_dataedge`, where `../../CGST/cgst_train_paw.xyz` resolves; `NEQUIP_FLOAT64_MODEL_TOL=1e-10` |
 
-| file | compiled on | used on | sha256 | validated |
-|---|---|---|---|---|
-| `run5_ep301.nequip.pt2` | a30 b-node (reference run, 2026-11-05) | a30 b- and d-nodes (d000, d005: `tests/scaling`, 1d) | `0a1a1b31…01b1` | all of `tests/`, 1a–1i |
-| `run5_ep301.G.nequip.pt2` | a100-40gb gilbreth-g000 (AMD EPYC 7662), 2026-11-06 | a100-40gb g-nodes | `94f52d392dedbaadad35efa74c30058a9700988986419db0616aa90ca6249b33` | `tests/a100_model` (g000); `tests/model_select` (g005) |
-| `run5_ep301.N.nequip.pt2` | a100-40gb gilbreth-n019 (AMD EPYC 7413), 2026-11-06 | a100-40gb n-nodes | `4077268cb713995582f2d0a402bfecb8f9dcbbc4de75eb251c555b275fe819f4` | `tests/a100_model` (n019); `tests/model_select` (n003); also ran `tests/glass_relax` on n002 and n010 |
+Compiled files: none yet.
 
-- All three are the same model: max |ΔE| = 0 on the 13 model_check frames. They are not byte-identical, because
-  AOTInductor output depends on the build machine.
-- All were compiled from the same checkpoint with `compile_model.sh`. G and N copies are from `tests/a100_model/`;
-  the hashes were checked against those copies.
-- a100-80gb (k- and i-nodes) has no run5_ep301 file. nozbl_paw has one for the k-nodes (`.K`, above).
+## Notes for every model
 
-## Container (both models)
+- An AOT-compiled model's host code runs only on the CPU type it was compiled on; elsewhere it dies with `Illegal
+  instruction` in the model loader (`tests/RESULTS.md`, Environment). Hence one file per node type.
+- AOTInductor output is not byte-reproducible, so a hash identifies a file, not the model; a recompile gives identical
+  energies (`tests/compile_check`).
+- A checkpoint saved by torch 2.12 (the `zbl_updated` training environment) loads and compiles in the container's
+  torch 2.8 with version warnings only; `tests/model_check` confirms the compiled file against the checkpoint.
+- On perc g-nodes a compile or LAMMPS job can die in `MPI_Init` (PMIx `gds_ds12` lock); `sbatch
+  --export=ALL,PMIX_MCA_gds=hash` avoids it (`RUNBOOK.md`).
+
+## Container (every model)
 
 | | |
 |---|---|

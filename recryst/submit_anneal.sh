@@ -21,7 +21,8 @@
 # Settings (--export=ALL,NAME=value): TA (K, required); NREP (replicas per cell, default 3); MAX_NS (hold length, ns)
 # and XSTOP (fix halt level on xfracGST), both from recryst/params/<MODEL_ID>.sh unless set; MAXCHAIN (jobs per chain,
 # default 4); EXTRA_VARS (extra LAMMPS -var options; not the criterion or barostat); TAG (optional run-name label for
-# a variant of the same runs: same seeds and glasses, its own directories and replica group; before _T so the
+# a variant of the same runs: same seeds and glasses, its own directories and replica group; required with a BARO
+# other than the params' BARO_DEFAULT, e.g. --export=ALL,BARO=iso,TAG=iso; before _T so the
 # analysis name patterns still match; scripts/submit_grid.sh passes RUNTAG). The criterion (Q_VARS), barostat (BARO)
 # and glass rate (QRATE) come from recryst/params/<MODEL_ID>.sh, DT and MODEL from common/defaults.sh.
 # Each task: exits if anneal_done.txt exists; as a continuation, stops the chain with an error if there is no newer
@@ -39,6 +40,8 @@ m=${MAX_NS:-}; x=${XSTOP:-}
 source $ROOT/common/defaults.sh             # DT (same as the melt-quench), MODEL_ID, MODEL (per node type)
 source $ROOT/recryst/params/$MODEL_ID.sh         # MAX_NS, XSTOP, BARO, QRATE, Q_VARS (calibrated criterion)
 MAX_NS=${m:-$MAX_NS}; XSTOP=${x:-$XSTOP}
+[ "$BARO" = "${BARO_DEFAULT:-$BARO}" ] || [ -n "${TAG:-}" ] || {   # a non-default barostat needs its own run directories
+    echo "BARO=$BARO differs from the params default ${BARO_DEFAULT:-}: set TAG (RUNTAG in submit_grid.sh)" >&2; exit 1; }
 [ -z "${NGPU:-}" ] || [ "$SLURM_NTASKS" = "$NGPU" ] || {
     echo "this job has $SLURM_NTASKS ranks, params NGPU=$NGPU: submit with --gpus-per-node=$NGPU --ntasks-per-node=$NGPU" >&2
     exit 1; }

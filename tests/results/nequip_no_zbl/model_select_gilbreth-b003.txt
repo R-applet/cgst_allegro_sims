@@ -1,0 +1,2 @@
+gilbreth-b003: MODEL=nequip_no_zbl.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
