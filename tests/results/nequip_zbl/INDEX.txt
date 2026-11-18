@@ -1,0 +1,34 @@
+== model_check/RESULT.txt  (job 12430328, 2026-11-18 11:26)
+ frame     N   nC  dE_meV/at    max|dF|  max|dP|_bar  E-EDFT_meV/at
+     0   144    0     0.0000   5.12e-12     7.13e-04           9.91 
+   767   768   77    -0.0000   4.97e-12     3.23e-04          -6.51 
+   800   160   16    -0.0000   4.84e-12     2.62e-04          -0.60 
+  1003   320   32    -0.0000   3.25e-11     5.43e-03           0.37 
+  1005   168   24    -0.0000   5.13e-12     1.40e-04          -4.46 
+  1131   176   32     0.0000   5.16e-12     4.59e-04           3.24 
+  1270   698    7     0.0000   5.69e-12     2.13e-04          -2.83 
+  1303   146    2     0.0000   5.07e-12     5.93e-04          -7.94 
+  1507   292    4    -0.0000   7.13e-12     2.05e-04           6.65 
+  1508   730   39     0.0000   5.58e-12     2.00e-04          -5.46 
+  1541   152    8    -0.0000   4.61e-12     2.85e-04          -4.31 
+  1663   304   16     0.0000   5.31e-12     4.91e-04          -4.13 
+  2013   691    0    -0.0000   5.66e-12     1.27e-03          -5.61 
+PASS
+== model_select/RESULT_gilbreth-g000.txt  (job 12430329, 2026-11-18 11:26)
+gilbreth-g000: MODEL=nequip_zbl.G.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== model_select/RESULT_gilbreth-k028.txt  (job 12430331, 2026-11-18 11:27)
+gilbreth-k028: MODEL=nequip_zbl.K.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== model_select/RESULT_gilbreth-n012.txt  (job 12430330, 2026-11-18 11:26)
+gilbreth-n012: MODEL=nequip_zbl.N.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== dt/RESULT.txt  (job 12431078, 2026-11-18 12:40)
+ dt_fs  T_mean  drift_meV/at/ps  margin  std(Etot)/std(PE)  margin  pass
+   0.5  1555.9          -0.0001   463.8             0.0003    29.6   yes
+   1.0  1550.8          -0.0003   178.7             0.0015     6.8   yes
+   2.0  1552.6          -0.0021    23.6             0.0063     1.6   yes
+== smoke/RESULT.txt  (job 12431077, 2026-11-18 12:16)
+x0: PASS
+x10: PASS
+PASS

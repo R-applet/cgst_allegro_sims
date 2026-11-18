@@ -39,13 +39,13 @@ case $MODEL_ID in
     nequip_zbl)     # Allegro with ZBL for all pairs to r_max; stock nequip 0.17.1 / allegro 0.8.2 = the container's
         MODEL_SRC=${MODEL_SRC-}
         TRAIN_DIR=${TRAIN_DIR:-/depot/prism/data/rushik/CGST/nequip_zbl}
-        _dt=0.002   # PROVISIONAL until tests/dt runs for this model
+        _dt=0.002   # tests/dt job 12431078: 2 fs passes (tests/results/nequip_zbl/)
         ;;
     rushik_zbl_pairwise)  # Allegro with per-pair ZBL at the data edge; trained as rushik_zbl_dataedge with Rushik's
                     # modified nequip 0.18.0 / allegro 0.8.3 (MODEL_SRC), which the container's 0.17.1 lacks
         MODEL_SRC=${MODEL_SRC-/depot/prism/data/rushik/zbl_updated}
         TRAIN_DIR=${TRAIN_DIR:-$MODEL_SRC/rushik_zbl_dataedge}
-        _dt=0.002   # PROVISIONAL until tests/dt runs for this model
+        _dt=0.002   # tests/dt job 12430590: 2 fs passes (tests/results/rushik_zbl_pairwise/)
         ;;
     *)  # a new model: give its paths here (or in the environment) before running anything
         : "${TRAIN_DIR:?common/model.sh: set TRAIN_DIR (and MODEL_SRC if needed) for MODEL_ID=$MODEL_ID}"

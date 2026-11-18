@@ -18,11 +18,11 @@ of the data). Each is compared with DFT and with the others. Their training conf
 
 | Study | Directory | `nequip_no_zbl` (no ZBL; default) | `nequip_zbl` | `rushik_zbl_pairwise` |
 |---|---|---|---|---|
-| Validation | `tests/` | done: all gate and physics tests pass; vs DFT RMS 5.4 meV/atom on the model_check frames, 2 fs timestep; glass as dense as the crystal (`tests/results/nequip_no_zbl/RESULTS.md`) | compiling (2026-11-18) | compiling (2026-11-18) |
-| Melt-quench | `meltquench/` | done: 15 glasses at 10 K/ps (4×4×4), x0 and x10 at 5 and 1 K/ps (1 K/ps partially crystallizes); density, Tm_app, Tg and structure against C; report and slides (`meltquench/results/nequip_no_zbl/`) | — | — |
+| Validation | `tests/` | done: all gate and physics tests pass; vs DFT RMS 5.4 meV/atom on the model_check frames, 2 fs timestep; glass as dense as the crystal (`tests/results/nequip_no_zbl/RESULTS.md`) | gate, smoke and dt pass (2026-11-18): vs DFT RMS 5.43 meV/atom, 2 fs (`tests/results/nequip_zbl/RESULTS.md`) | gate, smoke and dt pass (2026-11-18): vs DFT RMS 5.57 meV/atom, 2 fs (`tests/results/rushik_zbl_pairwise/RESULTS.md`) |
+| Melt-quench | `meltquench/` | done: 15 glasses at 10 K/ps (4×4×4), x0 and x10 at 5 and 1 K/ps (1 K/ps partially crystallizes); density, Tm_app, Tg and structure against C; report and slides (`meltquench/results/nequip_no_zbl/`) | superheating pilot running (2026-11-18) | superheating pilot running (2026-11-18) |
 | Recrystallization | `recryst/` | calibration done, criterion 3.9 Å/0.6/4 (`recryst/calib/nequip_no_zbl/`); ramps x0, x5, x10 done (Tx 583, 650 K; x10 none below 900 K); Phase A (x0, 500–700 K) done; Phase B x1/x2p5 partly done, the rest of Phase B cancelled 2026-11-18 (`RUNBOOK.md`, status) | — | — |
 | Coexistence | `coexistence/` | planned | — | — |
-| Phases | `phases/` | done: 8 DFT cells (amorphous, rocksalt, trigonal; 0–10% C) at 300 K vs DFT-MD; RDF and ADF close (R 0.05–0.08, ADF overlap 0.92–0.98), Ge/Sb/Te VDOS 0–9% soft, C VDOS overlap 0.61–0.72 (`phases/results/nequip_no_zbl/RESULTS.md`) | — | — |
+| Phases | `phases/` | done: 8 DFT cells (amorphous, rocksalt, trigonal; 0–10% C) at 300 K vs DFT-MD; RDF and ADF close (R 0.05–0.08, ADF overlap 0.92–0.98), Ge/Sb/Te VDOS 0–9% soft, C VDOS overlap 0.61–0.72 (`phases/results/nequip_no_zbl/RESULTS.md`) | done (2026-11-18): the same agreement with DFT as nequip_no_zbl within the seed spread (`phases/results/nequip_zbl/RESULTS.md`) | done (2026-11-18): the same, except am_c10 RDF R 0.089 vs 0.071–0.075 (`phases/results/rushik_zbl_pairwise/RESULTS.md`) |
 | Cascades | `cascades/` | planned | — | — |
 
 ## Study layout

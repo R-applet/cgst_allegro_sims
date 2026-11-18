@@ -1,0 +1,34 @@
+== dt/RESULT.txt  (job 12430590, 2026-11-18 12:07)
+ dt_fs  T_mean  drift_meV/at/ps  margin  std(Etot)/std(PE)  margin  pass
+   0.5  1562.8          -0.0001   471.1             0.0004    28.2   yes
+   1.0  1571.3          -0.0002   239.9             0.0014     7.1   yes
+   2.0  1568.8          -0.0013    39.3             0.0062     1.6   yes
+== model_check/RESULT.txt  (job 12430417, 2026-11-18 11:30)
+ frame     N   nC  dE_meV/at    max|dF|  max|dP|_bar  E-EDFT_meV/at
+     0   144    0    -0.0000   5.25e-12     7.00e-04           9.99 
+   767   768   77    -0.0000   4.66e-12     3.23e-04          -6.96 
+   800   160   16     0.0000   5.01e-12     2.52e-04          -1.92 
+  1003   320   32     0.0000   2.30e-11     5.46e-03           1.57 
+  1005   168   24     0.0000   4.87e-12     1.20e-04          -6.79 
+  1131   176   32     0.0000   5.00e-12     4.54e-04           2.71 
+  1270   698    7     0.0000   5.33e-12     2.24e-04          -3.00 
+  1303   146    2     0.0000   4.87e-12     5.84e-04          -7.46 
+  1507   292    4    -0.0000   5.01e-12     1.91e-04           6.51 
+  1508   730   39     0.0000   4.93e-12     1.98e-04          -5.50 
+  1541   152    8     0.0000   4.93e-12     2.99e-04          -3.91 
+  1663   304   16     0.0000   4.84e-12     4.80e-04          -3.29 
+  2013   691    0    -0.0000   5.18e-12     1.27e-03          -5.65 
+PASS
+== model_select/RESULT_gilbreth-g003.txt  (job 12430418, 2026-11-18 11:58)
+gilbreth-g003: MODEL=rushik_zbl_pairwise.G.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== model_select/RESULT_gilbreth-k011.txt  (job 12430420, 2026-11-18 11:37)
+gilbreth-k011: MODEL=rushik_zbl_pairwise.K.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== model_select/RESULT_gilbreth-n012.txt  (job 12430419, 2026-11-18 11:32)
+gilbreth-n012: MODEL=rushik_zbl_pairwise.N.nequip.pt2
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+== smoke/RESULT.txt  (job 12430589, 2026-11-18 11:41)
+x0: PASS
+x10: PASS
+PASS

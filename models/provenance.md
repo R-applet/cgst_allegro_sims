@@ -9,8 +9,8 @@ term (`training/README.md`).
 | MODEL_ID | Type | Short range | Checkpoint (sha256) | Compiled files | Status |
 |---|---|---|---|---|---|
 | `nequip_no_zbl` | Allegro 0.8.2 (stock nequip 0.17.1) | none | `ed645c56…bfcc` | A30, `.G`, `.N`, `.K` (validated) | default `MODEL_ID`; formerly `nozbl_paw` |
-| `nequip_zbl` | Allegro 0.8.2 (stock nequip 0.17.1) | ZBL for all pairs to r_max 6 Å | `6feb183a…aee3` | not compiled yet | registered 2026-11-18 |
-| `rushik_zbl_pairwise` | Allegro 0.8.3 (modified nequip 0.18.0, `zbl_updated`) | per-pair ZBL at the data edge, 1.15–1.76 Å | `4e45d863…57e4` | not compiled yet | registered 2026-11-18 |
+| `nequip_zbl` | Allegro 0.8.2 (stock nequip 0.17.1) | ZBL for all pairs to r_max 6 Å | `6feb183a…aee3` | `.G`, `.N`, `.K` (validated; no A30 file) | gate, smoke and dt passed 2026-11-18 |
+| `rushik_zbl_pairwise` | Allegro 0.8.3 (modified nequip 0.18.0, `zbl_updated`) | per-pair ZBL at the data edge, 1.15–1.76 Å | `4e45d863…57e4` | `.G`, `.N`, `.K` (validated; no A30 file) | gate, smoke and dt passed 2026-11-18 |
 
 ## nequip_no_zbl
 
@@ -55,7 +55,15 @@ DFT, RMS 5.4 meV/atom (mean |error| 4.7, max 10.4). `stress_parity`, `am_eos` an
 | Short range | ZBL for every pair out to r_max (6 Å), p = 2 |
 | Compile | `MODEL_SRC` empty; `TRAIN_DIR=/depot/prism/data/rushik/CGST/nequip_zbl`, where the checkpoint's relative `../cgst_train_paw.xyz` resolves |
 
-Compiled files: none yet.
+Compiled files (`models/compile_model.sh` with `MODEL_ID=nequip_zbl` on a node of each type, 2026-11-18; logs
+`models/slurm-<job>.out`; the checkpoint loads with a torch-version warning only):
+
+| file | compiled on | used on | sha256 | validated |
+|---|---|---|---|---|
+| `nequip_zbl.G.nequip.pt2` | a100-40gb gilbreth-g002 (job 12429600) | a100-40gb g-nodes | `7a130d6344d54b9f5990d4d21cdacdfbd0db7660199d020e4715f5f0b8c4f485` | `tests/model_select` (job 12430329, g000): selected, max \|ΔE\| = 0 vs `model_check` (job 12430328, N: vs checkpoint max \|ΔE\| 0.0000 meV/atom, max \|ΔF\| 3.2e-11 eV/Å) |
+| `nequip_zbl.N.nequip.pt2` | a100-40gb gilbreth-n009 (job 12429601) | a100-40gb n-nodes | `52b0f926eabda7432706d43e905fc9dec999872af74b862bc3d5acf6220722a0` | `tests/model_check` (job 12430328, n012) and `tests/model_select` (job 12430330, n012): max \|ΔE\| = 0 |
+| `nequip_zbl.K.nequip.pt2` | a100-80gb gilbreth-k038, account `alta` (job 12429602) | a100-80gb k-nodes | `ea92342148fb6423f423e80324b22c70fe5852eca444b284f055e2527dc5ebac` | `tests/model_select` (job 12430331, k028): selected, max \|ΔE\| = 0 |
+
 
 ## rushik_zbl_pairwise
 
@@ -66,7 +74,15 @@ Compiled files: none yet.
 | Short range | per-pair ZBL (`per_edge_type_cutoff`) at the edge of the training data, 1.15–1.76 Å, p = 2 |
 | Compile | the modified sources `MODEL_SRC=/depot/prism/data/rushik/zbl_updated` on `PYTHONPATH` (the container's nequip 0.17.1 lacks per-pair cutoffs), from `TRAIN_DIR=$MODEL_SRC/rushik_zbl_dataedge`, where `../../CGST/cgst_train_paw.xyz` resolves; `NEQUIP_FLOAT64_MODEL_TOL=1e-10` |
 
-Compiled files: none yet.
+Compiled files (`models/compile_model.sh` with `MODEL_ID=rushik_zbl_pairwise` on a node of each type, 2026-11-18; logs
+`models/slurm-<job>.out`; the checkpoint loads with a torch-version warning only):
+
+| file | compiled on | used on | sha256 | validated |
+|---|---|---|---|---|
+| `rushik_zbl_pairwise.G.nequip.pt2` | a100-40gb gilbreth-g002 (job 12429603) | a100-40gb g-nodes | `33fcae9062562096c5b4e1fe76525b8e80a30e11a69283e046f56202cb0ca67d` | `tests/model_select` (job 12430418, g003): selected, max \|ΔE\| = 0 vs `model_check` (job 12430417, N: vs checkpoint max \|ΔE\| 0.0000 meV/atom, max \|ΔF\| 2.3e-11 eV/Å) |
+| `rushik_zbl_pairwise.N.nequip.pt2` | a100-40gb gilbreth-n002 (job 12429604) | a100-40gb n-nodes | `d7f6582f15c70515d993a8bf740d47bf4eda24a274e0814772e483c47355209e` | `tests/model_check` (job 12430417, n012) and `tests/model_select` (job 12430419, n012): max \|ΔE\| = 0 |
+| `rushik_zbl_pairwise.K.nequip.pt2` | a100-80gb gilbreth-k039, account `alta` (job 12429605) | a100-80gb k-nodes | `6c5b4e4e01979d49fa0b8bed86146661edcb7307d4ba88fca9c279df11011d68` | `tests/model_select` (job 12430420, k011): selected, max \|ΔE\| = 0 |
+
 
 ## Notes for every model
 

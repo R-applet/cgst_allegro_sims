@@ -23,8 +23,9 @@ until 2026-11-18: older logs and `lmp_inputs/` records use that name).
 and x2p5 (all of 650 K and most of 500 K; the 550/700 K runs still running end at their job limits, without
 continuations); every other Phase B job (x1/x2p5 600 K, x5, x10) and the iso barostat check cancelled 2026-11-18; phases done (`phases/results/nequip_no_zbl/RESULTS.md`).
 
-**Status of `nequip_zbl` and `rushik_zbl_pairwise` (2026-11-18):** A1 done (registered in `common/model.sh` and
-`models/provenance.md`); A2 G, N and K compiles submitted; the A30 file not yet. Next: the B gate.
+**Status of `nequip_zbl` and `rushik_zbl_pairwise` (2026-11-18):** A done for G, N and K (no A30 file yet); B gate,
+smoke and dt pass, 2 fs confirmed (`tests/results/<MODEL_ID>/RESULTS.md`; the other B tests not run yet); phases done
+(`phases/results/<MODEL_ID>/RESULTS.md`); meltquench superheating pilots (x0 r1, x10 r1) running with PROVISIONAL params.
 
 **Cluster note (PMIx).** On perc g-nodes LAMMPS under `srun` can die in `MPI_Init` with a segfault in PMIx
 (`gds_ds12_lock_pthread`; two `model_check` jobs, 2026-11-16). Submitting with
