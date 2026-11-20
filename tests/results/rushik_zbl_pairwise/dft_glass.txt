@@ -1,0 +1,8 @@
+DFT GST_Melt_Quench_Eform_train.xyz: 200 frames, 200 distinct volumes; energy -16.8 to 48.2 eV/cell
+DFT coldest 10 (E <= -15.2)        V/atom  30.39  rho 6.233  Z_Ge 4.46 Z_Sb 3.98 Z_Te 3.07  Ge>160deg 0.105  P_static -0.9 kbar (range -4.8..+1.8)
+DFT coldest 20 (E <= -14.5)        V/atom  30.38  rho 6.235  Z_Ge 4.50 Z_Sb 3.93 Z_Te 3.05  Ge>160deg 0.106  P_static -0.7 kbar (range -5.4..+4.2)
+DFT coldest 40 (E <= -12.3)        V/atom  30.33  rho 6.247  Z_Ge 4.51 Z_Sb 3.92 Z_Te 3.04  Ge>160deg 0.102  P_static -0.2 kbar (range -5.4..+6.1)
+DFT all 200 frames                 V/atom  32.72  rho 5.790  Z_Ge 4.01 Z_Sb 3.27 Z_Te 2.67  Ge>160deg 0.059
+model 10 K/ps glass, 300 K, 0 bar  V/atom  30.38  rho 6.237  Z_Ge 4.42 Z_Sb 3.82 Z_Te 2.99  Ge>160deg 0.096
+model - DFT coldest 20: density +0.02%, max |dZ| 0.11
+VERDICT: CONSISTENT (criterion: |drho| < 2% and every |dZ| < 0.15)

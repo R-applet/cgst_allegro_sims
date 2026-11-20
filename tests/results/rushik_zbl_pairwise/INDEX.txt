@@ -32,3 +32,94 @@ gilbreth-n012: MODEL=rushik_zbl_pairwise.N.nequip.pt2
 x0: PASS
 x10: PASS
 PASS
+== am_eos/RESULT.txt  (job 12434144, 2026-11-18 17:00)
+set          formula            n  V0_DFT  V0_mod rho0_DFT rho0_mod  drho%  RMSE_P  bias_P RMSE_Eshape
+                                    A3/at   A3/at     g/cc     g/cc           kbar    kbar      meV/at
+GST_AM_EOS   Ge32Sb32Te80      24  30.844  30.771   6.1421   6.1566   0.24    1.11   -1.09        1.76
+GST_CUB_EOS  Ge32Sb32Te80      24  30.057  30.058   6.3029   6.3026  -0.00    1.79    1.21        1.04
+GST_HEX_EOS  Ge32Sb32Te80      25  29.669  29.908   6.3852   6.3342  -0.80    4.52    4.48        6.90
+C1_AM_EOS    C2Ge32Sb32Te80    24  30.532  30.455   6.1288   6.1442   0.25    1.66   -1.65        2.46
+C1_CUB_EOS   C2Ge32Sb32Te80    24  29.481  29.599   6.3472   6.3219  -0.40    2.18    1.97        2.27
+C1_HEX_EOS   C2Ge32Sb32Te80    25  29.333  29.551   6.3794   6.3323  -0.74    4.26    4.24        6.30
+C5_AM_EOS    C8Ge32Sb32Te80    21  29.297  29.237   6.1618   6.1745   0.21    1.00   -0.98        1.33
+C5_CUB_EOS   C8Ge32Sb32Te80    25  27.960  28.199   6.4566   6.4017  -0.85    3.21    2.93        4.09
+C5_HEX_EOS   C8Ge32Sb32Te80    21  28.735  28.900   6.2823   6.2465  -0.57    4.96    4.86        6.95
+C10_AM_EOS   C16Ge32Sb32Te80   24  28.169  28.114   6.1236   6.1355   0.20    1.19   -1.15        1.63
+C10_CUB_EOS  C16Ge32Sb32Te80   23  26.039  26.415   6.6244   6.5301  -1.42    5.02    3.81        5.79
+C10_HEX_EOS  C16Ge32Sb32Te80   24  29.215  29.106   5.9044   5.9264   0.37    2.85    1.60        1.98
+C14_AM_EOS   C24Ge32Sb32Te80   22  27.038  26.954   6.1110   6.1301   0.31    1.43   -0.87        1.54
+C18_AM_EOS   C32Ge32Sb32Te80   24  26.198  26.128   6.0550   6.0711   0.27    1.38   -1.31        1.61
+drho% = 100 (rho0_model / rho0_DFT - 1). Static (virial-only) pressures; frames are training data.
+== compile_check/RESULT.txt  (job 12434147, 2026-11-18 17:13)
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+91c0614d960fc951c312442fb5df97a78babb78b0fdd30c5d711e5be49649dc8  recompiled.nequip.pt2
+d7f6582f15c70515d993a8bf740d47bf4eda24a274e0814772e483c47355209e  /scratch/gilbreth/rapplet/cgst_allegro_sims/models/rushik_zbl_pairwise.N.nequip.pt2
+== container/RESULT.txt  (job 12434148, 2026-11-18 17:20)
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+debug bench: Performance: 3.109 ns/day, 7.720 hours/ns, 17.991 timesteps/s, 248.710 katom-step/s
+stable bench: Performance: 3.130 ns/day, 7.669 hours/ns, 18.111 timesteps/s, 250.360 katom-step/s
+== density/RESULT.txt  (job 12434145, 2026-11-18 17:15)
+cell x0 T 300 V_A3_per_atom 30.4487 P_bar -2.0 rho_gcc 6.2243
+== glass_relax/RESULT.txt  (job 12434146, 2026-11-18 17:10)
+config_type        n  rho_DFTframe  rho_model_300K  change_%  <P>_bar
+GST_Melt_Quench   12    5.863+-0.319      6.233+-0.031      6.65      0.1
+AM_GST_runs       12    6.188+-0.155      6.244+-0.032      0.95     -4.4
+CUB_GST_runs      12    6.224+-0.094      6.237+-0.020      0.24     -1.0
+frames without a result: none
+== stress_parity/RESULT.txt  (job 12434143, 2026-11-18 16:59)
+config_type             n  V/atom    P_DFT  P_model    bias  RMSE_P  MAE_E
+                            (A^3)   (kbar)   (kbar)  (kbar)  (kbar) meV/at
+AM_GST_runs           767   31.12    12.90    12.17   -0.73    1.34   5.35
+CUB_GST_runs          271   30.53     8.11     7.63   -0.48    1.14   3.32
+HEX_GST_runs          249   30.03     6.66     7.15    0.48    1.43   4.38
+C1_runs               132   30.08    15.16    14.43   -0.72    1.87   7.01
+C5_runs               106   29.03    29.12    27.93   -1.18    2.14   7.70
+C10_runs               88   27.89    31.62    29.94   -1.68    2.99  10.78
+None                   66   28.12     7.36     5.68   -1.68    2.24   5.17
+GST_Melt_Quench        51   32.70    -2.09    -2.99   -0.90    1.33   5.27
+GST_HOMO               50   30.47    -0.09    -0.87   -0.78    1.05   8.45
+GST_HETERO             40   30.46     1.90     1.19   -0.71    0.76   3.62
+C1_HETERO              33   30.16     2.53     1.86   -0.66    0.81   3.96
+C14_runs               32   26.94     5.67     6.72    1.06    3.15   5.65
+C10_Melt_Quench        26   30.02    -0.59    -2.78   -2.19    2.58   4.59
+C14_Melt_Quench        26   29.46    -2.79    -4.83   -2.04    2.40   5.03
+C18_HOMO               26   27.04     1.29    -1.43   -2.72    2.77   4.24
+C1_Melt_Quench         26   32.61    -3.33    -4.09   -0.76    1.29   3.95
+C5_Melt_Quench         26   31.52    -2.84    -4.22   -1.38    1.78   3.25
+C10_HOMO               25   28.86     1.47    -0.47   -1.94    2.12   4.88
+C14_HOMO               25   27.75     1.09    -0.84   -1.92    2.01   5.75
+C18_Melt_Quench        25   28.94    -2.18    -4.36   -2.17    2.44   3.79
+C1_HOMO                25   30.23    -0.64    -2.00   -1.37    1.50   6.62
+C5_HOMO                25   29.57    -0.01    -1.72   -1.71    1.94   5.38
+C18_runs               23   26.12     7.45     8.46    1.01    3.40   8.47
+C10_NPT_am_600         11   29.03    -2.23    -4.50   -2.27    2.33   3.93
+C10_NPT_am_900         11   36.31    -6.79    -7.19   -0.41    0.72   3.25
+C10_NPT_xtal_600       11   29.08    -2.03    -5.21   -3.18    3.25   3.68
+C10_NPT_xtal_900       11   29.97    -1.90    -3.36   -1.46    2.08   3.89
+C10_NVT_2000           11   29.37    17.10    15.49   -1.61    1.74   4.08
+C10_NVT_3000           11   34.95     5.45     5.75    0.30    0.59   3.32
+C14_NPT_am_600         11   28.17    -3.29    -5.90   -2.61    2.70   2.01
+C14_NPT_am_900         11   33.07    -9.16   -10.05   -0.90    1.05   2.52
+C14_NPT_xtal_600       11   27.85    -3.61    -6.58   -2.96    3.06   4.15
+C18_NPT_am_600         11   41.11   -10.55   -11.97   -1.43    1.47   5.39
+C18_NPT_am_900         11   63.27    -7.27    -6.98    0.29    0.37   2.74
+C18_NPT_xtal_900       11   27.50    -2.68    -5.36   -2.68    2.76   8.25
+C18_NVT_2000           11   27.67    15.35    13.60   -1.75    1.84   5.47
+C18_NVT_3000           11   32.86    11.62    11.87    0.24    0.85   3.73
+C1_NVT_2000            11   32.19     8.01     7.12   -0.88    1.07   3.75
+C1_NVT_3000            11   38.30    -5.77    -4.88    0.89    1.04   3.65
+C5_NPT_am_600          11   29.82    -5.11    -7.18   -2.07    2.11   3.75
+C5_NPT_am_900          11   30.83    -4.43    -6.18   -1.75    1.84   3.60
+C5_NPT_xtal_600        11   30.09    -2.09    -3.98   -1.89    2.79   2.89
+C5_NPT_xtal_900        11   30.59    -3.64    -5.38   -1.75    1.93   3.46
+C14_NPT_xtal_900       10   28.44    -4.59    -6.80   -2.21    2.29   4.89
+C18_NPT_xtal_600       10   28.53    -5.74    -9.20   -3.46    3.49   1.99
+== dft_glass/RESULT.txt  (CPU on the login node, 2026-11-19; MODEL_GLASS=meltquench/runs/rushik_zbl_pairwise/x0_q10_r1/model_glass_300K.npz)
+DFT GST_Melt_Quench_Eform_train.xyz: 200 frames, 200 distinct volumes; energy -16.8 to 48.2 eV/cell
+DFT coldest 10 (E <= -15.2)        V/atom  30.39  rho 6.233  Z_Ge 4.46 Z_Sb 3.98 Z_Te 3.07  Ge>160deg 0.105  P_static -0.9 kbar (range -4.8..+1.8)
+DFT coldest 20 (E <= -14.5)        V/atom  30.38  rho 6.235  Z_Ge 4.50 Z_Sb 3.93 Z_Te 3.05  Ge>160deg 0.106  P_static -0.7 kbar (range -5.4..+4.2)
+DFT coldest 40 (E <= -12.3)        V/atom  30.33  rho 6.247  Z_Ge 4.51 Z_Sb 3.92 Z_Te 3.04  Ge>160deg 0.102  P_static -0.2 kbar (range -5.4..+6.1)
+DFT all 200 frames                 V/atom  32.72  rho 5.790  Z_Ge 4.01 Z_Sb 3.27 Z_Te 2.67  Ge>160deg 0.059
+model 10 K/ps glass, 300 K, 0 bar  V/atom  30.38  rho 6.237  Z_Ge 4.42 Z_Sb 3.82 Z_Te 2.99  Ge>160deg 0.096
+model - DFT coldest 20: density +0.02%, max |dZ| 0.11
+VERDICT: CONSISTENT (criterion: |drho| < 2% and every |dZ| < 0.15)

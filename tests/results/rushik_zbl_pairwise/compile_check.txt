@@ -1,0 +1,3 @@
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+91c0614d960fc951c312442fb5df97a78babb78b0fdd30c5d711e5be49649dc8  recompiled.nequip.pt2
+d7f6582f15c70515d993a8bf740d47bf4eda24a274e0814772e483c47355209e  /scratch/gilbreth/rapplet/cgst_allegro_sims/models/rushik_zbl_pairwise.N.nequip.pt2

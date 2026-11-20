@@ -1,0 +1,3 @@
+13 frames, max |dE| = 0.00e+00 eV/atom (tol 1e-06) -> PASS
+debug bench: Performance: 3.109 ns/day, 7.720 hours/ns, 17.991 timesteps/s, 248.710 katom-step/s
+stable bench: Performance: 3.130 ns/day, 7.669 hours/ns, 18.111 timesteps/s, 250.360 katom-step/s

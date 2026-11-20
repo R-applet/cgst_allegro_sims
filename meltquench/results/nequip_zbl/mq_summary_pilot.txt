@@ -1,0 +1,8 @@
+run                  Tm_app    rho_l    rho_a       Tg  xfrac_a xfracGST_a   rmin_l   rmin_a  hold_ps    CN_CC   CN_GeC  CN_GeGe  CN_GeSb  CN_GeTe   CN_SbC  CN_SbSb  CN_SbTe   CN_TeC  CN_TeTe     Z_Ge     Z_Sb     Z_Te      Z_C
+x0_q10_r1          1133.062    5.465    6.236  805.000    0.139      0.139    2.080    2.320  100.000      nan      nan    0.303    0.328    3.772      nan    0.418    3.069      nan    0.241    4.404    3.813    2.979      nan
+x10_q10_r1          956.265    5.369    6.100  755.000    0.165      0.120    1.080    1.180  100.000    1.705    0.397    0.402    0.342    3.219    0.164    0.352    2.878    0.033    0.374    4.359    3.733    2.848    2.998
+
+closest approach per pair (A), liquid / glass; nan: pair absent
+run                      Ge-Ge       Ge-Sb       Ge-Te        Ge-C       Sb-Sb       Sb-Te        Sb-C       Te-Te        Te-C         C-C
+x0_q10_r1           2.08/2.32   2.20/2.46   2.14/2.40    nan/nan    2.36/2.60   2.30/2.54    nan/nan    2.32/2.52    nan/nan     nan/nan  
+x10_q10_r1          2.10/2.28   2.18/2.44   2.16/2.38   1.60/1.78   2.36/2.64   2.32/2.54   1.78/1.96   2.34/2.54   1.74/1.92   1.08/1.18 

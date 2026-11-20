@@ -25,7 +25,7 @@ continuations); every other Phase B job (x1/x2p5 600 K, x5, x10) and the iso bar
 
 **Status of `nequip_zbl` and `rushik_zbl_pairwise` (2026-11-18):** A done for G, N and K (no A30 file yet); B gate,
 smoke and dt pass, 2 fs confirmed (`tests/results/<MODEL_ID>/RESULTS.md`; the other B tests not run yet); phases done
-(`phases/results/<MODEL_ID>/RESULTS.md`); meltquench superheating pilots (x0 r1, x10 r1) running with PROVISIONAL params.
+(`phases/results/<MODEL_ID>/RESULTS.md`); meltquench done (pilot confirmed TMELT and HOLD_PS; 15 runs; `meltquench/results/<MODEL_ID>/RESULTS.md`).
 
 **Cluster note (PMIx).** On perc g-nodes LAMMPS under `srun` can die in `MPI_Init` with a segfault in PMIx
 (`gds_ds12_lock_pthread`; two `model_check` jobs, 2026-11-16). Submitting with

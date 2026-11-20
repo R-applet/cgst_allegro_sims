@@ -1,0 +1,5 @@
+config_type        n  rho_DFTframe  rho_model_300K  change_%  <P>_bar
+GST_Melt_Quench   12    5.863+-0.319      6.209+-0.035      6.23      0.2
+AM_GST_runs       12    6.188+-0.155      6.239+-0.032      0.88     -5.1
+CUB_GST_runs      12    6.224+-0.094      6.242+-0.020      0.32     -7.2
+frames without a result: none

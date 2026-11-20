@@ -1,0 +1,8 @@
+# 3 replica(s): x1_q10_r1 x1_q10_r2 x1_q10_r3
+# fraction of C atoms in C-C clusters of this size
+cluster_size mean std
+1 0.73750 0.05201
+2 0.17917 0.02526
+3 0.05312 0.03292
+4 0.02500 0.01250
+5 0.00521 0.00902
