@@ -2,8 +2,8 @@
 
 The potentials this project runs, each named after its training folder (`training/configs/<MODEL_ID>/`, which holds
 the config, training log and best checkpoint), with the compiled files per node type (`common/model.sh` names them;
-`common/defaults.sh` picks the file for the node). Compiled `.pt2` files are not tracked by git; their hashes are
-here. The three models are trained from scratch on the same PAW data with identical settings except the short-range
+`common/defaults.sh` picks the file for the node). The compiled `.pt2` files are tracked in `models/`; their hashes
+are here (check with `sha256sum`). The three models are trained from scratch on the same PAW data with identical settings except the short-range
 term (`training/README.md`).
 
 | MODEL_ID | Type | Short range | Checkpoint (sha256) | Compiled files | Status |

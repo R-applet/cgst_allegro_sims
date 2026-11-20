@@ -2,7 +2,7 @@
 
 Everything needed to retrain the Allegro potentials used in this record: the training and test sets, the
 nequip/Allegro configs and submit scripts for each model, and the scripts that built and cleaned the data.
-Each folder's best checkpoint is tracked (Checkpoints, below); compiled `.pt2` files are not (`models/provenance.md`).
+Each folder's best checkpoint is tracked (Checkpoints, below); so are the compiled `.pt2` files in `models/` (`models/provenance.md`).
 
 ## Data (`data/`)
 

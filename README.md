@@ -51,7 +51,7 @@ potential, follow `RUNBOOK.md` A–B, then give each study a `params/<MODEL_ID>.
 - `training/`: the training and test data, and per potential (`configs/<MODEL_ID>/`) its config, training log and best
   checkpoint (`CKPT`). See `training/README.md`.
 - `models/`: the model registry (`provenance.md`: every potential, its checkpoint and compiled files with hashes), the
-  compiled files, one per node type and model (`<MODEL_ID>[.G|.N|.K].nequip.pt2`, not tracked), and `compile_model.sh`.
+  compiled files, one per node type and model (`<MODEL_ID>[.G|.N|.K].nequip.pt2`, tracked), and `compile_model.sh`.
 - `common/`:
   - `model.sh`: `MODEL_ID` (default `nequip_no_zbl`) and its checkpoint, sources, timestep `DT`, container and DFT data;
   - `defaults.sh`: the compiled model `MODEL` for this node;

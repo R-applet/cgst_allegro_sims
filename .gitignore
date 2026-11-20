@@ -31,3 +31,5 @@ tests/latent_feasibility/features.npz
 tests/**/lmp_inputs/
 # exception: the trained best checkpoints that go with the training configs (training/README.md)
 !training/configs/*/best.ckpt
+# exception: the compiled models per node type (models/provenance.md has their hashes)
+!models/*.nequip.pt2
