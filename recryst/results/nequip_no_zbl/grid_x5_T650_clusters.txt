@@ -1,0 +1,8 @@
+# MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.65, BARO aniso, MAX_NS 2
+# MODEL_ID nequip_no_zbl; runs used: nequip_no_zbl
+# x_c: --x-end 0.65; clusters: criterion q_rc 3.9 q_thr 0.6 q_nmin 4, t_nuc at 280 atoms
+anneal_x5_T650_r1            t_nuc 429  v_growth 4.742  single_grain 0.4829  x_a 0.04802  x_c 0.65  x_c_from x-end  t_inc 644  t50 1129  n_JMAK 1.036  k_JMAK 0.001147  t_end 1428  xfrac_end 0.6439  sdev_base 0.166  sdev_end 0.7207  sdev_z 13.39
+anneal_x5_T650_r2            t_nuc 447  v_growth 3.151  single_grain 0.8265  x_a 0.04856  x_c 0.65  x_c_from x-end  t_inc 540  t50 1040  n_JMAK 1.042  k_JMAK 0.0012  t_end 1587  xfrac_end 0.6486  sdev_base 0.179  sdev_end 0.334  sdev_z 4.117
+anneal_x5_T650_r3            t_nuc 469  v_growth 2.736  single_grain 0.7827  x_a 0.04612  x_c 0.65  x_c_from x-end  t_inc 558  t50 1103  n_JMAK 1.101  k_JMAK 0.0007762  t_end 1878  xfrac_end 0.6477  sdev_base 0.1787  sdev_end 0.2645  sdev_z 2.816
+anneal_x5_T650               n=3 mean +- sample std: t_nuc 448.3 +- 20  v_growth 3.543 +- 1.1  single_grain 0.6974 +- 0.19  x_a 0.04757 +- 0.0013  x_c 0.65 +- 0  t_inc 580.7 +- 56  t50 1091 +- 46  n_JMAK 1.06 +- 0.036  k_JMAK 0.001041 +- 0.00023  t_end 1631 +- 2.3e+02  xfrac_end 0.6467 +- 0.0025  sdev_base 0.1745 +- 0.0074  sdev_end 0.4397 +- 0.25  sdev_z 6.775 +- 5.8
+anneal_x5_T650               nucleation: n_nucleated 3  n_runs 3  J_surv_per_m3_s 2.397e+33  J_surv_rel_err 0.5774  n_base 52  n_star 5256  tau_J_ps 1768  J_per_m3_s 6.077e+32  n_replicas 3

@@ -1,5 +1,5 @@
 # MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.65, BARO aniso, MAX_NS 2
-# MODEL_ID nequip_no_zbl; runs used: nequip_no_zbl
+# MODEL_ID nequip_no_zbl; runs used: nozbl_paw
 # x_c: --x-end 0.65
 anneal_x0_T550_r1            x_a 0.0822  x_c 0.65  x_c_from x-end  t_inc 63  t50 440  n_JMAK 0.9465  k_JMAK 0.002976  t_end 1323  xfrac_end 0.6472  sdev_base 0.2026  sdev_end 0.2552  sdev_z 1.617
 anneal_x0_T550_r2            x_a 0.07807  x_c 0.65  x_c_from x-end  t_inc 60  t50 377  n_JMAK 0.9548  k_JMAK 0.003483  t_end 1106  xfrac_end 0.6457  sdev_base 0.2054  sdev_end 0.6663  sdev_z 17.5

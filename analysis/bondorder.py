@@ -34,8 +34,20 @@ except ImportError:                                       # older scipy: sph_har
 
 
 def read_dump(path):
-    """Yield (timestep, box_lengths[3], columns dict) for each frame of a (gzipped) LAMMPS custom dump, sorted by id."""
+    """Yield (timestep, box_lengths[3], columns dict) for each frame of a (gzipped) LAMMPS custom dump, sorted by id.
+    A gzip file cut off by a killed job (no end-of-stream marker) ends at its last complete frame, with a warning."""
     op = gzip.open if str(path).endswith(".gz") else open
+    try:
+        yield from _read_frames(op, path)
+    except (EOFError, _Truncated):
+        print(f"note: {path} is truncated (killed job); read up to its last complete frame", file=sys.stderr)
+
+
+class _Truncated(Exception):
+    pass
+
+
+def _read_frames(op, path):
     with op(path, "rt") as f:
         while True:
             line = f.readline()
@@ -51,7 +63,10 @@ def read_dump(path):
                 raise ValueError("triclinic boxes are not supported")
             bounds = np.array([[float(v) for v in f.readline().split()[:2]] for _ in range(3)])
             names = f.readline().split()[2:]
-            data = np.loadtxt([f.readline() for _ in range(n)], ndmin=2)
+            lines = [f.readline() for _ in range(n)]
+            if not lines or not lines[-1].endswith("\n"):
+                raise _Truncated
+            data = np.loadtxt(lines, ndmin=2)
             data = data[np.argsort(data[:, names.index("id")])]
             cols = {k: data[:, i] for i, k in enumerate(names)}
             cols["pos"] = np.stack([cols["x"], cols["y"], cols["z"]], 1) - bounds[:, 0]

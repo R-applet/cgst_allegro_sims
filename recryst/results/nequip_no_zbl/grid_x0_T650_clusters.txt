@@ -1,5 +1,5 @@
 # MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.65, BARO aniso, MAX_NS 2
-# MODEL_ID nequip_no_zbl; runs used: nequip_no_zbl
+# MODEL_ID nequip_no_zbl; runs used: nozbl_paw
 # x_c: --x-end 0.65; clusters: criterion q_rc 3.9 q_thr 0.6 q_nmin 4, t_nuc at 280 atoms
 anneal_x0_T650_r1            t_nuc 135  v_growth 10.76  single_grain 0.6857  x_a 0.06722  x_c 0.65  x_c_from x-end  t_inc 174  t50 344  n_JMAK 1.166  k_JMAK 0.001976  t_end 495  xfrac_end 0.6477  sdev_base 0.1989  sdev_end 0.3701  sdev_z 4.76
 anneal_x0_T650_r2            t_nuc 49  v_growth 13.06  single_grain 0.75  x_a 0.06247  x_c 0.65  x_c_from x-end  t_inc 120  t50 273  n_JMAK 1.046  k_JMAK 0.00389  t_end 400  xfrac_end 0.6482  sdev_base 0.1844  sdev_end 0.2548  sdev_z 1.646
