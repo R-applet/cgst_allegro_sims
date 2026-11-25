@@ -1,7 +1,7 @@
-# MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.65, BARO aniso, MAX_NS 2
+# MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.40, BARO aniso, MAX_NS 2
 # MODEL_ID nequip_no_zbl; runs used: nequip_no_zbl
-# x_c: --x-end 0.65
-anneal_x10_T700_r1           x_a 0.04522  x_c 0.65  x_c_from x-end  t_inc nan  t50 nan  n_JMAK nan  k_JMAK nan  t_end 2000  xfrac_end 0.03925  sdev_base 0.2145  sdev_end 0.21  sdev_z -0.1483
-anneal_x10_T700_r2           x_a 0.04234  x_c 0.65  x_c_from x-end  t_inc nan  t50 nan  n_JMAK nan  k_JMAK nan  t_end 2000  xfrac_end 0.03856  sdev_base 0.1778  sdev_end 0.2097  sdev_z 1.037
-anneal_x10_T700_r3           x_a 0.04371  x_c 0.65  x_c_from x-end  t_inc nan  t50 nan  n_JMAK nan  k_JMAK nan  t_end 2000  xfrac_end 0.03819  sdev_base 0.1976  sdev_end 0.1845  sdev_z -0.3988
-anneal_x10_T700              n=3 mean +- sample std: x_a 0.04376 +- 0.0014  x_c 0.65 +- 0  t_inc nan +- nan  t50 nan +- nan  n_JMAK nan +- nan  k_JMAK nan +- nan  t_end 2000 +- 0  xfrac_end 0.03867 +- 0.00054  sdev_base 0.1967 +- 0.018  sdev_end 0.2014 +- 0.015  sdev_z 0.1631 +- 0.77
+# x_c: --x-end 0.4
+anneal_x10_T700_r1           x_a 0.04522  x_c 0.4  x_c_from x-end  t_inc nan  t50 nan  n_JMAK nan  k_JMAK nan  t_end 2000  xfrac_end 0.03925  sdev_base 0.2145  sdev_end 0.21  sdev_z -0.1483
+anneal_x10_T700_r2           x_a 0.04234  x_c 0.4  x_c_from x-end  t_inc nan  t50 nan  n_JMAK nan  k_JMAK nan  t_end 2000  xfrac_end 0.03856  sdev_base 0.1778  sdev_end 0.2097  sdev_z 1.037
+anneal_x10_T700_r3           x_a 0.04371  x_c 0.4  x_c_from x-end  t_inc nan  t50 nan  n_JMAK nan  k_JMAK nan  t_end 2000  xfrac_end 0.03819  sdev_base 0.1976  sdev_end 0.1845  sdev_z -0.3988
+anneal_x10_T700              n=3 mean +- sample std: x_a 0.04376 +- 0.0014  x_c 0.4 +- 6.8e-17  t_inc nan +- nan  t50 nan +- nan  n_JMAK nan +- nan  k_JMAK nan +- nan  t_end 2000 +- 0  xfrac_end 0.03867 +- 0.00054  sdev_base 0.1967 +- 0.018  sdev_end 0.2014 +- 0.015  sdev_z 0.1631 +- 0.77

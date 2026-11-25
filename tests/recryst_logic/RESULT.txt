@@ -33,8 +33,8 @@ PASS  analysis: main() header names MODEL_ID, the model the run used and the cri
 PASS  known answer: load_dat keeps the last row of a repeated step  ([1.0, 9.0, 8.0, 4.0])
 PASS  known answer: ramp() Tx_xfrac at the half-rise, 650 K for a 0.8 and a 0.6 ceiling, NaN without a rise  (650 K, 650 K, nan)
 PASS  known answer: kinetics() v_growth 200 m/s within 2%, t_nuc within one frame of the analytic time  (v 200.0 m/s, t_nuc 4.0 ps (analytic 3.55))
-PASS  known answer: v_growth in a periodic cell, 200 m/s within 3% with the 10-60% window; 10-90% reads low  (10-60%: 199.2 m/s, 10-90%: 180.0 m/s)
-PASS  known answer: single_grain is the fraction of window frames without a second grain: 1, 0, the exact fraction for a second grain in every other frame, NaN without a window  (1.0, 0.0, 0.500, nan)
+PASS  known answer: v_growth in a periodic cell, 200 m/s within 3% with the 10%-25% window; 10-90% reads low  (10%-25%: 199.4 m/s, 10-90%: 180.0 m/s)
+PASS  known answer: single_grain is the fraction of window frames without a second grain: 1, 0, the exact fraction for a second grain in every other frame, NaN without a window  (1.0, 0.0, 0.429, nan)
 PASS  known answer: survival_rate() J = 2 / (1400 ps x 1e5 A^3), 2 of 3 nucleated  (1.429e+34)
 PASS  known answer: smooth() keeps a constant constant at the ends
 PASS  known answer: stress() |z| < 5 on pure noise, z > 10 and sdev_end ~ 2 kbar for a 2 kbar step  (noise z -0.9; step z 16.0, end 2.11 kbar)

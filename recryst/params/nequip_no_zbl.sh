@@ -24,8 +24,14 @@ XSTOP=0.65          # fix halt on xfracGST. nequip_no_zbl Phase A x0: a crystal 
                     #   550-700 K (0.2 K/ps ramp peak 0.666) and was still at 0.55-0.56, slowing, after 2 ns at 500 K; the
                     #   perfect crystal reads 0.95. Kept at 0.65 for every composition (decided 2026-11-17): C-rich crystals
                     #   will not reach it and run the full MAX_NS. Only the cost depends on it; v_growth does not.
-X_END=0.65          # one end point for t_inc/t50 in every run (recryst_summary.py --x-end); <= XSTOP. PROVISIONAL: set after
-                    #   Phase B to the lowest level every crystallizing run reaches (all compositions, all Ta), likely ~0.5.
+X_END=0.65          # end point for t_inc/t50 (recryst_summary.py --x-end), one per composition: X_END, unless X_END_CELL
+                    #   names the cell; <= XSTOP. Set after Phase B (2026-11-24, user decision: per composition, from its
+                    #   plateau). x0, x1, x2p5 and x5 all reach the 0.65 halt at some Ta (x5 at 650 K only), so 0.65.
+declare -gA X_END_CELL=( [x10]=0.40 )   # x10 never levels off within 2 ns: at 600 K it is still rising at 2 ns
+                    #   (0.40-0.45, +0.03 per 250 ps), at 650 K it nucleates only near 1 ns, so there is no plateau;
+                    #   0.40 = the lowest x10 600 K replica at 2 ns. t50 (X = 0.5, xfracGST ~0.23) then exists at
+                    #   550 K (3/3), 600 K (3/3), 650 K (2/3); 500 K none within 2 ns.
+                    #   Not a plateau: x10 t50 is not comparable to the other compositions' t50. v_growth does not use it.
 MAX_NS=2            # ns hold, decided 2026-11-13. At 444 on 2 A100s (2.59 ns/day) a non-halting run is ~19 h, one job.
                     #   Nucleation exposure (volume x time) is 2.37 x 2 = 4.7 ns of a 333 cell.
 NREP=3              # replicas per (composition, Ta); more where a rate needs them.

@@ -2,9 +2,9 @@
 # Analysis of the anneal grid (submit_grid.sh; RUNBOOK.md, recryst steps 3-4), per composition and Ta that has runs.
 #   [CELLS="x0"] bash scripts/analyze_grid.sh summary [--dry-run]   checks, fraction summaries, ONE perc cluster job
 #   [CELLS="x0"] bash scripts/analyze_grid.sh verdict                after the cluster job: verdicts and growth table
-# Every number (criterion, NUC, GLASS_<cell>, X_END, XSTOP, MAX_NS, BARO, RUNTAG) is from recryst/params/<MODEL_ID>.sh and its
+# Every number (criterion, NUC, GLASS_<cell>, X_END/X_END_CELL, XSTOP, MAX_NS, BARO, RUNTAG) is from recryst/params/<MODEL_ID>.sh and its
 # calib_params.sh. Outputs in results/<MODEL_ID>/, each starting with '#' lines naming the model and criterion:
-#   grid_<cell>[_<RUNTAG>]_T<Ta>.txt            recryst_summary.py --x-end X_END (t_inc, t50, stress)
+#   grid_<cell>[_<RUNTAG>]_T<Ta>.txt            recryst_summary.py --x-end <the cell's X_END> (t_inc, t50, stress)
 #   grid_<cell>[_<RUNTAG>]_T<Ta>_clusters.txt   the same with --clusters (t_nuc, v_growth, single_grain, J_surv, MFPT)
 #   grid_verdict.txt                            per (cell, Ta): TOO HOT / TOO COLD / USABLE, nucleated k of n
 #   growth_table.csv                            per run: cell, Ta, rep, t_nuc, t50, v_growth, single_grain, sdev_z
@@ -30,9 +30,9 @@ if [ $STAGE = summary ]; then
     grep -l 'stopping the chain' slurm-anneal-*.out 2>/dev/null && check "a chain stopped for no progress (above)"
     cmds=""
     for s in "${SETS[@]}"; do set -- $s
-        { header; MODEL_ID=$MODEL_ID $PY $ROOT/analysis/recryst_summary.py --x-end $X_END $RUNS/anneal_$1${STEM}_T$2_r*; } \
+        { header $1; MODEL_ID=$MODEL_ID $PY $ROOT/analysis/recryst_summary.py --x-end $(x_end $1) $RUNS/anneal_$1${STEM}_T$2_r*; } \
             > $(out $1 $2 .txt)
-        cmds+="{ $(header | sed 's/^/echo "/; s/$/"/'); $PY $ROOT/analysis/recryst_summary.py --x-end $X_END --clusters"
+        cmds+="{ $(header $1 | sed 's/^/echo "/; s/$/"/'); $PY $ROOT/analysis/recryst_summary.py --x-end $(x_end $1) --clusters"
         cmds+=" --nucleated-size ${NUC[$2]} $Q_ARGS $RUNS/anneal_$1${STEM}_T$2_r*; } > $(out $1 $2 _clusters.txt) 2>&1; "
     done
     echo "$cmds" | tr ';' '\n' | sed '/^ *$/d'

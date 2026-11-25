@@ -33,8 +33,13 @@ STEM=${RUNTAG:+_$RUNTAG}                    # anneal_<cell>${STEM}_T<Ta>_r<rep>
 
 n_end() { echo $(( 5000 + 50 * ($1 - 300) + MAX_NS * 500000 )); }
 
-header() {
-    echo "# MODEL_ID $MODEL_ID, criterion $Q_RC/$Q_THR/$Q_NMIN, XSTOP $XSTOP, X_END $X_END, BARO $BARO, MAX_NS $MAX_NS"
+x_end() { echo ${X_END_CELL[$1]:-$X_END}; }   # x_end CELL: that composition's X_END (params X_END_CELL, else X_END)
+
+header() {   # header [CELL]: with a cell, its own X_END; without, X_END and every per-cell override
+    local xe=$X_END c
+    if [ -n "${1:-}" ]; then xe=$(x_end $1)
+    else for c in "${!X_END_CELL[@]}"; do xe+=" ($c ${X_END_CELL[$c]})"; done; fi
+    echo "# MODEL_ID $MODEL_ID, criterion $Q_RC/$Q_THR/$Q_NMIN, XSTOP $XSTOP, X_END $xe, BARO $BARO, MAX_NS $MAX_NS"
 }
 
 # check_anneal_set CELL TA RUN...: every run finished, with the calibrated criterion (hold_start.txt), one halt line for
@@ -51,7 +56,7 @@ check_anneal_set() {
     [ $(echo "$stops" | wc -l) = 1 ] || check "$c T$T: runs differ: $(echo $stops)"
     echo "$stops" | grep -q "or step $(n_end $T))$" || check "$c T$T: not a $MAX_NS ns hold: $stops"
     xs=$(echo "$stops" | head -1 | sed 's/.*> \([0-9.]*\) or.*/\1/')
-    awk -v x="$xs" -v e=$X_END 'BEGIN { exit !(x + 0 >= e) }' || check "$c T$T: XSTOP $xs below X_END $X_END"
+    awk -v x="$xs" -v e=$(x_end $c) 'BEGIN { exit !(x + 0 >= e) }' || check "$c T$T: XSTOP $xs below X_END $(x_end $c)"
     for r in "$@"; do
         l=$r/log.anneal.1
         [ -e $l ] || { check "$l missing"; continue; }

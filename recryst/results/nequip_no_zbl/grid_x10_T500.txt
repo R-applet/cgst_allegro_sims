@@ -1,7 +1,7 @@
-# MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.65, BARO aniso, MAX_NS 2
+# MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.40, BARO aniso, MAX_NS 2
 # MODEL_ID nequip_no_zbl; runs used: nequip_no_zbl
-# x_c: --x-end 0.65
-anneal_x10_T500_r1           x_a 0.06613  x_c 0.65  x_c_from x-end  t_inc 220  t50 nan  n_JMAK 0.4263  k_JMAK 0.008602  t_end 2000  xfrac_end 0.182  sdev_base 0.1794  sdev_end 0.2488  sdev_z 2.584
-anneal_x10_T500_r2           x_a 0.06066  x_c 0.65  x_c_from x-end  t_inc 154  t50 nan  n_JMAK 0.3804  k_JMAK 0.01098  t_end 2000  xfrac_end 0.1732  sdev_base 0.2836  sdev_end 0.2072  sdev_z -1.551
-anneal_x10_T500_r3           x_a 0.06765  x_c 0.65  x_c_from x-end  t_inc 280  t50 nan  n_JMAK 0.3666  k_JMAK 0.01213  t_end 2000  xfrac_end 0.1802  sdev_base 0.2739  sdev_end 0.2423  sdev_z -0.8576
-anneal_x10_T500              n=3 mean +- sample std: x_a 0.06481 +- 0.0037  x_c 0.65 +- 0  t_inc 218 +- 63  t50 nan +- nan  n_JMAK 0.3911 +- 0.031  k_JMAK 0.01057 +- 0.0018  t_end 2000 +- 0  xfrac_end 0.1785 +- 0.0047  sdev_base 0.2456 +- 0.058  sdev_end 0.2327 +- 0.022  sdev_z 0.05854 +- 2.2
+# x_c: --x-end 0.4
+anneal_x10_T500_r1           x_a 0.06613  x_c 0.4  x_c_from x-end  t_inc 132  t50 nan  n_JMAK 0.5057  k_JMAK 0.008819  t_end 2000  xfrac_end 0.182  sdev_base 0.1794  sdev_end 0.2488  sdev_z 2.584
+anneal_x10_T500_r2           x_a 0.06066  x_c 0.4  x_c_from x-end  t_inc 93  t50 nan  n_JMAK 0.4371  k_JMAK 0.01327  t_end 2000  xfrac_end 0.1732  sdev_base 0.2836  sdev_end 0.2072  sdev_z -1.551
+anneal_x10_T500_r3           x_a 0.06765  x_c 0.4  x_c_from x-end  t_inc 185  t50 nan  n_JMAK 0.4985  k_JMAK 0.008716  t_end 2000  xfrac_end 0.1802  sdev_base 0.2739  sdev_end 0.2423  sdev_z -0.8576
+anneal_x10_T500              n=3 mean +- sample std: x_a 0.06481 +- 0.0037  x_c 0.4 +- 6.8e-17  t_inc 136.7 +- 46  t50 nan +- nan  n_JMAK 0.4804 +- 0.038  k_JMAK 0.01027 +- 0.0026  t_end 2000 +- 0  xfrac_end 0.1785 +- 0.0047  sdev_base 0.2456 +- 0.058  sdev_end 0.2327 +- 0.022  sdev_z 0.05854 +- 2.2

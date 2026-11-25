@@ -44,8 +44,8 @@ anneal: anneal_done.txt); others are listed and skipped.
   t_nuc     first hold time the largest cluster has >= --nucleated-size atoms (required with --clusters; take it
             from calibrate.py at Ta and the same criterion: the glass already holds crystal-like patches of up to a
             few hundred atoms, recryst/README.md, so a small size would mark every run nucleated at t = 0)
-  v_growth  growth velocity (m/s): slope of the largest cluster's equivalent-sphere radius while it holds 10-60% of
-            the Ge/Sb/Te atoms (periodic images bias it by < 0.5% up to 60%, -5% by 80%)
+  v_growth  growth velocity (m/s): slope of the largest cluster's equivalent-sphere radius while it holds 10-25% of
+            the Ge/Sb/Te atoms (early growth, well before grown crystals saturate; see kinetics())
   single_grain  fraction of the window's frames in which no second cluster has --nucleated-size atoms (1: one grain
             throughout; below 0.8, i.e. a second grain in more than 20% of the frames, the radius mixes grains and
             v_growth is an upper bound), NaN without a window. A fraction, not a flag, so that a
@@ -217,17 +217,19 @@ def clusters(run, rc, thr, nmin, nuc_min, reuse=True):
             "big2": np.array([r[6] for r in rows]), "volume": float(np.mean([r[4] for r in rows])), "n_gst": rows[0][5]}
 
 
-V_WINDOW = (0.10, 0.60)   # v_growth fit window, fraction of Ge/Sb/Te in the largest cluster (see kinetics())
+V_WINDOW = (0.10, 0.25)   # v_growth fit window, fraction of Ge/Sb/Te in the largest cluster (see kinetics())
 
 
 def kinetics(cl, nucleated):
     """From one run's clusters() output: t_nuc, the first hold time the largest cluster has >= nucleated atoms;
     v_growth (m/s), the slope of its equivalent-sphere radius r = (3 N V / (4 pi N_GST))^(1/3) while it holds
-    V_WINDOW (10-60%) of the Ge/Sb/Te atoms (least squares; NaN with fewer than 3 frames there); and single_grain,
+    V_WINDOW (10-25%) of the Ge/Sb/Te atoms (least squares; NaN with fewer than 3 frames there); and single_grain,
     the fraction of that window's frames with no second cluster of `nucleated` atoms (1: one grain throughout),
-    NaN without a window. A sphere meets its own periodic image at pi/6 = 52% of the cell, but the overlap stays
-    small: counted exactly in a periodic cell, the slope is within 0.5% of the true one up to 60%, -1.5% at 70%,
-    -5% at 80% (tests/recryst_logic, check.py). So 60% is the cap."""
+    NaN without a window. Why 25%: grown crystals saturate (nequip_no_zbl: xfracGST ~0.65, ~0.61 of the Ge/Sb/Te
+    atoms in the largest cluster), and the front slows throughout a run, so a window reaching toward saturation
+    averages in the slow end: the earlier 10-60% window read 2-4x below 10-25% in the nequip_no_zbl grid
+    (2026-11-24) and collapsed slow cells onto ~1 m/s. Geometry is no limit below 60% (a sphere counted exactly in a
+    periodic cell keeps its slope within 0.5% up to 60%; tests/recryst_logic, check.py)."""
     t, big, n = cl["t"], cl["big"], cl["n_gst"]
     big2 = cl.get("big2", np.zeros_like(big))
     r = (3 * big * cl["volume"] / (4 * pi * n)) ** (1 / 3)

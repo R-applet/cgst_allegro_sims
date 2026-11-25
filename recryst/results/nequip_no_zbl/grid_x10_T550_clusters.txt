@@ -1,8 +1,8 @@
-# MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.65, BARO aniso, MAX_NS 2
+# MODEL_ID nequip_no_zbl, criterion 3.9/0.6/4, XSTOP 0.65, X_END 0.40, BARO aniso, MAX_NS 2
 # MODEL_ID nequip_no_zbl; runs used: nequip_no_zbl
-# x_c: --x-end 0.65; clusters: criterion q_rc 3.9 q_thr 0.6 q_nmin 4, t_nuc at 200 atoms
-anneal_x10_T550_r1           t_nuc 303  v_growth 1.075  single_grain 0.3979  x_a 0.06449  x_c 0.65  x_c_from x-end  t_inc 162  t50 nan  n_JMAK 0.5977  k_JMAK 0.004868  t_end 2000  xfrac_end 0.2949  sdev_base 0.2358  sdev_end 0.275  sdev_z 1.151
-anneal_x10_T550_r2           t_nuc 511  v_growth 0.8691  single_grain 0.107  x_a 0.06004  x_c 0.65  x_c_from x-end  t_inc 206  t50 nan  n_JMAK 0.5484  k_JMAK 0.006063  t_end 2000  xfrac_end 0.2711  sdev_base 0.1778  sdev_end 0.2038  sdev_z 1.075
-anneal_x10_T550_r3           t_nuc 265  v_growth 1.118  single_grain 0.3943  x_a 0.06531  x_c 0.65  x_c_from x-end  t_inc 248  t50 nan  n_JMAK 0.5716  k_JMAK 0.005885  t_end 2000  xfrac_end 0.2949  sdev_base 0.2169  sdev_end 0.2431  sdev_z 0.7642
-anneal_x10_T550              n=3 mean +- sample std: t_nuc 359.7 +- 1.3e+02  v_growth 1.021 +- 0.13  single_grain 0.2997 +- 0.17  x_a 0.06328 +- 0.0028  x_c 0.65 +- 0  t_inc 205.3 +- 43  t50 nan +- nan  n_JMAK 0.5725 +- 0.025  k_JMAK 0.005605 +- 0.00064  t_end 2000 +- 0  xfrac_end 0.287 +- 0.014  sdev_base 0.2102 +- 0.03  sdev_end 0.2406 +- 0.036  sdev_z 0.9968 +- 0.21
+# x_c: --x-end 0.4; clusters: criterion q_rc 3.9 q_thr 0.6 q_nmin 4, t_nuc at 200 atoms
+anneal_x10_T550_r1           t_nuc 303  v_growth 1.066  single_grain 0.3817  x_a 0.06449  x_c 0.4  x_c_from x-end  t_inc 96  t50 1273  n_JMAK 0.7308  k_JMAK 0.003742  t_end 2000  xfrac_end 0.2949  sdev_base 0.2358  sdev_end 0.275  sdev_z 1.151
+anneal_x10_T550_r2           t_nuc 511  v_growth 0.8691  single_grain 0.107  x_a 0.06004  x_c 0.4  x_c_from x-end  t_inc 115  t50 1474  n_JMAK 0.6874  k_JMAK 0.004262  t_end 2000  xfrac_end 0.2711  sdev_base 0.1778  sdev_end 0.2038  sdev_z 1.075
+anneal_x10_T550_r3           t_nuc 265  v_growth 1.115  single_grain 0.3556  x_a 0.06531  x_c 0.4  x_c_from x-end  t_inc 124  t50 1361  n_JMAK 0.8563  k_JMAK 0.001522  t_end 2000  xfrac_end 0.2949  sdev_base 0.2169  sdev_end 0.2431  sdev_z 0.7642
+anneal_x10_T550              n=3 mean +- sample std: t_nuc 359.7 +- 1.3e+02  v_growth 1.017 +- 0.13  single_grain 0.2814 +- 0.15  x_a 0.06328 +- 0.0028  x_c 0.4 +- 6.8e-17  t_inc 111.7 +- 14  t50 1369 +- 1e+02  n_JMAK 0.7582 +- 0.088  k_JMAK 0.003175 +- 0.0015  t_end 2000 +- 0  xfrac_end 0.287 +- 0.014  sdev_base 0.2102 +- 0.03  sdev_end 0.2406 +- 0.036  sdev_z 0.9968 +- 0.21
 anneal_x10_T550              nucleation: n_nucleated 3  n_runs 3  J_surv_per_m3_s 2.959e+33  J_surv_rel_err 0.5774  n_base 64  n_star 3203  tau_J_ps 2272  J_per_m3_s 4.685e+32  n_replicas 3

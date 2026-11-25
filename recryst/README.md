@@ -145,9 +145,11 @@ The normalized fraction X = (xfracGST − x_a)/(x_c − x_a) needs an end point 
 that applies: `--x-end` (one value for every run); the run's own plateau; `--x-crystal` (the composition's crystal
 reference at Ta, from `calibrate.py`); the run's `XSTOP`; `x_c_from` says which. Without `--x-end`, runs of one set
 can mix sources (a plateau in some, the ≈ 0.95 crystal reference in others), so t50 would mean a different `xfracGST`
-in different runs. **The analysis scripts therefore pass `--x-end X_END`** (params; 0.65 for nequip_no_zbl): t_inc and t50
-are measured toward the same `xfracGST` in every run, at every Ta, reached by every run that halts at `XSTOP` ≥ `X_END`. `v_growth` does not use
-x_c. (`--x-end` and `--x-crystal` are alternatives; passing both is refused.) x10 has no crystal reference (its
+in different runs. **The analysis scripts therefore pass `--x-end` with the composition's `X_END`** (params: `X_END`, or
+`X_END_CELL[<cell>]` where a composition never reaches it): t_inc and t50 are measured toward the same `xfracGST` in every run
+of a composition, at every Ta. For nequip_no_zbl 0.65 for x0–x5 (each reaches the 0.65 halt at some Ta) and 0.40 for x10,
+which does not level off within 2 ns at any Ta; x10's t50 therefore refers to a lower `xfracGST` and is not comparable
+across compositions. `v_growth` does not use x_c. (`--x-end` and `--x-crystal` are alternatives; passing both is refused.) x10 has no crystal reference (its
 rocksalt disorders), which `--x-end` sidesteps.
 
 **Outputs.**
@@ -179,9 +181,12 @@ Ge/Sb/Te cluster and the number of such clusters of at least `--nucleus-min` ato
 - `t_nuc`, the first hold time the largest cluster reaches `--nucleated-size` atoms. This option is required with
   `--clusters`: use the value `calibrate.py` suggests for Ta and the same criterion (Calibration, step 4);
 - `v_growth`, the growth velocity (m/s): the slope of the largest cluster's equivalent-sphere radius while it holds
-  10–60% of the Ge/Sb/Te atoms. A sphere meets its own periodic image at π/6 ≈ 52% of the cell, but counted
-  exactly in a periodic cell its slope stays within 0.5% of the true one up to 60% (−1.5% at 70%, −5% at 80%;
-  `tests/recryst_logic`), so 60% is the cap. A faceted grain's equivalent radius is not its facet distance, so
+  10–25% of the Ge/Sb/Te atoms (`V_WINDOW`), i.e. early growth. Grown crystals saturate (nequip_no_zbl: xfracGST
+  ≈ 0.65, ≈ 0.61 of the Ge/Sb/Te atoms in the largest cluster) and the front slows throughout a run, so a window
+  reaching toward saturation averages in the slow end: the earlier 10–60% window read 2–4× below 10–25% in the
+  nequip_no_zbl grid and put slow cells at ≈ 1 m/s whatever their carbon content. Geometry is no limit below 60%
+  (a sphere counted exactly in a periodic cell keeps its slope within 0.5%, −5% at 80%; `tests/recryst_logic`).
+  The front decelerates even within 10–25%, so v_growth is an early-growth velocity, not a steady state. A faceted grain's equivalent radius is not its facet distance, so
   homogeneous and seeded (planar-front) velocities are compared by trend, not one-to-one;
 - `single_grain`: the fraction of that window's frames in which no second cluster has `--nucleated-size` atoms
   (1: one grain throughout). Below 0.8 (a second grain in over 20% of the frames) the radius mixes grains and
@@ -295,7 +300,7 @@ python ../analysis/rate_compare.py results/<MODEL_ID>/grid_*_T600_clusters.txt  
   file a repeated frame was taken from; the later-wins rule for `.dat` rows is a known answer below.)
 - **Known answers:** `load_dat` keeps the last row of a repeated step; the half-rise `Tx_xfrac` of a synthetic
   ramp is 650 K for both a 0.8 and a 0.6 ceiling (a fixed 0.5 threshold would give 654 K and 665 K); `v_growth`
-  recovers 200 m/s for a growing sphere, also counted exactly in a periodic cell (199 m/s with the 10–60% window,
+  recovers 200 m/s for a growing sphere, also counted exactly in a periodic cell (within 3% with the `V_WINDOW` window,
   180 m/s if it ran to 90%); `single_grain` is the exact fraction of window frames without a second grain (1, 0, 0.5)
   and NaN without a window; `J_surv` matches the censored-exponential formula; `smooth()` keeps a
   constant constant; the stress statistic gives |z| < 5 on production-level noise

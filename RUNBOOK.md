@@ -142,6 +142,8 @@ Needs the melt-quench glasses of the same potential and `recryst/params/<MODEL_I
 4. **Phase B: every composition.** Set `TAS` to the window where nucleation happens, then run
    `bash scripts/submit_grid.sh --dry-run` and the same analysis. Phase A's x0 runs are reused. Outputs:
    `results/<MODEL_ID>/growth_table.csv` and `grid_verdict.txt`. Add replicas (`NREP`) where the spread hides a trend.
+   Then set `X_END` per composition from its plateau: `X_END` where the composition reaches it at some Ta, else an
+   override in `X_END_CELL` (params comments say why); rerun `summary` for the changed cells, then `verdict` for all.
 5. **Seeded slabs (heterogeneous; the full v(Ta) curve).** These are for x0, x1 and x2p5 (x5 and x10 have no stable
    crystal), over 500–900 K or up to the model's Tm. Homogeneous runs give v only where a nucleus forms within
    `MAX_NS`, so the seeded runs supply the peak's high side and v → 0 at Tm (`recryst/README.md`, "Homogeneous vs
@@ -181,6 +183,7 @@ Independent of the other studies; needs only steps A–B. `phases/params/<MODEL_
 
 ## What carries over, and what does not
 - Carries over: the inputs, scripts, analysis code and their tests; the Q4 criterion *form* (Ge/Sb/Te only); the
-  10–60% v_growth window (a geometric result); the 1/√n error estimates.
+  10–25% v_growth window (early growth; it must stay below the grown-crystal plateau, so check it if a model's
+  plateau is much lower than nequip_no_zbl's ≈ 0.61 of the Ge/Sb/Te atoms); the 1/√n error estimates.
 - Remeasured for every model: everything in each study's `params/<MODEL_ID>.sh` and `calib_params.sh`, plus the timestep, the
   throughput, and the glass-vs-crystal density relation.
