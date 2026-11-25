@@ -193,6 +193,15 @@ Ge/Sb/Te cluster and the number of such clusters of at least `--nucleus-min` ato
   `v_growth` is an upper bound. It is a fraction so that a short-lived second cluster in a frame or two does not mark a run as
   multi-grain.
 
+**Interface velocity: v_flux, not v_growth.** In multi-grain runs (nearly all homogeneous runs: 54 of 57 in the
+nequip_no_zbl grid), the largest Q4 cluster grows mostly by swallowing neighbouring grains. Its `v_growth` is then a
+coalescence rate, 3-20x the interface velocity, and its apparent peak in Ta tracks the nucleus count. The interface velocity comes from grain
+tracking, for the rocksalt compositions (x0-x2p5) only. `analysis/grains.py` per run (Te-sublattice PTM + OVITO
+grain segmentation, as a Slurm job), then `analysis/plot_grains.py` gives `v_flux`: the growth of all tracked grains
+(merge-corrected) / (n_Te x grain area), up to xfracGST 0.45. A budget check (`budget_flux` ~0.7-0.9 vs
+`budget_cluster` 3-7) and the single-grain run (x0 700 K r3: both methods agree) back this choice; see
+`results/nequip_no_zbl/RESULTS.md` section 2. For x5/x10 (no segmentable grains) compare t_nuc and t50 only.
+
 Per (composition, Ta) group, two nucleation rates:
 - `J_surv`, from the `t_nuc` of all replicas, runs that never nucleated counting as censored at their end (the
   maximum-likelihood rate of an exponential waiting time), with relative error 1/√(runs that nucleated);

@@ -155,8 +155,11 @@ Needs the melt-quench glasses of the same potential and `recryst/params/<MODEL_I
    - set the in-plane box from the calibration crystal's V/atom at Ta, and couple the barostat to z only;
    - halt when the slab is full or the crystal fraction falls below the glass value + 0.03;
    - take v = dN/dt / (2 A n) from the crystalline cluster connected to the seed, and flag stray nuclei.
-6. **Write-up:** `recryst/results/<MODEL_ID>/RESULTS.md` (v_growth vs Ta per composition with n per point, its
-   distribution, the fraction nucleated vs Ta; then the seeded curve). Plots follow the dataviz conventions.
+6. **Write-up:** `recryst/results/<MODEL_ID>/RESULTS.md` (nucleation times, interface velocity vs Ta per
+   composition with n per point, grains, the fraction nucleated vs Ta; then the seeded curve). Plots follow the
+   dataviz conventions. `analysis/plot_growth.py` (times, cluster rates), then grains: `analysis/grains.py` per run
+   as a Slurm job (x0-x2p5), then `analysis/plot_grains.py`. Report `v_flux` as the interface velocity, not
+   `v_growth`, which is coalescence-dominated in multi-grain runs (recryst/README.md); check `budget_flux` ~1.
 
 ## phases: Allegro vs DFT-MD in the DFT cells (`phases/`)
 Independent of the other studies; needs only steps A–B. `phases/params/<MODEL_ID>.sh` is a copy of nequip_no_zbl's
