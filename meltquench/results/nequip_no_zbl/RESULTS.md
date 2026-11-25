@@ -99,3 +99,20 @@ Fixed in commit 855a40f (`exec srun`); the run is used as is.
 **Densities.** The x0 glass (6.239 g/cc) is as dense as this potential's rocksalt crystal (6.224 g/cc at 3×3×3,
 `tests/density`): the glass is not lighter than the crystal, unlike experiment (6–7% lighter).
 `tests/dft_glass` on this x0 glass: **CONSISTENT**, density +0.01% vs DFT's own cold melt-quenched glass, largest coordination difference 0.14 (Z_Sb 3.80 vs 3.93; criterion 0.15).
+
+## Trigonal melting (x0, pilot, 2026-11-24)
+
+Apparent melting point of the stable trigonal phase, heated the same way as the rocksalt runs (10 K/ps, 300 → 1500 K).
+Setup: `structures/build_trig.py` (orthohexagonal 6×3×6 supercell of the DFT 144-atom Kooi cell, 31104 atoms) and
+`submit.sh PHASE=trig` (stages 0-1 only, aniso barostat, same seeds as rocksalt x0 r1-r3). Summary:
+`trig/mq_summary.txt`; heating curves: `trig/x0_curves.dat`.
+
+| phase | Tm_app (K), r1 / r2 / r3 | mean ± std |
+|---|---|---|
+| trigonal | 1307 / 1307 / 1299 | 1304 ± 4 |
+| rocksalt (production, above) | | 1139 ± 5 |
+
+The trigonal phase superheats about 165 K further than the metastable rocksalt at this heating rate, as expected
+for the more stable phase. Both are superheated apparent values, not thermodynamic Tm. TMELT 1500 K is 196 K above the
+trigonal Tm_app. That is enough for melting from rocksalt or glass, but a melt-quench started from the trigonal
+cell would need a margin check first (RUNBOOK meltquench step 1: ≥ ~300 K). C-containing trigonal cells are not built.

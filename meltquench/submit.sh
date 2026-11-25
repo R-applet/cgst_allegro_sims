@@ -15,12 +15,18 @@
 #   1 K/ps sensitivity (x0, x10, r1):  sbatch --array=0,12 --export=ALL,QRATE=1 submit.sh
 #   longer melt hold for every run (after an MSD-gate ERROR): --export=ALL,HOLD_PS=150
 #   444 on 3 A30s (24 GB each):       sbatch --constraint=B --gpus-per-node=3 --ntasks-per-node=3 --export=ALL,NGPU=3 ...
+#   trigonal melting (heat only):      sbatch --array=0 --export=ALL,PHASE=trig submit.sh    (x0 r1)
+# PHASE: rs (default) = the rocksalt melt-quench above; trig = melting from trigonal GST (structures/trig/<cell>.data,
+# structures/build_trig.py): stages 0-1 only (stop_after heat), aniso barostat, run dir runs/<MODEL_ID>/trig/<cell>_r<r>/,
+# same seeds as the rocksalt run of that index. Tm_app: analysis/mq_summary.py on the run dirs.
 # SIZE, NGPU (checked against the job's ranks), QRATE, HOLD_PS and TMELT come from meltquench/params/<MODEL_ID>.sh;
 # QRATE and HOLD_PS set in the environment override it, and NGPU too where the params allow (NGPU=${NGPU:-2}).
 # Array index i -> cell CELLS[i / 3], replica r = i % 3 + 1.
 # Run directory: runs/<MODEL_ID>/<cell>_q<QRATE>_r<r>/ (MODEL_ID: common/model.sh).
 # Velocity seed = 10007*(i+1) + QRATE, so every run has a different seed.
 set -euo pipefail
+PHASE=${PHASE:-rs}
+[ $PHASE = rs ] || [ $PHASE = trig ] || { echo "PHASE must be rs or trig, not $PHASE" >&2; exit 1; }
 cd $SLURM_SUBMIT_DIR
 ROOT=$(realpath ..)
 q=${QRATE:-}; h=${HOLD_PS:-}
@@ -36,7 +42,14 @@ i=$SLURM_ARRAY_TASK_ID
 cell=${CELLS[$((i / 3))]}
 rep=$((i % 3 + 1))
 run=runs/$MODEL_ID/${cell}_q${QRATE}_r${rep}
+extra=()
+if [ $PHASE = trig ]; then
+    data=$ROOT/structures/trig/$cell.data
+    [ -e $data ] || { echo "no $data: python structures/build_trig.py (C-containing trigonal cells: not built yet)" >&2; exit 1; }
+    run=runs/$MODEL_ID/trig/${cell}_r${rep}
+    extra=(-var data $data -var baro aniso -var stop_after heat)
+fi
 mkdir -p $run && cd $run
 $ROOT/common/run_lmp.sh $SLURM_NTASKS -in $ROOT/meltquench/in.meltquench -log log.mq \
     -var root $ROOT -var cell $cell -var seed $((10007 * (i + 1) + QRATE)) -var qrate $QRATE -var dt $DT \
-    -var model $MODEL -var hold_ps $HOLD_PS -var tmelt $TMELT -var size $SIZE
+    -var model $MODEL -var hold_ps $HOLD_PS -var tmelt $TMELT -var size $SIZE "${extra[@]}"

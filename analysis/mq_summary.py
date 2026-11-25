@@ -22,6 +22,8 @@ Per run directory (mq.dat, gate.txt, stages.txt, rdf_300K.dat, amorphous_300K.da
             (a crash or an energy drift in tests/dt is the other sign)
   hold_ps   the tmelt hold (gate.txt). A run that fails its MSD gate stops before the quench, so every complete run
             passed it; runs compared with each other must share hold_ps, and a WARNING is printed if they do not.
+Heat-only runs (in.meltquench -var stop_after heat, e.g. the trigonal melting runs, meltquench/submit.sh PHASE=trig;
+marked by heated_<tmelt>K.data) report Tm_app only; their other columns are NaN.
 With --out DIR, also writes DIR/<group>_curves.dat: rho(T) and H(T) on the heating ramp and the quench in 10 K bins,
 mean and sample std over the replicas of each (cell, qrate) group (the header lists the replicas; std is NaN for one).
 Bond cutoffs: runio.BOND_RC (fixed per pair; the reasons are there). Override with --rc PAIR=R.
@@ -126,16 +128,21 @@ def summarize(run, tscale=1.0, rc=None):
     rc = rc or {}
     d = load_dat(run / "mq.dat")
     t, T, H = d["time_ps"], d["T_K"], d["H_eV_per_atom"]
-    w = (run / "gate.txt").read_text().split()
-    gate = dict(zip(w[::2], w[1::2]))
     stages = dict(l.split() for l in (run / "stages.txt").read_text().splitlines() if l.strip())
     t_heat0, t_heat1 = float(stages["heat_start_ps"]), float(stages["heat_end_ps"])
-    t_q0, t_q1 = float(stages["quench_start_ps"]), float(stages["quench_end_ps"])
-    t_end = t.max()
-    res = {"run": run.name, "hold_ps": float(gate["hold_ps"])}
     heat = (t >= t_heat0) & (t <= t_heat1)
     dH = np.convolve(np.gradient(H[heat], t[heat]), np.ones(5) / 5, "same")
-    res["Tm_app"] = T[heat][2:-2][np.argmax(dH[2:-2])]
+    res = {"run": run.name, "Tm_app": T[heat][2:-2][np.argmax(dH[2:-2])]}
+    if "quench_start_ps" not in stages:                           # heat-only run (stop_after heat): Tm_app only
+        res |= {"hold_ps": np.nan, "_rmin": {},
+                "_curves": {"heat": [binned(T[heat], d[c][heat]) for c in ("rho_gcc", "H_eV_per_atom")],
+                            "quench": [binned(T[:0], d[c][:0]) for c in ("rho_gcc", "H_eV_per_atom")]}}
+        return res
+    w = (run / "gate.txt").read_text().split()
+    gate = dict(zip(w[::2], w[1::2]))
+    t_q0, t_q1 = float(stages["quench_start_ps"]), float(stages["quench_end_ps"])
+    t_end = t.max()
+    res["hold_ps"] = float(gate["hold_ps"])
     res["rho_l"] = d["rho_gcc"][(t > t_heat1) & (t <= t_q0)].mean()
     final = t >= t_end - 50 * tscale
     res["rho_a"] = d["rho_gcc"][final].mean()
@@ -173,7 +180,8 @@ def summarize(run, tscale=1.0, rc=None):
 
 
 def main(runs, tscale, rc, out=None):
-    runs = complete_runs(runs)
+    heat_only = [Path(r) for r in runs if any(Path(r).glob("heated_*K.data"))]
+    runs = heat_only + complete_runs([r for r in runs if Path(r) not in heat_only])
     if not runs:
         raise SystemExit("no complete runs")
     rows = [summarize(r, tscale, rc) for r in runs]
@@ -198,7 +206,7 @@ def main(runs, tscale, rc, out=None):
     groups = {}
     for r in rows:
         groups.setdefault(group_of(r["run"]), []).append(r)
-    holds = sorted({r["hold_ps"] for r in rows})
+    holds = sorted({r["hold_ps"] for r in rows if np.isfinite(r["hold_ps"])})
     if len(holds) > 1:
         print(f"WARNING: the runs have different tmelt holds ({', '.join(f'{h:g}' for h in holds)} ps), so their "
               "melts had different thermal histories")

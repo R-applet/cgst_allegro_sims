@@ -1,0 +1,14 @@
+run                  Tm_app    rho_l    rho_a       Tg  xfrac_a xfracGST_a   rmin_l   rmin_a  hold_ps
+x0_r1              1306.679      nan      nan      nan      nan        nan      nan      nan      nan
+x0_r2              1307.114      nan      nan      nan      nan        nan      nan      nan      nan
+x0_r3              1299.472      nan      nan      nan      nan        nan      nan      nan      nan
+
+closest approach per pair (A), liquid / glass; nan: pair absent
+run                      Ge-Ge       Ge-Sb       Ge-Te        Ge-C       Sb-Sb       Sb-Te        Sb-C       Te-Te        Te-C         C-C
+x0_r1                nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan  
+x0_r2                nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan  
+x0_r3                nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan     nan/nan  
+
+mean +- sample std (ddof = 1) over replicas
+x0            n=3  1304.422      nan      nan      nan      nan        nan      nan      nan      nan
+                      4.292      nan      nan      nan      nan        nan      nan      nan      nan

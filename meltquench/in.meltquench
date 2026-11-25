@@ -26,6 +26,11 @@
 #   tmelt  optional, melt temperature in K, a multiple of 100 (default 1500; submit.sh passes TMELT). Set it from
 #          the model's superheated melting point with margin (RUNBOOK.md, meltquench step 1); the same for every run.
 #   gate_A2 optional, MSD gate in A^2 before tscale (default 100; tests raise it to force a gate failure).
+#   data   optional, the starting structure (default structures/<size>/<cell>.data, rocksalt); the trigonal melting
+#          runs pass structures/trig/<cell>.data (submit.sh PHASE=trig)
+#   baro   optional, barostat coupling of every stage: iso (default) | aniso (non-cubic crystals: trigonal)
+#   stop_after optional: none (default, all stages) | heat (stop after stage 1, writing heated_<tmelt>K.data: the
+#          melting runs, which measure Tm_app only)
 # Thermostat/barostat damping: Tdamp = 100 dt, Pdamp = 1000 dt (LAMMPS-recommended ratios).
 # Outputs in the run directory: mq.dat (every 1 ps; columns in common/in.analysis), log.mq, traj.lammpstrj.gz,
 # rdf_<tmelt>K.dat, rdf_300K.dat, liquid_<tmelt>K.data, snap_<T>K.data, amorphous_300K.data, gate.txt, stages.txt,
@@ -42,13 +47,18 @@ variable        tmelt     index 1500
 variable        nq        equal round((v_tmelt-300)/100)          # 100 K quench segments
 if "$(v_tmelt%100) != 0 || ${tmelt} <= 300" then "print 'ERROR: tmelt must be a multiple of 100 above 300 K'" "quit 1"
 variable        gate_A2   index 100
+variable        data      index ${root}/structures/${size}/${cell}.data
+variable        baro      index iso
+variable        stop_after index none
+if "(${baro} != iso) && (${baro} != aniso)" then "print 'ERROR: baro must be iso or aniso'" "quit 1"
+if "(${stop_after} != none) && (${stop_after} != heat)" then "print 'ERROR: stop_after must be none or heat'" "quit 1"
 variable        out       index mq
 variable        thermo_ps index 1.0
 variable        Tdamp     equal 100*${dt}
 variable        Pdamp     equal 1000*${dt}
 variable        nps       equal round(1.0/${dt})                  # steps per ps
 
-read_data       ${root}/structures/${size}/${cell}.data
+read_data       ${data}
 include         ${root}/common/in.potential
 
 # ---------- 0. minimize, equilibrate the crystal at 300 K ----------
@@ -66,21 +76,25 @@ dump            traj all custom ${dump_hold} traj.lammpstrj.gz id type x y z c_q
 dump_modify     traj sort id element Ge Sb Te C
 
 velocity        all create 300.0 ${seed} mom yes rot yes dist gaussian
-fix             npt all npt temp 300.0 300.0 ${Tdamp} iso 0.0 0.0 ${Pdamp}
+fix             npt all npt temp 300.0 300.0 ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
 run             $(round(20*v_tscale*v_nps))
 
 # ---------- 1. heat 300 -> tmelt at 10 K/ps ----------
 print           "heat_start_ps $(step*dt)" file stages.txt
 dump_modify     traj every ${nps}
 unfix           npt
-fix             npt all npt temp 300.0 ${tmelt} ${Tdamp} iso 0.0 0.0 ${Pdamp}
+fix             npt all npt temp 300.0 ${tmelt} ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
 run             $(round((v_tmelt-300)/10*v_tscale*v_nps))
 print           "heat_end_ps $(step*dt)" append stages.txt
+if "${stop_after} == heat" then &
+   "write_data      heated_${tmelt}K.data" &
+   "print           'stop_after heat: stopped after stage 1 (heating)'" &
+   "quit 0"
 
 # ---------- 2. hold tmelt for hold_ps; the MSD gate checks that the liquid has decorrelated ----------
 dump_modify     traj every ${dump_hold}
 unfix           npt
-fix             npt all npt temp ${tmelt} ${tmelt} ${Tdamp} iso 0.0 0.0 ${Pdamp}
+fix             npt all npt temp ${tmelt} ${tmelt} ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
 # MSD measured from the start of the hold (the in.analysis MSDs start at step 0 and include the crystal)
 compute         hGe Ge msd com yes
 compute         hSb Sb msd com yes
@@ -128,7 +142,7 @@ label           quench
 variable        T1 equal ${tmelt}+100-100*${Ta}
 variable        T2 equal ${T1}-100
 unfix           npt
-fix             npt all npt temp ${T1} ${T2} ${Tdamp} iso 0.0 0.0 ${Pdamp}
+fix             npt all npt temp ${T1} ${T2} ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
 run             $(round(100.0/v_qrate*v_tscale*v_nps))
 write_data      snap_${T2}K.data
 next            Ta
@@ -138,7 +152,7 @@ print           "quench_end_ps $(step*dt)" append stages.txt
 # ---------- 4. hold 300 K: relax 50 ps, then average the RDF over 50 ps ----------
 dump_modify     traj every ${dump_hold}
 unfix           npt
-fix             npt all npt temp 300.0 300.0 ${Tdamp} iso 0.0 0.0 ${Pdamp}
+fix             npt all npt temp 300.0 300.0 ${Tdamp} ${baro} 0.0 0.0 ${Pdamp}
 run             $(round(50*v_tscale*v_nps))
 variable        rdf_ps   delete
 variable        rdf_ps   index $(50*v_tscale)
